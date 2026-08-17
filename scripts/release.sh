@@ -49,7 +49,7 @@ ML_ZIP="aero-model-lib-modloader-$VERSION.zip"
 # Using `jar` (always present with JDK) instead of `zip` (not on MSYS by default).
 # `jar -cMf` = create no-manifest archive. The .zip extension is purely cosmetic
 # — the format is identical, and consumers extract it the same way.
-jar -cMf "$DIST/$ML_ZIP" core modloader DOC.md README.md
+jar -cMf "$DIST/$ML_ZIP" core modloader docs/DOC.md docs/README.md README.md
 echo "      → $DIST/$ML_ZIP"
 
 # -----------------------------------------------------------------------

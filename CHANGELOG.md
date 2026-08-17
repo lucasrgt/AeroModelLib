@@ -749,7 +749,7 @@ build script structure and rendering performance.
 
 ### Docs
 - **README**: AI disclaimer at the top.
-- **DOC.md** § 15 Profiling: VisualVM walkthrough alongside JFR + JMC.
+- **docs/DOC.md** § 15 Profiling: VisualVM walkthrough alongside JFR + JMC.
 - **CHANGELOG.md** (this file): introduced.
 
 ## [0.2.1] — 2026-04-26

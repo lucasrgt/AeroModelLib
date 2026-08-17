@@ -1,0 +1,10 @@
+# AeroModelLib Documentation
+
+- [`DOC.md`](DOC.md) is the complete user and API guide, including quick
+  starts, architecture, animation schemas, public APIs, integration patterns,
+  examples, troubleshooting, and profiling.
+- [`PERF_ROADMAP.md`](PERF_ROADMAP.md) records implemented, experimental,
+  deferred, and rejected performance work with benchmark context.
+
+Repository-level `README.md`, `CHANGELOG.md`, and `LICENSE.md` remain at the
+root because hosting platforms and release tooling expect them there.

@@ -306,7 +306,7 @@ Or let `Aero_ModelSpec` infer LOD automatically.
   (sounds) so SMP doesn't double-play. Particles fire on both sides
   freely (server-side `spawnParticle` is a no-op).
 
-See [DOC.md § Multiplayer](DOC.md#multiplayer) for the full SMP recipe.
+See [docs/DOC.md § Multiplayer](docs/DOC.md#multiplayer) for the full SMP recipe.
 
 ### Always-on profiler, zero cost when off
 
@@ -557,7 +557,7 @@ Java that compiles and runs identical on both.
 - **Pivots**: Blockbench pixels (auto-divided by 16 in the loader)
 - **Rotation**: Euler degrees [X, Y, Z], applied Z→Y→X (Bedrock compatible)
 - **Position**: Blockbench pixels (divided by 16 in the renderer)
-- **Pose keyframes**: every segment is `{"value": [x, y, z], "interp": "..."}`. The interp picks one of the 33 [easing curves](DOC.md#easing-curves); unknown names throw at load time.
+- **Pose keyframes**: every segment is `{"value": [x, y, z], "interp": "..."}`. The interp picks one of the 33 [easing curves](docs/DOC.md#easing-curves); unknown names throw at load time.
 - **Loop types**: `"loop"` / `"play_once"` / `"hold_on_last_frame"`.
 - **Keyframe events**: every entry under `keyframes` is `{"name": "...", "locator": "boneName"}`. Channel is the parent key (`sound`, `particle`, `custom`, or any string the listener routes); locator is optional.
 - **`format_version`**: required string; the loader currently accepts `"1.0"` only. Future schema bumps reject mismatched versions loudly instead of silently half-parsing.
@@ -627,20 +627,22 @@ hot frame. No consumer changes are required for this.
 
 ## Documentation
 
-[DOC.md](DOC.md) covers the full API reference, architecture diagrams,
+The documentation index is [`docs/README.md`](docs/README.md).
+
+[docs/DOC.md](docs/DOC.md) covers the full API reference, architecture diagrams,
 end-to-end examples (full mod + tile + renderer + JSON), troubleshooting,
 and the multiplayer recipe.
 
 | Section | What |
 |---------|------|
-| [§ 1 Quick Start](DOC.md#1-quick-start) | 3-step + 5-step recipes for static and animated models |
-| [§ 2 Architecture](DOC.md#2-architecture) | Mindmap + class dependency graph |
-| [§ 5 Animations](DOC.md#5-animations) | Schema, sampling, per-channel keyframes |
-| [§ 7 Advanced Animation](DOC.md#7-advanced-animation) | Easings, transitions, keyframe events, Stack, router |
-| [§ 8 API Reference](DOC.md#8-api-reference) | Every public class with method tables |
-| [§ 11 Patterns](DOC.md#11-patterns--best-practices) | Multiplayer, NBT, LOD, render-distance idioms |
-| [§ 14 End-to-end example](DOC.md#14-full-end-to-end-example) | A complete simple-crusher mod, copy-paste ready |
-| [§ 15 Profiling](DOC.md#15-development-tests--benchmarks) | Aero_Profiler + VisualVM + JFR launch + JMC analysis |
+| [§ 1 Quick Start](docs/DOC.md#1-quick-start) | 3-step + 5-step recipes for static and animated models |
+| [§ 2 Architecture](docs/DOC.md#2-architecture) | Mindmap + class dependency graph |
+| [§ 5 Animations](docs/DOC.md#5-animations) | Schema, sampling, per-channel keyframes |
+| [§ 7 Advanced Animation](docs/DOC.md#7-advanced-animation) | Easings, transitions, keyframe events, Stack, router |
+| [§ 8 API Reference](docs/DOC.md#8-api-reference) | Every public class with method tables |
+| [§ 11 Patterns](docs/DOC.md#11-patterns--best-practices) | Multiplayer, NBT, LOD, render-distance idioms |
+| [§ 14 End-to-end example](docs/DOC.md#14-full-end-to-end-example) | A complete simple-crusher mod, copy-paste ready |
+| [§ 15 Profiling](docs/DOC.md#15-development-tests--benchmarks) | Aero_Profiler + VisualVM + JFR launch + JMC analysis |
 
 ---
 

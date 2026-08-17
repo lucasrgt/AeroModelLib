@@ -422,7 +422,7 @@ public final class Aero_AnimationClip {
             // same quat-space orientation. CATMULLROM on a slerp segment is
             // demoted to LINEAR-eased slerp (no spherical Catmull-Rom —
             // squad adds complexity for marginal benefit on rotation curves
-            // where slerp is already smooth). Documented in DOC.md.
+            // where slerp is already smooth). Documented in docs/DOC.md.
             if (quatValues != null && useSlerpSegment != null && useSlerpSegment[lo]) {
                 float eased = easing == Aero_Easing.LINEAR || easing == Aero_Easing.CATMULLROM
                     ? alpha
