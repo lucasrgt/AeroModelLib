@@ -22,6 +22,14 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   reuse is implemented by the StationAPI renderer; the ModLoader renderer
   still allocates those inputs per call and remains a known platform gap.
 
+### Fixed
+- **Animation budget tests now configure the policy they exercise.** Runtime
+  defaults to unlimited admission (`aero.maxAnimatedBE=-1`) and hard-cap mode;
+  the five finite-budget tests had retained assumptions from the earlier
+  `128` default and therefore never entered their target branches. The test
+  class now selects `128` plus reserve-enabled mode before the budget class is
+  initialized, without changing production defaults.
+
 ### Removed
 - **`aero.modellib.mixin.WorldSaveSpikeMixin` is gone from the published
   lib.** Cancelling vanilla world saves had no business in a model-rendering

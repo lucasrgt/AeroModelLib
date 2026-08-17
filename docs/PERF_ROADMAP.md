@@ -249,7 +249,8 @@ histórico detalhado e o protocolo experimental.
   - [x] `Aero_AnimationRenderBudget` rebaixa overflow `ANIMATED -> STATIC`.
   - [x] Mantém objeto visível.
   - [x] Flag: `-Daero.animBudget=false`.
-  - [x] Flag: `-Daero.maxAnimatedBE=N` (default `128`, `-1` ilimitado).
+  - [x] Flag: `-Daero.maxAnimatedBE=N` (current default `-1`, unlimited;
+    finite-policy tests use `128`).
 
 - [x] **C1. Prioridade de animação por importância - CONCLUÍDO**
   - [x] Prioridade por tamanho projetado/distância.

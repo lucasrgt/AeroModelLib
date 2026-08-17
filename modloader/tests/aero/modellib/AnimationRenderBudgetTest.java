@@ -1,5 +1,6 @@
 package aero.modellib;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import aero.modellib.render.Aero_AnimationRenderBudget;
@@ -9,6 +10,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class AnimationRenderBudgetTest {
+
+    @BeforeClass
+    public static void configureFiniteBudgetPolicy() {
+        // Production defaults to unlimited animation admission. These tests
+        // exercise the finite-cap priority, reserve, hysteresis, and cache
+        // branches explicitly, so configure that policy before class init.
+        System.setProperty("aero.maxAnimatedBE", "128");
+        System.setProperty("aero.animBudget.hardCap", "false");
+        assertEquals(128, Aero_AnimationRenderBudget.MAX_ANIMATED);
+    }
 
     @Test
     public void lowPriorityObjectsStopConsumingBudgetEarly() {
