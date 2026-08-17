@@ -12,6 +12,15 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   behavioral deltas, risks, rollback paths, source symbols, and evidence. The
   records use the neutral `worldline.optimization.v1` schema, but Aero owns
   their implementation details and source of truth.
+- **Source-wide optimization audit.** Reconciled production code, property
+  literals, explicit performance intent, changelog evidence, and performance
+  commits against the catalog. Twelve missing decisions expand the inventory
+  from 32 to 44 records: eleven active always-on or opt-in implementations and
+  the retired coarse raycast-occlusion path. Added
+  `tools/optimization-catalog/Audit.java` as a failing source-drift gate.
+- **IK scratch scope corrected.** The catalog now states that input-array
+  reuse is implemented by the StationAPI renderer; the ModLoader renderer
+  still allocates those inputs per call and remains a known platform gap.
 
 ### Removed
 - **`aero.modellib.mixin.WorldSaveSpikeMixin` is gone from the published

@@ -338,7 +338,9 @@ The canonical optimization IDs, ownership, status, defaults, risks, and
 rollback paths are in
 [`docs/OPTIMIZATION_CATALOG.md`](docs/OPTIMIZATION_CATALOG.md). Detailed
 benchmark history and the investigation protocol remain in
-[`docs/PERF_ROADMAP.md`](docs/PERF_ROADMAP.md).
+[`docs/PERF_ROADMAP.md`](docs/PERF_ROADMAP.md). The source-wide reconciliation
+and drift gate are documented in
+[`optimizations/AUDIT.md`](optimizations/AUDIT.md).
 
 ### Profiling
 
@@ -396,6 +398,7 @@ The complete class map and diagrams are in
 | [Documentation index](docs/README.md) | Entry point for all maintained docs |
 | [Complete guide](docs/DOC.md) | Quick starts, architecture, API, formats, patterns, examples, troubleshooting |
 | [Optimization catalog](docs/OPTIMIZATION_CATALOG.md) | Canonical Aero optimization IDs, status, risks, defaults, and rollback paths |
+| [Optimization audit](optimizations/AUDIT.md) | Source-wide coverage, platform drift, and the repeatable catalog-to-code gate |
 | [Performance roadmap](docs/PERF_ROADMAP.md) | Implemented optimizations, experiments, evidence, flags, and known regressions |
 | [Changelog](CHANGELOG.md) | Version history and compatibility notes |
 

@@ -1,16 +1,21 @@
 # Aero Optimization Catalog
 
 This repository owns the canonical metadata for AeroModelLib optimizations.
-The 32 records under `optimizations/catalog` describe Aero implementation
+The 44 records under `optimizations/catalog` describe Aero implementation
 details, defaults, risks, rollback paths, source symbols, and evidence using
 the neutral `worldline.optimization.v1` schema.
 
-The initial audit was performed at revision
-`436d65b38c53346b465e5e793bd943177ebfaa32`. A record's optional
-`source.revision` is its last audited source snapshot, not a dependency on a
-Worldline checkout. Existing records use `tracking=symbol` so the catalog adds
-no annotations or runtime dependency to Aero. Future owned sites may adopt a
-source-only annotation without changing runtime behavior.
+The initial import was performed at revision
+`436d65b38c53346b465e5e793bd943177ebfaa32`; the source-wide reconciliation
+was performed against `258a22bdbbd6102657de83a34fd1b5c9cf1a0e87`. A
+record's optional `source.revision` is its last audited source snapshot, not a
+dependency on a Worldline checkout. Existing records use `tracking=symbol` so
+the catalog adds no annotations or runtime dependency to Aero. Future owned
+sites may adopt a source-only annotation without changing runtime behavior.
+
+The audit method, missing decisions found, platform drift, and repeatable
+source gate are documented in
+[`optimizations/AUDIT.md`](../optimizations/AUDIT.md).
 
 Worldline can validate and experimentally evaluate these IDs, but it does not
 own or duplicate their definitions. Other consumers should treat this
@@ -20,9 +25,10 @@ repository as the source of truth for every `aero.*` optimization ID.
 
 | Status | Count | Meaning in this inventory |
 | --- | ---: | --- |
-| Active | 16 | Shipped implementation with a supported production path; some still require consumer adoption. |
+| Active | 27 | Shipped implementation with a supported production path; some still require consumer adoption. |
 | Candidate | 14 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
 | Rejected | 2 | A known current implementation is unsafe or a measured regression. |
+| Retired | 1 | Historical implementation removed from current production source. |
 
 The `default.enabled` field records the source-level default, not proof of a
 performance win. For adoption-gated APIs such as `Aero_TextureBinder`, false
@@ -31,12 +37,16 @@ remains active because the supported implementation is shipped.
 
 ### Active families
 
-- Allocation and cache control: bounded loader caches, IK scratch reuse,
-  texture-ID caching, and chunk-bake prewarm.
+- Allocation and cache control: bounded loader caches, hot-path sampling,
+  lookup and metadata caches, morph/IK scratch reuse, texture-ID caching, and
+  chunk-bake prewarm.
 - Render submission: animated batching, composite-state sorting, bone pages,
-  block-entity cell indexing/pages, and individual-render skipping.
+  at-rest display lists, block-entity cell indexing/pages, and
+  individual-render skipping.
 - Visibility and detail: smart LOD, conservative cone culling, small-object
   culling, chunk visibility, and animation admission control.
+- Inner-loop work: animation event lower bounds and cursors, smooth-light grid
+  reuse, loop-invariant hoisting, and opt-in back-face culling.
 - Side-effect pressure: same-name sound coalescing.
 
 ### Candidate families
@@ -57,6 +67,18 @@ remains active because the supported implementation is shipped.
   opted in.
 - `aero.render.six-plane-frustum`: the current lazy plane capture can read
   stale or uninitialized data and over-cull visible block entities.
+
+### Retired implementation
+
+- `aero.render.raycast-occlusion`: coarse voxel DDA was removed in favor of
+  chunk-visibility snapshots and the cell-page path. Its cost, false-cull,
+  hysteresis, and chunk-boundary spike history remain cataloged.
+
+## Known platform divergence
+
+`aero.animation.ik-scratch-reuse` currently names only the StationAPI
+renderer. The equivalent ModLoader `runIkChains` path still performs per-call
+input allocation. This is a known implementation gap, not catalog ambiguity.
 
 ## Lag-spike evidence
 

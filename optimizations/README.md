@@ -11,4 +11,11 @@ feature. Aero's source and feature flags remain authoritative for behavior.
 Worldline and other experiment runners may validate these records and attach
 evidence to their IDs. They must not copy the catalog and become a competing
 source of truth. See `docs/OPTIMIZATION_CATALOG.md` for classification and
-investigation guidance.
+investigation guidance, and `AUDIT.md` for the source-wide reconciliation and
+repeatable drift gate.
+
+Run the Aero-owned implementation audit from the repository root:
+
+```text
+java tools/optimization-catalog/Audit.java
+```
