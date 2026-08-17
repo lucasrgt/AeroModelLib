@@ -1,7 +1,7 @@
 # Aero Optimization Catalog
 
 This repository owns the canonical metadata for AeroModelLib optimizations.
-The 44 records under `optimizations/catalog` describe Aero implementation
+The 44 records under `worldline/optimizations/catalog` describe Aero implementation
 details, defaults, risks, rollback paths, source symbols, and evidence using
 the neutral `worldline.optimization.v1` schema.
 
@@ -15,7 +15,7 @@ sites may adopt a source-only annotation without changing runtime behavior.
 
 The audit method, missing decisions found, platform drift, and repeatable
 source gate are documented in
-[`optimizations/AUDIT.md`](../optimizations/AUDIT.md).
+[`worldline/optimizations/AUDIT.md`](../worldline/optimizations/AUDIT.md).
 
 Worldline can validate and experimentally evaluate these IDs, but it does not
 own or duplicate their definitions. Other consumers should treat this

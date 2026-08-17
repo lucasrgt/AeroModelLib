@@ -97,8 +97,8 @@ public final class Audit {
     }
 
     private List<Record> loadRecords() throws IOException {
-        Path directory = root.resolve("optimizations/catalog");
-        require(Files.isDirectory(directory), "missing optimizations/catalog");
+        Path directory = root.resolve("worldline/optimizations/catalog");
+        require(Files.isDirectory(directory), "missing worldline/optimizations/catalog");
         List<Record> records = new ArrayList<Record>();
         Set<String> ids = new HashSet<String>();
         for (Path path : files(directory, ".properties")) {
@@ -119,7 +119,7 @@ public final class Audit {
     }
 
     private Map<String, String> loadExclusions() throws IOException {
-        Path path = root.resolve("optimizations/audit-exclusions.properties");
+        Path path = root.resolve("worldline/optimizations/audit-exclusions.properties");
         Properties fields = properties(path);
         Map<String, String> result = new HashMap<String, String>();
         for (String key : fields.stringPropertyNames()) {
