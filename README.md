@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="banner.png" alt="AeroModelLib" width="100%">
+  <img src="banner.png" alt="AeroModelLib" width="720">
 </p>
 
 <h1 align="center">AeroModelLib</h1>
