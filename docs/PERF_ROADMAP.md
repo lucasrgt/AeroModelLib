@@ -4,6 +4,11 @@ Checklist para investigação de gargalos. Este arquivo separa claramente o que
 foi entregue na lib, o que depende de adoção nos mods consumidores, o que só
 deve avançar com benchmark/JFR e o que está bloqueado por arquitetura.
 
+Os registros estruturados e canônicos pertencem a este repositório e ficam em
+[`optimizations/catalog`](../optimizations/catalog), com resumo em
+[`OPTIMIZATION_CATALOG.md`](OPTIMIZATION_CATALOG.md). Este roadmap preserva o
+histórico detalhado e o protocolo experimental.
+
 Última limpeza de status: 2026-05-02.
 
 ## Legenda

@@ -6,6 +6,13 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 
 ## [3.x] — Smart LOD + occlusion default-on
 
+### Added
+- **Repository-owned optimization catalog.** Thirty-two stable `aero.*`
+  records now live under `optimizations/catalog`, with status, defaults,
+  behavioral deltas, risks, rollback paths, source symbols, and evidence. The
+  records use the neutral `worldline.optimization.v1` schema, but Aero owns
+  their implementation details and source of truth.
+
 ### Removed
 - **`aero.modellib.mixin.WorldSaveSpikeMixin` is gone from the published
   lib.** Cancelling vanilla world saves had no business in a model-rendering

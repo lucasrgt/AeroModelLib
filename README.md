@@ -334,8 +334,11 @@ frame-stage evidence. The old global `-Daero.palettedcache=true` mode remains
 an A/B diagnostic path, not a recommended gameplay default: the hot-method
 injection measured as a steady-state regression.
 
-The maintained evidence, rejected approaches, flags, and benchmark protocol
-are in [`docs/PERF_ROADMAP.md`](docs/PERF_ROADMAP.md).
+The canonical optimization IDs, ownership, status, defaults, risks, and
+rollback paths are in
+[`docs/OPTIMIZATION_CATALOG.md`](docs/OPTIMIZATION_CATALOG.md). Detailed
+benchmark history and the investigation protocol remain in
+[`docs/PERF_ROADMAP.md`](docs/PERF_ROADMAP.md).
 
 ### Profiling
 
@@ -392,6 +395,7 @@ The complete class map and diagrams are in
 | --- | --- |
 | [Documentation index](docs/README.md) | Entry point for all maintained docs |
 | [Complete guide](docs/DOC.md) | Quick starts, architecture, API, formats, patterns, examples, troubleshooting |
+| [Optimization catalog](docs/OPTIMIZATION_CATALOG.md) | Canonical Aero optimization IDs, status, risks, defaults, and rollback paths |
 | [Performance roadmap](docs/PERF_ROADMAP.md) | Implemented optimizations, experiments, evidence, flags, and known regressions |
 | [Changelog](CHANGELOG.md) | Version history and compatibility notes |
 
