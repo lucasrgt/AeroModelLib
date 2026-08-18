@@ -8,7 +8,7 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 
 ### Added
 - **Repository-owned optimization catalog.** Thirty-two stable `aero.*`
-  records now live under `optimizations/catalog`, with status, defaults,
+  records now live under `worldline/optimizations/catalog`, with status, defaults,
   behavioral deltas, risks, rollback paths, source symbols, and evidence. The
   records use the neutral `worldline.optimization.v1` schema, but Aero owns
   their implementation details and source of truth.
@@ -50,6 +50,8 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   zero crash, slightly degraded breakdown.
 
 ### Changed
+- Relocated optimization metadata to `worldline/optimizations/` and reserved
+  `worldline/extensions/` for Worldline extension manifests.
 - **`runClient` task is now bare ("modpack user with default Loom JVM"
   simulation).** The previous `runClient` quietly bumped heap to 4 GB and
   cancelled vanilla autosave so dev sessions felt smoother — that hid GC
