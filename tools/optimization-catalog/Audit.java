@@ -24,6 +24,9 @@ public final class Audit {
             "core/aero", "modloader/aero", "stationapi/src/main/java");
     private static final Pattern PACKAGE = Pattern.compile("(?m)^package\\s+([A-Za-z0-9_.]+)\\s*;");
     private static final Pattern REVISION = Pattern.compile("[0-9a-f]{40}");
+    private static final Pattern ANNOTATION = Pattern.compile(
+            "@(?:aero\\.modellib\\.optimization\\.)?OptimizationRef\\s*\\((.*?)\\)", Pattern.DOTALL);
+    private static final Pattern OPTIMIZATION_ID = Pattern.compile("\"(aero\\.[A-Za-z0-9_.-]+)\"");
     private static final Pattern PROPERTY = Pattern.compile("\"aero\\.[A-Za-z0-9_.-]+\"");
     private static final Pattern INTENT = Pattern.compile(
             "(?i)(fast[- ]path|zero[- ]allocation|alloc-free|avoid(?:s|ing)?[^\\n]{0,50}alloc"
@@ -50,6 +53,7 @@ public final class Audit {
 
     private void run() throws Exception {
         List<Record> records = loadRecords();
+        validateAnnotations(records);
         Map<String, String> exclusions = loadExclusions();
         Set<String> coveredTypes = new HashSet<String>();
         int symbols = 0;
@@ -105,6 +109,9 @@ public final class Audit {
             Properties fields = properties(path);
             String id = required(fields, "id", path);
             String status = required(fields, "status", path);
+            String tracking = required(fields, "tracking", path);
+            require(tracking.equals("symbol") || tracking.equals("annotation"),
+                    "unsupported tracking mode in " + id + ": " + tracking);
             String revision = required(fields, "source.revision", path);
             require(REVISION.matcher(revision).matches(), "invalid source.revision in " + id);
             require(ids.add(id), "duplicate optimization id " + id);
@@ -113,9 +120,31 @@ public final class Audit {
             List<String> paths = csv(fields.getProperty("source.paths", ""));
             for (String sourcePath : paths)
                 require(Files.isRegularFile(root.resolve(sourcePath)), "missing source.paths entry " + sourcePath);
-            records.add(new Record(id, status, symbols, paths));
+            records.add(new Record(id, status, tracking, symbols, paths));
         }
         return records;
+    }
+
+    private void validateAnnotations(List<Record> records) {
+        Set<String> catalog = records.stream().map(record -> record.id).collect(Collectors.toSet());
+        Set<String> annotated = new HashSet<String>();
+        for (Source source : sources) {
+            Matcher annotations = ANNOTATION.matcher(source.text);
+            while (annotations.find()) {
+                Matcher ids = OPTIMIZATION_ID.matcher(annotations.group(1));
+                require(ids.find(), "empty OptimizationRef in " + source.path);
+                do {
+                    String id = ids.group(1);
+                    require(catalog.contains(id), "unknown OptimizationRef " + id + " in " + source.path);
+                    annotated.add(id);
+                } while (ids.find());
+            }
+        }
+        for (Record record : records) {
+            if (record.tracking.equals("annotation"))
+                require(annotated.contains(record.id), "missing OptimizationRef for " + record.id);
+        }
+        System.out.println("  source annotations: " + annotated.size() + " catalog IDs");
     }
 
     private Map<String, String> loadExclusions() throws IOException {
@@ -197,8 +226,8 @@ public final class Audit {
     private static void fail(String message) { System.err.println(message); System.exit(2); }
 
     private static final class Record {
-        final String id, status; final List<String> symbols, paths;
-        Record(String id, String status, List<String> symbols, List<String> paths) { this.id = id; this.status = status; this.symbols = symbols; this.paths = paths; }
+        final String id, status, tracking; final List<String> symbols, paths;
+        Record(String id, String status, String tracking, List<String> symbols, List<String> paths) { this.id = id; this.status = status; this.tracking = tracking; this.symbols = symbols; this.paths = paths; }
     }
     private static final class Source {
         final String type, path, text;

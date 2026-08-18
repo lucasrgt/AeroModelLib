@@ -40,33 +40,34 @@ public final class Aero_ModelSpec {
     private final double animatedDistanceBlocks;
 
     public static Builder json(String modelPath) {
-        return new Builder(Kind.JSON, modelPath, null, null);
+        return new Builder(new Aero_ModelSpecDraft(Kind.JSON, modelPath, null, null));
     }
 
     public static Builder json(Aero_JsonModel model) {
-        return new Builder(Kind.JSON, null, model, null);
+        return new Builder(new Aero_ModelSpecDraft(Kind.JSON, null, model, null));
     }
 
     public static Builder mesh(String modelPath) {
-        return new Builder(Kind.MESH, modelPath, null, null);
+        return new Builder(new Aero_ModelSpecDraft(Kind.MESH, modelPath, null, null));
     }
 
     public static Builder mesh(Aero_MeshModel model) {
-        return new Builder(Kind.MESH, null, null, model);
+        return new Builder(new Aero_ModelSpecDraft(Kind.MESH, null, null, model));
     }
 
     private Aero_ModelSpec(Builder builder) {
-        this.kind = builder.kind;
-        this.modelPath = builder.modelPath;
-        this.texturePath = builder.texturePath;
-        this.jsonModel = builder.resolveJsonModel();
-        this.meshModel = builder.resolveMeshModel();
-        this.meshLodModels = builder.resolveMeshLodModels();
-        this.meshLodDistanceSq = builder.resolveMeshLodDistanceSq();
-        this.animationSpec = builder.animationSpec;
-        this.entityTransform = builder.transformBuilder.build();
-        this.renderOptions = builder.renderOptions;
-        this.animatedDistanceBlocks = builder.animatedDistanceBlocks;
+        Aero_ModelSpecDraft draft = builder.finish();
+        this.kind = draft.kind;
+        this.modelPath = draft.modelPath;
+        this.texturePath = draft.texturePath;
+        this.jsonModel = draft.resolveJsonModel();
+        this.meshModel = draft.resolveMeshModel();
+        this.meshLodModels = draft.resolveMeshLodModels();
+        this.meshLodDistanceSq = draft.resolveMeshLodDistanceSq();
+        this.animationSpec = draft.animationSpec;
+        this.entityTransform = draft.transformBuilder.build();
+        this.renderOptions = draft.renderOptions;
+        this.animatedDistanceBlocks = draft.animatedDistanceBlocks;
 
         if (animationSpec != null && kind != Kind.MESH) {
             throw new IllegalStateException("animations are supported only for mesh specs");
@@ -195,220 +196,27 @@ public final class Aero_ModelSpec {
     }
 
     public static final class Builder {
-        private final Kind kind;
-        private final String modelPath;
-        private final Aero_JsonModel jsonModel;
-        private final Aero_MeshModel meshModel;
-        private java.util.ArrayList meshLodPaths;
-        private java.util.ArrayList meshLodModels;
-        private java.util.ArrayList meshLodDistances;
-        private String texturePath;
-        private Aero_AnimationSpec animationSpec;
-        private Aero_AnimationSpec.Builder animationBuilder;
-        private Aero_EntityModelTransform.Builder transformBuilder =
-            Aero_EntityModelTransform.builder();
-        private Aero_RenderOptions renderOptions = Aero_RenderOptions.DEFAULT;
-        private double animatedDistanceBlocks =
-            Aero_RenderDistanceCulling.DEFAULT_SPECIAL_RENDER_RADIUS;
-
-        private Builder(Kind kind, String modelPath,
-                        Aero_JsonModel jsonModel,
-                        Aero_MeshModel meshModel) {
-            if (kind == null) throw new IllegalArgumentException("kind must not be null");
-            if (modelPath == null && jsonModel == null && meshModel == null) {
-                throw new IllegalArgumentException("modelPath or model must be provided");
-            }
-            this.kind = kind;
-            this.modelPath = modelPath;
-            this.jsonModel = jsonModel;
-            this.meshModel = meshModel;
-        }
-
-        public Builder texture(String texturePath) {
-            this.texturePath = texturePath;
-            return this;
-        }
-
-        public Builder animations(String animationPath) {
-            this.animationSpec = null;
-            this.animationBuilder = Aero_AnimationSpec.builder(animationPath);
-            return this;
-        }
-
-        public Builder animations(Aero_AnimationBundle bundle) {
-            this.animationSpec = null;
-            this.animationBuilder = Aero_AnimationSpec.builder(bundle);
-            return this;
-        }
-
-        public Builder animations(Aero_AnimationSpec animationSpec) {
-            if (animationSpec == null) {
-                throw new IllegalArgumentException("animationSpec must not be null");
-            }
-            this.animationSpec = animationSpec;
-            this.animationBuilder = null;
-            return this;
-        }
-
-        public Builder state(int stateId, String clipName) {
-            if (animationBuilder == null) {
-                if (animationSpec != null) {
-                    throw new IllegalStateException("state() cannot be used after animations(Aero_AnimationSpec)");
-                }
-                throw new IllegalStateException("state() requires animations(...) first");
-            }
-            animationBuilder.state(stateId, clipName);
-            return this;
-        }
-
-        public Builder definition(Aero_AnimationDefinition definition) {
-            if (animationBuilder == null) {
-                throw new IllegalStateException("definition() requires animations(...) first");
-            }
-            animationBuilder.definition(definition);
-            return this;
-        }
-
-        /**
-         * Default crossfade applied by {@link Aero_ModelSpec#applyState}
-         * when the integer state changes. {@code 0} = snap (default).
-         */
-        public Builder defaultTransitionTicks(int ticks) {
-            if (animationBuilder == null) {
-                throw new IllegalStateException("defaultTransitionTicks() requires animations(...) first");
-            }
-            animationBuilder.defaultTransitionTicks(ticks);
-            return this;
-        }
-
-        public Builder transform(Aero_EntityModelTransform transform) {
-            if (transform == null) throw new IllegalArgumentException("transform must not be null");
-            this.transformBuilder = transform.toBuilder();
-            return this;
-        }
-
-        public Builder offset(float x, float y, float z) {
-            transformBuilder.offset(x, y, z);
-            return this;
-        }
-
-        public Builder scale(float scale) {
-            transformBuilder.scale(scale);
-            return this;
-        }
-
-        public Builder yawOffset(float yawOffset) {
-            transformBuilder.yawOffset(yawOffset);
-            return this;
-        }
-
-        public Builder cullingRadius(float cullingRadius) {
-            transformBuilder.cullingRadius(cullingRadius);
-            return this;
-        }
-
-        public Builder maxRenderDistance(float maxRenderDistance) {
-            transformBuilder.maxRenderDistance(maxRenderDistance);
-            return this;
-        }
-
-        public Builder animatedDistance(double animatedDistanceBlocks) {
-            requireNonNegativeFinite("animatedDistanceBlocks", animatedDistanceBlocks);
-            this.animatedDistanceBlocks = animatedDistanceBlocks;
-            return this;
-        }
-
-        public Builder meshLod(String modelPath, double fromDistanceBlocks) {
-            if (kind != Kind.MESH) throw new IllegalStateException("meshLod() requires a mesh spec");
-            if (modelPath == null) throw new IllegalArgumentException("modelPath must not be null");
-            requireNonNegativeFinite("fromDistanceBlocks", fromDistanceBlocks);
-            ensureMeshLodLists();
-            meshLodPaths.add(modelPath);
-            meshLodModels.add(null);
-            meshLodDistances.add(Double.valueOf(fromDistanceBlocks));
-            return this;
-        }
-
-        public Builder meshLod(Aero_MeshModel model, double fromDistanceBlocks) {
-            if (kind != Kind.MESH) throw new IllegalStateException("meshLod() requires a mesh spec");
-            if (model == null) throw new IllegalArgumentException("model must not be null");
-            requireNonNegativeFinite("fromDistanceBlocks", fromDistanceBlocks);
-            ensureMeshLodLists();
-            meshLodPaths.add(null);
-            meshLodModels.add(model);
-            meshLodDistances.add(Double.valueOf(fromDistanceBlocks));
-            return this;
-        }
-
-        public Builder renderOptions(Aero_RenderOptions renderOptions) {
-            if (renderOptions == null) {
-                throw new IllegalArgumentException("renderOptions must not be null");
-            }
-            this.renderOptions = renderOptions;
-            return this;
-        }
-
-        public Builder tint(float r, float g, float b) {
-            return renderOptions(Aero_RenderOptions.tint(r, g, b));
-        }
-
-        public Aero_ModelSpec build() {
-            if (animationBuilder != null) {
-                animationSpec = animationBuilder.build();
-                animationBuilder = null;
-            }
-            return new Aero_ModelSpec(this);
-        }
-
-        private Aero_JsonModel resolveJsonModel() {
-            if (kind != Kind.JSON) return null;
-            return jsonModel != null ? jsonModel : Aero_JsonModelLoader.load(modelPath);
-        }
-
-        private Aero_MeshModel resolveMeshModel() {
-            if (kind != Kind.MESH) return null;
-            return meshModel != null ? meshModel : Aero_ObjLoader.load(modelPath);
-        }
-
-        private Aero_MeshModel[] resolveMeshLodModels() {
-            if (kind != Kind.MESH || meshLodDistances == null || meshLodDistances.isEmpty()) {
-                return null;
-            }
-            int n = meshLodDistances.size();
-            Aero_MeshModel[] out = new Aero_MeshModel[n];
-            for (int i = 0; i < n; i++) {
-                Aero_MeshModel model = (Aero_MeshModel) meshLodModels.get(i);
-                String path = (String) meshLodPaths.get(i);
-                out[i] = model != null ? model : Aero_ObjLoader.load(path);
-            }
-            return out;
-        }
-
-        private double[] resolveMeshLodDistanceSq() {
-            if (kind != Kind.MESH || meshLodDistances == null || meshLodDistances.isEmpty()) {
-                return null;
-            }
-            int n = meshLodDistances.size();
-            double[] out = new double[n];
-            for (int i = 0; i < n; i++) {
-                double d = ((Double) meshLodDistances.get(i)).doubleValue();
-                out[i] = d * d;
-            }
-            return out;
-        }
-
-        private void ensureMeshLodLists() {
-            if (meshLodDistances != null) return;
-            meshLodPaths = new java.util.ArrayList();
-            meshLodModels = new java.util.ArrayList();
-            meshLodDistances = new java.util.ArrayList();
-        }
-
-        private static void requireNonNegativeFinite(String name, double value) {
-            if (Double.isNaN(value) || Double.isInfinite(value)) {
-                throw new IllegalArgumentException(name + " must be finite");
-            }
-            if (value < 0.0d) throw new IllegalArgumentException(name + " must be >= 0");
-        }
+        private final Aero_ModelSpecDraft draft;
+        private Builder(Aero_ModelSpecDraft draft) { this.draft = draft; }
+        public Builder texture(String value) { draft.texture(value); return this; }
+        public Builder animations(String value) { draft.animations(value); return this; }
+        public Builder animations(Aero_AnimationBundle value) { draft.animations(value); return this; }
+        public Builder animations(Aero_AnimationSpec value) { draft.animations(value); return this; }
+        public Builder state(int state, String clip) { draft.state(state, clip); return this; }
+        public Builder definition(Aero_AnimationDefinition value) { draft.definition(value); return this; }
+        public Builder defaultTransitionTicks(int value) { draft.defaultTransitionTicks(value); return this; }
+        public Builder transform(Aero_EntityModelTransform value) { draft.transform(value); return this; }
+        public Builder offset(float x, float y, float z) { draft.offset(x, y, z); return this; }
+        public Builder scale(float value) { draft.scale(value); return this; }
+        public Builder yawOffset(float value) { draft.yawOffset(value); return this; }
+        public Builder cullingRadius(float value) { draft.cullingRadius(value); return this; }
+        public Builder maxRenderDistance(float value) { draft.maxRenderDistance(value); return this; }
+        public Builder animatedDistance(double value) { draft.animatedDistance(value); return this; }
+        public Builder meshLod(String path, double distance) { draft.meshLod(path, distance); return this; }
+        public Builder meshLod(Aero_MeshModel model, double distance) { draft.meshLod(model, distance); return this; }
+        public Builder renderOptions(Aero_RenderOptions value) { draft.renderOptions(value); return this; }
+        public Builder tint(float r, float g, float b) { return renderOptions(Aero_RenderOptions.tint(r, g, b)); }
+        public Aero_ModelSpec build() { return new Aero_ModelSpec(this); }
+        private Aero_ModelSpecDraft finish() { draft.finishAnimation(); return draft; }
     }
 }

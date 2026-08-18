@@ -50,7 +50,7 @@ public class Aero_Convert {
 
         try {
             String src = readFile(inputFile);
-            Map root = (Map) new JsonParser(src).parseValue();
+            Map root = (Map) new Aero_ConvertJsonParser(src).parseValue();
 
             // 1. Build UUID → group map
             Map groupByUuid = new HashMap(); // uuid → Map (group)
@@ -174,17 +174,17 @@ public class Aero_Convert {
 
             // Pivots
             sb.append("  \"pivots\": {\n");
-            writePivots(sb, pivots);
+            Aero_ConvertWriter.writePivots(sb, pivots);
             sb.append("  },\n");
 
             // ChildMap
             sb.append("  \"childMap\": {\n");
-            writeChildMap(sb, childMap);
+            Aero_ConvertWriter.writeChildMap(sb, childMap);
             sb.append("  },\n");
 
             // Animations
             sb.append("  \"animations\": {\n");
-            writeAnimations(sb, animations);
+            Aero_ConvertWriter.writeAnimations(sb, animations);
             sb.append("  }\n");
 
             sb.append("}\n");
@@ -285,103 +285,6 @@ public class Aero_Convert {
     }
 
     // -----------------------------------------------------------------------
-    // JSON output helpers
-    // -----------------------------------------------------------------------
-
-    private static void writePivots(StringBuilder sb, Map pivots) {
-        Iterator it = pivots.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry e = (Map.Entry) it.next();
-            double[] v = (double[]) e.getValue();
-            sb.append("    \"").append(e.getKey()).append("\": [");
-            sb.append(fmtNum(v[0])).append(", ").append(fmtNum(v[1])).append(", ").append(fmtNum(v[2]));
-            sb.append("]");
-            if (it.hasNext()) sb.append(",");
-            sb.append("\n");
-        }
-    }
-
-    private static void writeChildMap(StringBuilder sb, Map childMap) {
-        Iterator it = childMap.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry e = (Map.Entry) it.next();
-            sb.append("    \"").append(e.getKey()).append("\": \"").append(e.getValue()).append("\"");
-            if (it.hasNext()) sb.append(",");
-            sb.append("\n");
-        }
-    }
-
-    private static void writeAnimations(StringBuilder sb, Map animations) {
-        Iterator ait = animations.entrySet().iterator();
-        while (ait.hasNext()) {
-            Map.Entry ae = (Map.Entry) ait.next();
-            String clipName = (String) ae.getKey();
-            Map clip = (Map) ae.getValue();
-
-            sb.append("    \"").append(clipName).append("\": {\n");
-            sb.append("      \"loop\": \"").append(clip.get("loop")).append("\",\n");
-            sb.append("      \"length\": ").append(fmtNum(((Number) clip.get("length")).doubleValue())).append(",\n");
-            sb.append("      \"bones\": {\n");
-
-            Map bones = (Map) clip.get("bones");
-            Iterator bit = bones.entrySet().iterator();
-            while (bit.hasNext()) {
-                Map.Entry be = (Map.Entry) bit.next();
-                String boneName = (String) be.getKey();
-                Map boneData = (Map) be.getValue();
-
-                sb.append("        \"").append(boneName).append("\": {\n");
-
-                Iterator cit = boneData.entrySet().iterator();
-                while (cit.hasNext()) {
-                    Map.Entry ce = (Map.Entry) cit.next();
-                    String channel = (String) ce.getKey();
-                    Map keyframes = (Map) ce.getValue();
-
-                    sb.append("          \"").append(channel).append("\": {\n");
-
-                    // Sort keyframes by time
-                    List timeEntries = new ArrayList(keyframes.entrySet());
-                    Collections.sort(timeEntries, new Comparator() {
-                        public int compare(Object a, Object b) {
-                            double ta = Double.parseDouble((String) ((Map.Entry) a).getKey());
-                            double tb = Double.parseDouble((String) ((Map.Entry) b).getKey());
-                            return Double.compare(ta, tb);
-                        }
-                    });
-
-                    Iterator kit = timeEntries.iterator();
-                    while (kit.hasNext()) {
-                        Map.Entry ke = (Map.Entry) kit.next();
-                        String time = (String) ke.getKey();
-                        Map kfData = (Map) ke.getValue();
-                        double[] val = (double[]) kfData.get("value");
-                        String interp = (String) kfData.get("interp");
-                        sb.append("            \"").append(time).append("\": { \"value\": [");
-                        sb.append(fmtNum(val[0])).append(", ").append(fmtNum(val[1])).append(", ").append(fmtNum(val[2]));
-                        sb.append("], \"interp\": \"").append(interp).append("\" }");
-                        if (kit.hasNext()) sb.append(",");
-                        sb.append("\n");
-                    }
-
-                    sb.append("          }");
-                    if (cit.hasNext()) sb.append(",");
-                    sb.append("\n");
-                }
-
-                sb.append("        }");
-                if (bit.hasNext()) sb.append(",");
-                sb.append("\n");
-            }
-
-            sb.append("      }\n");
-            sb.append("    }");
-            if (ait.hasNext()) sb.append(",");
-            sb.append("\n");
-        }
-    }
-
-    // -----------------------------------------------------------------------
     // Utility
     // -----------------------------------------------------------------------
 
@@ -413,139 +316,4 @@ public class Aero_Convert {
         return s;
     }
 
-    private static String fmtNum(double v) {
-        if (v == Math.floor(v) && Math.abs(v) < 1e10) return String.valueOf((int) v);
-        // Trim trailing zeros
-        String s = String.valueOf(v);
-        if (s.contains(".") && !s.contains("E") && !s.contains("e")) {
-            while (s.endsWith("0")) s = s.substring(0, s.length() - 1);
-            if (s.endsWith(".")) s = s.substring(0, s.length() - 1);
-        }
-        return s;
-    }
-
-    // -----------------------------------------------------------------------
-    // Minimal JSON Parser (recursive descent) — same pattern as
-    // Aero_AnimationLoader but standalone (no package dependency)
-    // -----------------------------------------------------------------------
-
-    private static class JsonParser {
-        private final String s;
-        private int pos;
-
-        JsonParser(String src) { this.s = src; this.pos = 0; }
-
-        Object parseValue() {
-            skipWs();
-            if (pos >= s.length()) throw new RuntimeException("Unexpected end of JSON at pos " + pos);
-            char c = s.charAt(pos);
-            if (c == '{')  return parseObject();
-            if (c == '[')  return parseArray();
-            if (c == '"')  return parseString();
-            if (c == 't')  { pos += 4; return Boolean.TRUE; }
-            if (c == 'f')  { pos += 5; return Boolean.FALSE; }
-            if (c == 'n')  { pos += 4; return null; }
-            return parseNumber();
-        }
-
-        private Map parseObject() {
-            Map map = new LinkedHashMap(); // preserve insertion order
-            pos++; // '{'
-            skipWs();
-            if (pos < s.length() && s.charAt(pos) == '}') { pos++; return map; }
-            while (true) {
-                skipWs();
-                String key = parseString();
-                skipWs();
-                expect(':');
-                Object val = parseValue();
-                map.put(key, val);
-                skipWs();
-                if (pos >= s.length()) break;
-                char ch = s.charAt(pos);
-                if (ch == '}') { pos++; break; }
-                if (ch == ',') { pos++; continue; }
-                throw new RuntimeException("Expected ',' or '}' at pos " + pos);
-            }
-            return map;
-        }
-
-        private List parseArray() {
-            List list = new ArrayList();
-            pos++; // '['
-            skipWs();
-            if (pos < s.length() && s.charAt(pos) == ']') { pos++; return list; }
-            while (true) {
-                list.add(parseValue());
-                skipWs();
-                if (pos >= s.length()) break;
-                char ch = s.charAt(pos);
-                if (ch == ']') { pos++; break; }
-                if (ch == ',') { pos++; continue; }
-                throw new RuntimeException("Expected ',' or ']' at pos " + pos);
-            }
-            return list;
-        }
-
-        private String parseString() {
-            expect('"');
-            StringBuilder sb = new StringBuilder();
-            while (pos < s.length()) {
-                char c = s.charAt(pos++);
-                if (c == '"') return sb.toString();
-                if (c == '\\' && pos < s.length()) {
-                    char esc = s.charAt(pos++);
-                    if      (esc == '"')  sb.append('"');
-                    else if (esc == '\\') sb.append('\\');
-                    else if (esc == '/')  sb.append('/');
-                    else if (esc == 'n')  sb.append('\n');
-                    else if (esc == 'r')  sb.append('\r');
-                    else if (esc == 't')  sb.append('\t');
-                    else if (esc == 'u') {
-                        String hex = s.substring(pos, pos + 4);
-                        sb.append((char) Integer.parseInt(hex, 16));
-                        pos += 4;
-                    }
-                    else sb.append(esc);
-                } else {
-                    sb.append(c);
-                }
-            }
-            throw new RuntimeException("Unterminated string");
-        }
-
-        private Object parseNumber() {
-            int start = pos;
-            if (pos < s.length() && s.charAt(pos) == '-') pos++;
-            boolean isFloat = false;
-            while (pos < s.length()) {
-                char c = s.charAt(pos);
-                if (Character.isDigit(c)) { pos++; continue; }
-                if (c == '.') { isFloat = true; pos++; continue; }
-                if (c == 'e' || c == 'E') {
-                    isFloat = true;
-                    pos++;
-                    if (pos < s.length() && (s.charAt(pos) == '+' || s.charAt(pos) == '-')) pos++;
-                    continue;
-                }
-                break;
-            }
-            String num = s.substring(start, pos);
-            if (isFloat) return Double.valueOf(Double.parseDouble(num));
-            long lv = Long.parseLong(num);
-            if (lv >= Integer.MIN_VALUE && lv <= Integer.MAX_VALUE) return Integer.valueOf((int) lv);
-            return Long.valueOf(lv);
-        }
-
-        private void skipWs() {
-            while (pos < s.length() && s.charAt(pos) <= ' ') pos++;
-        }
-
-        private void expect(char c) {
-            if (pos >= s.length() || s.charAt(pos) != c)
-                throw new RuntimeException("Expected '" + c + "' at pos " + pos
-                    + ", got '" + (pos < s.length() ? s.charAt(pos) : '?') + "'");
-            pos++;
-        }
-    }
 }

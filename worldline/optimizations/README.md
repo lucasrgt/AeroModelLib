@@ -14,8 +14,11 @@ source of truth. See `docs/OPTIMIZATION_CATALOG.md` for classification and
 investigation guidance, and `AUDIT.md` for the source-wide reconciliation and
 repeatable drift gate.
 
-Run the Aero-owned implementation audit from the repository root:
+Run the canonical Aero-owned repository gate from the repository root:
 
 ```text
-java tools/optimization-catalog/Audit.java
+java tools/harness/Verify.java
 ```
+
+The narrower `java tools/optimization-catalog/Audit.java` command remains
+available when only catalog/source drift needs diagnosis.

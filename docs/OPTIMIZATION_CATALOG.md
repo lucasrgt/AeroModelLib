@@ -9,9 +9,11 @@ The initial import was performed at revision
 `436d65b38c53346b465e5e793bd943177ebfaa32`; the source-wide reconciliation
 was performed against `258a22bdbbd6102657de83a34fd1b5c9cf1a0e87`. A
 record's optional `source.revision` is its last audited source snapshot, not a
-dependency on a Worldline checkout. Existing records use `tracking=symbol` so
-the catalog adds no annotations or runtime dependency to Aero. Future owned
-sites may adopt a source-only annotation without changing runtime behavior.
+dependency on a Worldline checkout. Maintained implementation sites migrate
+from `tracking=symbol` to Aero's source-only `OptimizationRef` annotation as
+they are touched. Source retention adds no runtime metadata or Worldline
+dependency; the audit rejects unknown IDs and missing annotations for every
+record already marked `tracking=annotation`.
 
 The audit method, missing decisions found, platform drift, and repeatable
 source gate are documented in

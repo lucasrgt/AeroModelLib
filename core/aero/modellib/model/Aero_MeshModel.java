@@ -93,23 +93,19 @@ public class Aero_MeshModel {
     // bucket). Empty buckets get id 0 — caller skips them. Compile failure
     // flips the failed flag so we don't hammer glGenLists every frame.
     // Pure ints, no GL imports — keeps this class shared across runtimes.
-    private int[] cachedAtRestListIds;
-    private boolean atRestListsCompileFailed;
+    private final Aero_MeshDisplayListState displayLists = new Aero_MeshDisplayListState();
 
     // Display-list cache for rigid animated groups. The platform renderer
     // stores one optional page set for static geometry plus one optional page
     // set per named group. Kept here so all render overloads share the same
     // compiled GL ids for a model instance.
-    private Aero_BonePageLists cachedBonePageLists;
-    private boolean bonePageListsCompileFailed;
-
     /**
      * Optional morph targets keyed by name. Mutable holder — load-time
      * code can attach targets after construction via
      * {@link #attachMorphTarget(Aero_MorphTarget)}. Renderer fast-paths
      * skip blending when this is empty or all weights are zero.
      */
-    private Map morphTargets;
+    private final Aero_MorphTargetRegistry morphTargets = new Aero_MorphTargetRegistry();
 
     public Aero_MeshModel(String name, float[][][] groups, float scale, Map namedGroups) {
         if (scale == 0f) throw new IllegalArgumentException("scale must be non-zero");
@@ -126,19 +122,17 @@ public class Aero_MeshModel {
      * method only registers the named entry.
      */
     public void attachMorphTarget(Aero_MorphTarget target) {
-        if (target == null) throw new IllegalArgumentException("morph target must not be null");
-        if (morphTargets == null) morphTargets = new java.util.HashMap();
-        morphTargets.put(target.name, target);
+        morphTargets.attach(target);
     }
 
     /** Returns a morph target by name, or null if absent. */
     public Aero_MorphTarget getMorphTarget(String name) {
-        return morphTargets == null ? null : (Aero_MorphTarget) morphTargets.get(name);
+        return morphTargets.get(name);
     }
 
     /** True if at least one morph target is registered. Render fast-path probe. */
     public boolean hasMorphTargets() {
-        return morphTargets != null && !morphTargets.isEmpty();
+        return morphTargets.hasTargets();
     }
 
     /**
@@ -148,12 +142,12 @@ public class Aero_MeshModel {
      * skip it. Renderer-only state — model code never reads it.
      */
     public int[] getAtRestListIds() {
-        return cachedAtRestListIds;
+        return displayLists.atRestIds();
     }
 
     /** Stores compiled list IDs (renderer-only). */
     public void setAtRestListIds(int[] ids) {
-        this.cachedAtRestListIds = ids;
+        displayLists.atRestIds(ids);
     }
 
     /**
@@ -161,12 +155,12 @@ public class Aero_MeshModel {
      * this to avoid retrying glGenLists every frame.
      */
     public boolean atRestListsCompileFailed() {
-        return atRestListsCompileFailed;
+        return displayLists.atRestFailed();
     }
 
     /** Marks at-rest list compilation as permanently failed (renderer-only). */
     public void markAtRestListsCompileFailed() {
-        this.atRestListsCompileFailed = true;
+        displayLists.markAtRestFailed();
     }
 
     /**
@@ -178,30 +172,27 @@ public class Aero_MeshModel {
      * release driver-side handles.
      */
     public int[] extractAndClearAtRestListIds() {
-        int[] ids = this.cachedAtRestListIds;
-        this.cachedAtRestListIds = null;
-        this.atRestListsCompileFailed = false;
-        return ids;
+        return displayLists.clearAtRest();
     }
 
     /** Returns cached rigid animated display-list pages, or null if not compiled. */
     public Aero_BonePageLists getBonePageLists() {
-        return cachedBonePageLists;
+        return displayLists.bonePages();
     }
 
     /** Stores rigid animated display-list pages (renderer-only). */
     public void setBonePageLists(Aero_BonePageLists lists) {
-        this.cachedBonePageLists = lists;
+        displayLists.bonePages(lists);
     }
 
     /** True if animated page-list compilation failed once this model lifetime. */
     public boolean bonePageListsCompileFailed() {
-        return bonePageListsCompileFailed;
+        return displayLists.bonePagesFailed();
     }
 
     /** Marks animated page-list compilation as failed (renderer-only). */
     public void markBonePageListsCompileFailed() {
-        this.bonePageListsCompileFailed = true;
+        displayLists.markBonePagesFailed();
     }
 
     /**
@@ -209,10 +200,7 @@ public class Aero_MeshModel {
      * state so the renderer can delete GL ids and allow a future recompile.
      */
     public Aero_BonePageLists extractAndClearBonePageLists() {
-        Aero_BonePageLists lists = this.cachedBonePageLists;
-        this.cachedBonePageLists = null;
-        this.bonePageListsCompileFailed = false;
-        return lists;
+        return displayLists.clearBonePages();
     }
 
     /** Convenience constructor: scale=1, empty named groups. */
@@ -222,18 +210,12 @@ public class Aero_MeshModel {
 
     /** Total triangle count in static geometry (excludes named groups). */
     public int triangleCount() {
-        int n = 0;
-        for (int g = 0; g < 4; g++) n += groups[g].length;
-        return n;
+        return Aero_MeshGeometryMetadata.triangleCount(groups);
     }
 
     /** Total triangle count in a named group, or 0 if not found. */
     public int triangleCountForGroup(String groupName) {
-        float[][][] ng = getNamedGroup(groupName);
-        if (ng == null) return 0;
-        int n = 0;
-        for (int g = 0; g < 4; g++) n += ng[g].length;
-        return n;
+        return Aero_MeshGeometryMetadata.triangleCount(getNamedGroup(groupName));
     }
 
     /** Returns a named group's 4 brightness buckets, or null if absent. */
@@ -252,55 +234,7 @@ public class Aero_MeshModel {
     public float[] getBounds() {
         float[] cached = cachedBounds;
         if (cached != null) return cached;
-
-        float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY, minZ = Float.POSITIVE_INFINITY;
-        float maxX = Float.NEGATIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY, maxZ = Float.NEGATIVE_INFINITY;
-        final float invSc = invScale;
-
-        for (int g = 0; g < 4; g++) {
-            float[][] tris = groups[g];
-            for (int i = 0; i < tris.length; i++) {
-                float[] t = tris[i];
-                for (int v = 0; v < 3; v++) {
-                    int base = v * 5;
-                    float vx = t[base]     * invSc;
-                    float vy = t[base + 1] * invSc;
-                    float vz = t[base + 2] * invSc;
-                    if (vx < minX) minX = vx;
-                    if (vx > maxX) maxX = vx;
-                    if (vy < minY) minY = vy;
-                    if (vy > maxY) maxY = vy;
-                    if (vz < minZ) minZ = vz;
-                    if (vz > maxZ) maxZ = vz;
-                }
-            }
-        }
-
-        NamedGroup[] entries = getNamedGroupArray();
-        for (int e = 0; e < entries.length; e++) {
-            float[][][] ng = entries[e].tris;
-            for (int g = 0; g < 4; g++) {
-                float[][] tris = ng[g];
-                for (int i = 0; i < tris.length; i++) {
-                    float[] t = tris[i];
-                    for (int v = 0; v < 3; v++) {
-                        int base = v * 5;
-                        float vx = t[base]     * invSc;
-                        float vy = t[base + 1] * invSc;
-                        float vz = t[base + 2] * invSc;
-                        if (vx < minX) minX = vx; else if (vx > maxX) maxX = vx;
-                        if (vy < minY) minY = vy; else if (vy > maxY) maxY = vy;
-                        if (vz < minZ) minZ = vz; else if (vz > maxZ) maxZ = vz;
-                    }
-                }
-            }
-        }
-
-        if (minX == Float.POSITIVE_INFINITY) {
-            // Empty model — return a unit cube so the inventory render does not divide by zero.
-            minX = minY = minZ = 0f; maxX = maxY = maxZ = 1f;
-        }
-        cached = new float[]{minX, minY, minZ, maxX, maxY, maxZ};
+        cached = Aero_MeshGeometryMetadata.bounds(groups, getNamedGroupArray(), invScale);
         cachedBounds = cached;
         return cached;
     }
@@ -314,47 +248,9 @@ public class Aero_MeshModel {
     public SmoothLightData getStaticSmoothLightData() {
         SmoothLightData cached = cachedStaticSmoothLightData;
         if (cached != null) return cached;
-        cached = buildSmoothLightData(groups, invScale);
+        cached = Aero_MeshGeometryMetadata.smoothLight(groups, invScale);
         cachedStaticSmoothLightData = cached;
         return cached;
-    }
-
-    private static SmoothLightData buildSmoothLightData(float[][][] groups, float invSc) {
-        float minX = Float.POSITIVE_INFINITY, maxX = Float.NEGATIVE_INFINITY;
-        float minZ = Float.POSITIVE_INFINITY, maxZ = Float.NEGATIVE_INFINITY;
-        float[][] centroidX = new float[4][];
-        float[][] centroidZ = new float[4][];
-        final float oneThird = 1f / 3f;
-        boolean hasTris = false;
-
-        for (int g = 0; g < 4; g++) {
-            float[][] tris = groups[g];
-            float[] cx = new float[tris.length];
-            float[] cz = new float[tris.length];
-            centroidX[g] = cx;
-            centroidZ[g] = cz;
-
-            for (int i = 0; i < tris.length; i++) {
-                float[] t = tris[i];
-                float x0 = t[0] * invSc, x1 = t[5] * invSc, x2 = t[10] * invSc;
-                float z0 = t[2] * invSc, z1 = t[7] * invSc, z2 = t[12] * invSc;
-
-                if (x0 < minX) minX = x0; if (x1 < minX) minX = x1; if (x2 < minX) minX = x2;
-                if (x0 > maxX) maxX = x0; if (x1 > maxX) maxX = x1; if (x2 > maxX) maxX = x2;
-                if (z0 < minZ) minZ = z0; if (z1 < minZ) minZ = z1; if (z2 < minZ) minZ = z2;
-                if (z0 > maxZ) maxZ = z0; if (z1 > maxZ) maxZ = z1; if (z2 > maxZ) maxZ = z2;
-
-                cx[i] = (x0 + x1 + x2) * oneThird;
-                cz[i] = (z0 + z1 + z2) * oneThird;
-                hasTris = true;
-            }
-        }
-
-        if (!hasTris) {
-            minX = maxX = minZ = maxZ = 0f;
-        }
-
-        return new SmoothLightData(hasTris, minX, maxX, minZ, maxZ, centroidX, centroidZ);
     }
 
     /**
@@ -400,96 +296,7 @@ public class Aero_MeshModel {
             }
         }
 
-        NamedGroup[] entries = getNamedGroupArray();
-        BoneRef[] refs = new BoneRef[entries.length];
-        for (int i = 0; i < entries.length; i++) {
-            String groupName = entries[i].name;
-            float[] basePivot = bundle.pivotOrZero(groupName);
-            int boneIdx = -1;
-            float[] pivot = basePivot;
-            String resolvedBoneName = null;
-
-            if (clip != null) {
-                boneIdx = clip.indexOfBone(groupName);
-                if (boneIdx >= 0) resolvedBoneName = groupName;
-                if (boneIdx < 0) {
-                    // Hierarchy: try childMap (explicit Blockbench parent) first,
-                    // walking up one level if the direct parent has no keyframes.
-                    String parentName = bundle.getParentBoneName(groupName);
-                    if (parentName != null) {
-                        boneIdx = clip.indexOfBone(parentName);
-                        if (boneIdx >= 0) resolvedBoneName = parentName;
-                        if (boneIdx < 0) {
-                            String grandParent = bundle.getParentBoneName(parentName);
-                            if (grandParent != null) {
-                                boneIdx = clip.indexOfBone(grandParent);
-                                if (boneIdx >= 0) resolvedBoneName = grandParent;
-                            }
-                        }
-                    }
-                    // Fallback: longest bone name that is a "<bone>_" prefix of groupName.
-                    if (boneIdx < 0) {
-                        boneIdx = findParentBone(clip, groupName);
-                        if (boneIdx >= 0) resolvedBoneName = clip.boneNames[boneIdx];
-                    }
-                    if (boneIdx >= 0) {
-                        // Use the resolved parent's pivot, not the child group's.
-                        pivot = bundle.pivotOrZero(clip.boneNames[boneIdx]);
-                    }
-                }
-            }
-
-            // Build animated ancestor chain (root → ... → resolvedBoneName).
-            // Walks childMap upward, including only ancestors that have a
-            // bone in the clip. Required for hierarchical rendering: a child
-            // bone with its own animation must compose with every animated
-            // ancestor's transform so parent rotations propagate correctly.
-            int[] ancestorBoneIdx;
-            String[] ancestorBoneNames;
-            float[][] ancestorPivots;
-            if (boneIdx < 0 || clip == null) {
-                ancestorBoneIdx = EMPTY_INT;
-                ancestorBoneNames = EMPTY_STRING;
-                ancestorPivots = EMPTY_PIVOTS;
-            } else {
-                // Walk parents starting from resolvedBoneName, collecting
-                // animated ancestors. Cap at MAX_DEPTH to guard cycles.
-                String[] tmpNames = new String[MAX_HIERARCHY_DEPTH];
-                int[] tmpIdx = new int[MAX_HIERARCHY_DEPTH];
-                float[][] tmpPivots = new float[MAX_HIERARCHY_DEPTH][];
-                int depth = 0;
-
-                tmpNames[depth] = resolvedBoneName;
-                tmpIdx[depth] = boneIdx;
-                tmpPivots[depth] = pivot;
-                depth++;
-
-                String parent = bundle.getParentBoneName(resolvedBoneName);
-                while (parent != null && depth < MAX_HIERARCHY_DEPTH) {
-                    int parentIdx = clip.indexOfBone(parent);
-                    if (parentIdx >= 0) {
-                        tmpNames[depth] = parent;
-                        tmpIdx[depth] = parentIdx;
-                        tmpPivots[depth] = bundle.pivotOrZero(parent);
-                        depth++;
-                    }
-                    parent = bundle.getParentBoneName(parent);
-                }
-
-                // Reverse so chain is root → ... → leaf.
-                ancestorBoneIdx = new int[depth];
-                ancestorBoneNames = new String[depth];
-                ancestorPivots = new float[depth][];
-                for (int d = 0; d < depth; d++) {
-                    ancestorBoneIdx[d] = tmpIdx[depth - 1 - d];
-                    ancestorBoneNames[d] = tmpNames[depth - 1 - d];
-                    ancestorPivots[d] = tmpPivots[depth - 1 - d];
-                }
-            }
-
-            refs[i] = new BoneRef(boneIdx, resolvedBoneName, pivot,
-                ancestorBoneIdx, ancestorBoneNames, ancestorPivots);
-        }
+        BoneRef[] refs = Aero_MeshBoneResolver.resolve(getNamedGroupArray(), clip, bundle);
 
         cachedClip     = clip;
         cachedBundle   = bundle;
@@ -505,30 +312,6 @@ public class Aero_MeshModel {
     private static final int[] EMPTY_INT = new int[0];
     private static final String[] EMPTY_STRING = new String[0];
     private static final float[][] EMPTY_PIVOTS = new float[0][];
-    private static final int MAX_HIERARCHY_DEPTH = 32;
-
-    /**
-     * Finds a bone whose name is a prefix of groupName followed by '_'.
-     * Returns the index of the longest matching bone, or -1 if none.
-     * Avoids any String allocation in the hot path.
-     */
-    private static int findParentBone(Aero_AnimationClip clip, String groupName) {
-        int bestIdx = -1;
-        int bestLen = 0;
-        int gnLen = groupName.length();
-        for (int i = 0; i < clip.boneNames.length; i++) {
-            String bone = clip.boneNames[i];
-            int bLen = bone.length();
-            if (bLen <= bestLen) continue;
-            if (gnLen <= bLen) continue;
-            if (groupName.charAt(bLen) != '_') continue;
-            if (!groupName.regionMatches(0, bone, 0, bLen)) continue;
-            bestIdx = i;
-            bestLen = bLen;
-        }
-        return bestIdx;
-    }
-
     /** Pair of (group name, triangles) — used by the animated render path. */
     public static final class NamedGroup {
         public final String name;
