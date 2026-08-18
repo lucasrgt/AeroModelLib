@@ -1,5 +1,7 @@
 package aero.modellib;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import java.util.concurrent.locks.LockSupport;
 import org.lwjgl.opengl.Display;
 
@@ -11,6 +13,7 @@ import org.lwjgl.opengl.Display;
  * opt-in pacer only sleeps when the previous frame actually used Aero dense
  * rendering, keeping normal gameplay/menu behaviour untouched.
  */
+@OptimizationRef({"aero.render.frame-pacer"})
 public final class Aero_FramePacer {
 
     public static final boolean ENABLED =

@@ -20,12 +20,9 @@ All repository artifacts must be written in English.
    300 code lines.
 3. There is no total line budget. Behavior may not be moved into tests,
    generated files, or harness code to evade a per-file ceiling.
-4. The temporary entries in `tools/harness/source-debt.properties` freeze
-   pre-harness oversized files. They may shrink but never grow, and an entry
-   must be removed as soon as its file reaches the normal ceiling.
-5. Modules follow the dependency order in `harness.properties`. Dependencies
+4. Modules follow the dependency order in `harness.properties`. Dependencies
    not declared there and dependency cycles are forbidden.
-6. Missing tools, stale debt entries, unknown optimization IDs, compilation
+5. Missing tools, unknown optimization IDs, compilation
    failures, and failed tests fail closed.
 
 ## Canonical verification

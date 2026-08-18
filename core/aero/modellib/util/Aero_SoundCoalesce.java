@@ -1,5 +1,7 @@
 package aero.modellib.util;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -54,6 +56,7 @@ import java.util.Map;
  * lambda that wraps the right vanilla call. The dispatcher is also where
  * camera-relative coordinates can be converted if the runtime needs that.
  */
+@OptimizationRef({"aero.audio.sound-coalescing"})
 public final class Aero_SoundCoalesce {
 
     public static final boolean ENABLED =

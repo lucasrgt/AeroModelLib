@@ -1,10 +1,13 @@
 package aero.modellib.util;
 
+
+import aero.modellib.optimization.OptimizationRef;
 /**
  * Shared performance-preset helpers. Defaults stay conservative unless the
  * user opts into {@code -Daero.perf.memory=high}; explicit properties always
  * win over the preset.
  */
+@OptimizationRef({"aero.perf.high-memory-preset"})
 public final class Aero_PerfConfig {
 
     public static final boolean HIGH_MEMORY = isHighMemoryPreset();

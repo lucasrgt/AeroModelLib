@@ -1,5 +1,7 @@
 package aero.modellib.render;
 
+
+import aero.modellib.optimization.OptimizationRef;
 /**
  * Dense-scene animation tick thinning.
  *
@@ -10,6 +12,7 @@ package aero.modellib.render;
  * hash phases entities across that stride, so they do not all update on the
  * same game tick.
  */
+@OptimizationRef({"aero.animation.tick-budget"})
 public final class Aero_AnimationTickBudget {
 
     public static final boolean ENABLED =

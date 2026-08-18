@@ -1,5 +1,7 @@
 package aero.modellib.render;
 
+
+import aero.modellib.optimization.OptimizationRef;
 /**
  * Small-object culling — skips rendering a BE / entity whose projected
  * size on screen is below a small pixel threshold (default 2 px). Below
@@ -43,6 +45,7 @@ package aero.modellib.render;
  *   <li>{@code -Daero.smallobj.px=N} sets the pixel threshold (default 2).</li>
  * </ul>
  */
+@OptimizationRef({"aero.render.small-object-cull"})
 public final class Aero_SmallObjectCull {
 
     public static final boolean ENABLED =

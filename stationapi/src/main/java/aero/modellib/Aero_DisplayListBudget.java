@@ -1,5 +1,7 @@
 package aero.modellib;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import org.lwjgl.opengl.GL11;
 
 import aero.modellib.util.Aero_PerfConfig;
@@ -9,6 +11,7 @@ import aero.modellib.util.Aero_PerfConfig;
  * visible in Java heap graphs, so high-memory mode still needs a hard ceiling
  * and counters when old GL drivers stop handing out IDs.
  */
+@OptimizationRef({"aero.render.display-list-budget"})
 public final class Aero_DisplayListBudget {
 
     private static final int MAX_LIVE =

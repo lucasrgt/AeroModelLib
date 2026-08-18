@@ -1,8 +1,11 @@
 package aero.modellib.render;
 
+
+import aero.modellib.optimization.OptimizationRef;
 /**
  * Runtime toggles for Aero render LOD heuristics.
  */
+@OptimizationRef({"aero.render.smart-lod"})
 public final class Aero_LODConfig {
 
     /**

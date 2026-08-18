@@ -1,5 +1,7 @@
 package aero.modellib;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.world.BlockView;
 
@@ -57,6 +59,7 @@ import aero.modellib.render.Aero_RenderOptions;
  *
  * @see aero.modellib.mixin.BlockRenderManagerChunkBakeMixin
  */
+@OptimizationRef({"aero.render.chunk-bake-prewarm"})
 public final class Aero_MeshChunkBaker {
 
     private static final int INITIAL_REGISTRY_SIZE = 4096;

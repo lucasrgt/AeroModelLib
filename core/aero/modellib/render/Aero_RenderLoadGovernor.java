@@ -1,5 +1,7 @@
 package aero.modellib.render;
 
+
+import aero.modellib.optimization.OptimizationRef;
 /**
  * Previous-frame render pressure feedback shared by the platform renderers and
  * the pure render-distance math.
@@ -10,6 +12,7 @@ package aero.modellib.render;
  * sustained frame-time pressure. It recovers slowly to avoid popping while the
  * player rotates around a heavy scene.</p>
  */
+@OptimizationRef({"aero.render.load-governor"})
 public final class Aero_RenderLoadGovernor {
 
     private static final boolean ENABLED =

@@ -20,7 +20,6 @@ public final class Verify {
     private final Path root = Paths.get("").toAbsolutePath().normalize();
     private final Path build = root.resolve(".aero/build");
     private final Properties config = new Properties();
-    private final Properties debt = new Properties();
     private final boolean platforms;
 
     private Verify(boolean platforms) { this.platforms = platforms; }
@@ -42,17 +41,15 @@ public final class Verify {
     private void execute() throws Exception {
         System.out.println("AeroModelLib repository verification");
         load(config, root.resolve("harness.properties"));
-        load(debt, root.resolve("tools/harness/source-debt.properties"));
         List<String> modules = values("modules");
         validateModules(modules);
         Set<String> production = new HashSet<String>();
         for (String module : modules) production.addAll(values("module." + module + ".roots"));
-        enforce("product", production, integer("product.max.file"), true);
-        enforce("test", new HashSet<String>(values("test.roots")), integer("test.max.file"), false);
-        enforce("harness", Collections.singleton("tools/harness"), integer("harness.max.file"), false);
-        enforce("tool", new HashSet<String>(values("tool.roots")), integer("tool.max.file"), true,
+        enforce("product", production, integer("product.max.file"));
+        enforce("test", new HashSet<String>(values("test.roots")), integer("test.max.file"));
+        enforce("harness", Collections.singleton("tools/harness"), integer("harness.max.file"));
+        enforce("tool", new HashSet<String>(values("tool.roots")), integer("tool.max.file"),
                 Collections.singleton("tools/harness"));
-        validateDebt();
         run(Arrays.asList("java", "tools/optimization-catalog/Audit.java"), root);
         recreateBuild();
         compileAndTest();
@@ -78,15 +75,14 @@ public final class Verify {
         System.out.println("  module order: " + String.join(" -> ", modules));
     }
 
-    private void enforce(String kind, Set<String> roots, int limit, boolean debtAllowed) throws IOException {
-        enforce(kind, roots, limit, debtAllowed, Collections.<String>emptySet());
+    private void enforce(String kind, Set<String> roots, int limit) throws IOException {
+        enforce(kind, roots, limit, Collections.<String>emptySet());
     }
 
-    private void enforce(String kind, Set<String> roots, int limit, boolean debtAllowed,
+    private void enforce(String kind, Set<String> roots, int limit,
             Set<String> excludedRoots) throws IOException {
         int files = 0;
         long lines = 0;
-        int oversized = 0;
         for (String sourceRoot : roots) {
             for (Path path : javaFiles(root.resolve(sourceRoot))) {
                 String relative = relative(path);
@@ -94,29 +90,12 @@ public final class Verify {
                 int count = codeLines(path);
                 files++;
                 lines += count;
-                if (count <= limit) continue;
-                String frozen = debt.getProperty(relative);
-                require(debtAllowed && frozen != null,
+                require(count <= limit,
                         kind + " file ceiling exceeded: " + relative + " has " + count + "/" + limit);
-                int ceiling = Integer.parseInt(frozen.trim());
-                require(count <= ceiling, "source debt grew: " + relative + " has " + count + "/" + ceiling);
-                oversized++;
             }
         }
         System.out.println("  " + kind + " sources: " + files + " files, " + lines
-                + " code lines, max file " + limit + (oversized == 0 ? "" : ", frozen debt " + oversized));
-    }
-
-    private void validateDebt() throws IOException {
-        int normal = integer("product.max.file");
-        for (String relative : debt.stringPropertyNames()) {
-            Path path = root.resolve(relative).normalize();
-            require(path.startsWith(root) && Files.isRegularFile(path), "stale source debt path: " + relative);
-            int count = codeLines(path);
-            int ceiling = Integer.parseInt(debt.getProperty(relative).trim());
-            require(count > normal, "repaid source debt entry must be removed: " + relative);
-            require(count <= ceiling, "source debt grew: " + relative + " has " + count + "/" + ceiling);
-        }
+                + " code lines, max file " + limit);
     }
 
     private int codeLines(Path path) throws IOException {

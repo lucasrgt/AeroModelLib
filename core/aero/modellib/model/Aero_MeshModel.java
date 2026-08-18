@@ -1,5 +1,7 @@
 package aero.modellib.model;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -42,6 +44,7 @@ import aero.modellib.skeletal.Aero_MorphTarget;
  *     changes (state transitions only), so the per-frame cost collapses to
  *     a single identity check.
  */
+@OptimizationRef({"aero.model.render-metadata-caches", "aero.render.smooth-light-cache"})
 public class Aero_MeshModel {
 
     public static final int GROUP_TOP    = 0;

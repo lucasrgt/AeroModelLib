@@ -1,5 +1,7 @@
 package aero.modellib.model;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import aero.modellib.Aero_AnimationState;
 
 
@@ -20,6 +22,7 @@ import aero.modellib.render.Aero_RenderOptions;
  * spec lets normal integrations keep one static description for the model,
  * texture path, animation wiring, entity transform and render options.
  */
+@OptimizationRef({"aero.model.mesh-lod"})
 public final class Aero_ModelSpec {
 
     public enum Kind {
