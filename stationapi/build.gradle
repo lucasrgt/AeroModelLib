@@ -45,7 +45,7 @@ dependencies {
     // If StationAPI isn't on the runtime classpath, the mixin apply
     // fails silently and modellib loads without the cache — graceful
     // degradation, no crash.
-    modCompileOnly "net.modificationstation:StationAPI:2.0.0-alpha.5.4"
+    modCompileOnly "net.modificationstation:StationAPI:2.0.0-alpha.6.2"
 }
 
 // Pull in the shared pure-Java core sources from sibling dir libraries/modellib/core/.
