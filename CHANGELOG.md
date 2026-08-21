@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+- Added external Worldline TestKit 0.1.0 consumer specs for quaternion and
+  render-option contracts, compiled only against the packaged Java 8 API.
+
 All notable changes to **AeroModelLib** documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) loosely; versions
 correspond to `mod_version` in `stationapi/gradle.properties`.
