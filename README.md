@@ -53,13 +53,12 @@ pin the exact tag or commit used by a mod.
 
 ### Worldline TestKit consumer
 
-The `worldline-tests/` project compiles external Java 8 specs against the
-packaged Worldline TestKit API and loads AeroModelLib core classes through the
-runner's bounded external classpath. Set `WORLDLINE_TESTKIT_HOME` to a TestKit
-0.1.0 distribution and run:
+The `tests/worldline/` Gradle project compiles external Java 8 specs with
+Worldline TestKit 0.2.0 and loads AeroModelLib core classes through the
+runner's bounded external classpath. Run:
 
 ```text
-java tools/testkit/Run.java
+gradle -p tests/worldline worldlineDoctor worldlineTest
 ```
 
 ---

@@ -9,7 +9,7 @@ import static worldline.test.Worldline.describe;
 import static worldline.test.Worldline.test;
 
 /** External TestKit consumer compiled against the packaged Java 8 API. */
-public final class AeroModelLibTestKitSpec extends WorldlineSpec {
+public final class AeroModelLibWorldlineTest extends WorldlineSpec {
     @Override protected void define() {
         describe("AeroModelLib math and rendering", () -> {
             test("creates a unit quaternion", context -> {
