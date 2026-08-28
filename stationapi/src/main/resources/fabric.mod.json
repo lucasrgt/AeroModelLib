@@ -7,9 +7,9 @@
   "description": "OBJ + Blockbench JSON model rendering and keyframe animation for Beta 1.7.3 / StationAPI.",
   "authors": ["lucasrgt"],
   "contact": {
-    "homepage": "https://github.com/lucasrgt/aero-model-lib",
-    "sources": "https://github.com/lucasrgt/aero-model-lib",
-    "issues": "https://github.com/lucasrgt/aero-model-lib/issues"
+    "homepage": "https://github.com/lucasrgt/AeroModelLib",
+    "sources": "https://github.com/lucasrgt/AeroModelLib",
+    "issues": "https://github.com/lucasrgt/AeroModelLib/issues"
   },
   "license": "MIT",
   "icon": "assets/aero-model-lib/icon.png",

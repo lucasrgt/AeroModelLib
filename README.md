@@ -14,8 +14,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/lucasrgt/aero-model-lib/actions/workflows/ci.yml"><img src="https://github.com/lucasrgt/aero-model-lib/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
-  <a href="https://github.com/lucasrgt/aero-model-lib/releases"><img src="https://img.shields.io/github/v/release/lucasrgt/aero-model-lib?display_name=tag&sort=semver&style=flat-square" alt="Latest release"></a>
+  <a href="https://github.com/lucasrgt/AeroModelLib/actions/workflows/ci.yml"><img src="https://github.com/lucasrgt/AeroModelLib/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://github.com/lucasrgt/AeroModelLib/releases"><img src="https://img.shields.io/github/v/release/lucasrgt/AeroModelLib?display_name=tag&sort=semver&style=flat-square" alt="Latest release"></a>
   <a href="LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-2EA44F?style=flat-square" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Minecraft-Beta%201.7.3-62B47A?style=flat-square" alt="Minecraft Beta 1.7.3">
   <img src="https://img.shields.io/badge/rendering-OpenGL%201.1-5586A4?style=flat-square" alt="OpenGL 1.1">
@@ -68,7 +68,7 @@ render-distance behavior.
 ### 1. Obtain the runtime target
 
 Tagged artifacts are published through
-[GitHub Releases](https://github.com/lucasrgt/aero-model-lib/releases).
+[GitHub Releases](https://github.com/lucasrgt/AeroModelLib/releases).
 
 - StationAPI consumers use the versioned library JAR with StationAPI present at
   runtime.
