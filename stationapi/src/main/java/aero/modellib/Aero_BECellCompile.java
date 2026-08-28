@@ -31,6 +31,7 @@ static boolean canRebuildAnotherPageThisFrame() {
     }
 
 static Aero_BECellCachedPage compilePage(Aero_BECellQueuedPage page, int[] modelIds, int membershipHash) {
+        long censusStartNs = Aero_FrameSpikeLogger.beginCellRebuild();
         Aero_Profiler.start("aero.becell.compile");
         try {
             int[] ids = new int[4];
@@ -88,6 +89,7 @@ static Aero_BECellCachedPage compilePage(Aero_BECellQueuedPage page, int[] model
             }
             return new Aero_BECellCachedPage(ids, page.count, membershipHash, frameIndex);
         } finally {
+            Aero_FrameSpikeLogger.endCellRebuild(censusStartNs);
             Aero_Profiler.end("aero.becell.compile");
         }
     }

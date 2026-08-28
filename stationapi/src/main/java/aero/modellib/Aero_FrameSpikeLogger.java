@@ -46,4 +46,24 @@ public final class Aero_FrameSpikeLogger extends Aero_FrameSpikeState {
     public static void endRenderChunks() { Aero_FrameSpikeStages.endRenderChunks(); }
     public static long beginWorldFlush() { return Aero_FrameSpikeStages.beginWorldFlush(); }
     public static void endWorldFlush(long startNs) { Aero_FrameSpikeStages.endWorldFlush(startNs); }
+    public static long beginCellRebuild() { return Aero_FrameSpikeStages.beginCellRebuild(); }
+    public static void endCellRebuild(long startNs) { Aero_FrameSpikeStages.endCellRebuild(startNs); }
+
+    /** Allocation-free read-only access for complete-census tooling. */
+    public static long frameStartNanos() { return lastFrameStartNs; }
+    public static long clientTickNanos() { return lastClientTickNs; }
+    public static long worldSaveNanos() { return lastWorldSaveNs; }
+    public static long worldSaveSkipped() { return worldSaveSkipped; }
+    public static long chunkCompileCalls() { return chunkCompileCalls; }
+    public static long chunkCompileMaxNanos() { return lastChunkCompileMaxNs; }
+    public static long terrainRenderNanos() { return lastRenderChunksNs; }
+    public static long aeroPrepareNanos() { return lastAeroRenderPrepNs; }
+    public static long entityRenderNanos() { return lastRenderEntitiesNs; }
+    public static long displayUpdateNanos() { return lastDisplayUpdateNs; }
+    public static long cellRebuildNanos() { return lastCellRebuildNs; }
+    public static long frameAllocatedBytes() { return lastFrameAllocBytes; }
+    public static long gcCollectionCount() { return Aero_FrameSpikeMetrics.gcCollectionCount(); }
+    public static long gcCollectionTimeMillis() {
+        return Aero_FrameSpikeMetrics.gcCollectionTimeMs();
+    }
 }

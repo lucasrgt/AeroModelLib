@@ -553,6 +553,9 @@ public class AeroTestMod {
         int x = event.x + dx;
         int z = event.z + dz;
         event.world.setBlockWithoutNotifyingNeighbors(x, y, z, blockId);
+        // The block placement creates its default BE. Replace it instead of
+        // retaining both entries in World.blockEntities during dense tests.
+        event.world.removeBlockEntity(x, y, z);
         event.world.setBlockEntity(x, y, z, be);
     }
 
@@ -574,7 +577,10 @@ public class AeroTestMod {
      * at far render-distance = 1152 BEs in the visible chunk set.
      */
     private static void populateChunkMega(WorldGenEvent.ChunkDecoration event) {
-        int baseY = event.world.getTopSolidBlockY(event.x + 8, event.z + 8) + 1;
+        // Beta 1.7.3 stops at Y=127. A 16-floor tower plus its top cap
+        // occupies baseY..baseY+64, so clamp the base to 63. Without this,
+        // ordinary sea-level terrain silently drops the upper machine floor.
+        int baseY = Math.min(event.world.getTopSolidBlockY(event.x + 8, event.z + 8) + 1, 63);
         final int FLOOR_HEIGHT = 4;
         final int NUM_FLOORS = 16;
         final int COBBLESTONE_ID = net.minecraft.block.Block.COBBLESTONE.id;

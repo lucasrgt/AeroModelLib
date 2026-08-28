@@ -98,6 +98,7 @@ class Aero_FrameSpikeState {
     static long lastWorldFlushNs;
     static long lastWorldFlushAllocBytes;
     static long slowWorldFlushes;
+    static long lastCellRebuildNs;
     static final List GC_BEANS = ManagementFactory.getGarbageCollectorMXBeans();
     static final ThreadMXBean THREAD_BEAN =
         ManagementFactory.getThreadMXBean();

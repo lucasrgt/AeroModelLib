@@ -114,5 +114,6 @@ static void resetFrameStageCounters() {
         lastWorldFlushNs = 0L;
         lastWorldFlushAllocBytes = 0L;
         slowWorldFlushes = 0L;
+        lastCellRebuildNs = 0L;
     }
 }

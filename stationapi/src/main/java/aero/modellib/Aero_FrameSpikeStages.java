@@ -192,4 +192,13 @@ static void endWorldFlush(long startNs) {
             Aero_FrameSpikeWriter.logEvent("WorldFlush", elapsedMs, 0L, 0L);
         }
     }
+
+static long beginCellRebuild() {
+        return TIMING_ENABLED ? System.nanoTime() : 0L;
+    }
+
+static void endCellRebuild(long startNs) {
+        if (!TIMING_ENABLED || startNs == 0L) return;
+        lastCellRebuildNs += System.nanoTime() - startNs;
+    }
 }
