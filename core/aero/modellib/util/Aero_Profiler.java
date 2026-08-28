@@ -1,5 +1,7 @@
 package aero.modellib.util;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -36,6 +38,7 @@ import java.util.Map;
  * Calls are accumulated globally; {@link #reset()} zeroes the table and
  * {@link #dump()} prints + resets.
  */
+@OptimizationRef({"aero.diagnostics.profiler-timer-reuse"})
 public final class Aero_Profiler {
 
     private static volatile boolean enabled = Boolean.getBoolean("aero.profiler");

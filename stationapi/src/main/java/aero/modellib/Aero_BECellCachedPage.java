@@ -1,0 +1,38 @@
+package aero.modellib;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import net.minecraft.block.entity.BlockEntity;
+import org.lwjgl.opengl.GL11;
+
+import aero.modellib.model.Aero_MeshBlendMode;
+import aero.modellib.model.Aero_MeshModel;
+import aero.modellib.render.Aero_CellRenderableBE;
+import aero.modellib.render.Aero_RenderOptions;
+import aero.modellib.util.Aero_PerfConfig;
+import aero.modellib.util.Aero_Profiler;
+
+/**
+ * At-rest BlockEntity cell pages. Renderers can queue static/LOD-overflow
+ * meshes here instead of drawing each BE immediately; the flush compiles one
+ * small display-list page per visible cell/render key and replays that page
+ * while preserving the existing direct-render fallback.
+ */
+final class Aero_BECellCachedPage {
+        final int[] ids;
+        final int count;
+        final int membershipHash;
+        int lastUsedFrame;
+
+        Aero_BECellCachedPage(int[] ids, int count, int membershipHash, int lastUsedFrame) {
+            this.ids = ids;
+            this.count = count;
+            this.membershipHash = membershipHash;
+            this.lastUsedFrame = lastUsedFrame;
+        }
+    }

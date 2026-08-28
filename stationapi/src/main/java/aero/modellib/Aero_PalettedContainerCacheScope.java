@@ -1,5 +1,7 @@
 package aero.modellib;
 
+
+import aero.modellib.optimization.OptimizationRef;
 /**
  * Per-thread scope used by the StationAPI PalettedContainer cache mixin.
  *
@@ -8,6 +10,7 @@ package aero.modellib;
  * state. This scope lets the cache activate only while vanilla is rebuilding a
  * chunk display list, which is the workload that originally showed locality.
  */
+@OptimizationRef({"aero.chunk.paletted-cache-scope"})
 public final class Aero_PalettedContainerCacheScope {
 
     private static final boolean CHUNK_SCOPE_ENABLED =

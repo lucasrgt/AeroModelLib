@@ -1,5 +1,7 @@
 package aero.modellib;
 
+
+import aero.modellib.optimization.OptimizationRef;
 /**
  * Optional frame-smoothing governor for vanilla chunk display-list rebuilds.
  *
@@ -15,6 +17,7 @@ package aero.modellib;
  * can opt in for heavy factory-style scenes with
  * {@code -Daero.chunkCompileBudget=true}.
  */
+@OptimizationRef({"aero.chunk.compile-budget"})
 public final class Aero_ChunkCompileBudget {
 
     public static final boolean ENABLED =

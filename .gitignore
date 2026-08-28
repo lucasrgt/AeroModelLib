@@ -44,3 +44,6 @@ stationapi/test-bare/jfr-repo/
 # Moved unit-test runner output
 modloader/tests/out/
 modloader/tests/bench-out/
+
+# Canonical harness output
+.aero/

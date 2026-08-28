@@ -1,5 +1,7 @@
 package aero.modellib.render;
 
+
+import aero.modellib.optimization.OptimizationRef;
 /**
  * Tick-rate LOD math for animated entities.
  *
@@ -37,6 +39,7 @@ package aero.modellib.render;
  * }
  * }</pre>
  */
+@OptimizationRef({"aero.animation.motion-tick-lod"})
 public final class Aero_AnimationTickLOD {
 
     public static final double DEFAULT_CLOSE_RADIUS  = 64.0d;

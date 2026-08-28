@@ -1,6 +1,8 @@
 package aero.modellib.skeletal;
 
 
+
+import aero.modellib.optimization.OptimizationRef;
 import aero.modellib.animation.Aero_AnimationBundle;
 import aero.modellib.animation.Aero_AnimationClip;
 import aero.modellib.model.Aero_MeshModel;
@@ -23,6 +25,7 @@ import aero.modellib.model.Aero_ObjLoader;
  * separate UV channels in {@link Aero_AnimationClip} and would
  * double-count if mixed in here.
  */
+@OptimizationRef({"aero.render.morph-scratch-reuse"})
 public final class Aero_MorphTarget {
 
     public final String name;

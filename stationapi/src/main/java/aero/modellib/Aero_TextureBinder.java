@@ -1,5 +1,7 @@
 package aero.modellib;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import java.util.HashMap;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
@@ -11,6 +13,7 @@ import net.minecraft.client.Minecraft;
  * under mixin instrumentation. Resolving once per texture path keeps dense BE
  * scenes from feeding periodic GC just to bind the same model textures.
  */
+@OptimizationRef({"aero.render.texture-id-cache"})
 public final class Aero_TextureBinder {
     private static final HashMap<String, Integer> IDS_BY_PATH = new HashMap<String, Integer>();
     private static Object lastTextureManager;

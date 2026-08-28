@@ -1,5 +1,7 @@
 package aero.modellib;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import java.util.ArrayDeque;
 import java.util.IdentityHashMap;
 
@@ -11,6 +13,7 @@ import aero.modellib.util.Aero_PerfConfig;
  * enqueue models after loading them; the queue drains gradually during render
  * frames so cache compilation does not all land on the first visible frame.
  */
+@OptimizationRef({"aero.render.prewarm"})
 public final class Aero_Prewarm {
 
     public static final boolean ENABLED =

@@ -1,5 +1,7 @@
 package aero.modellib;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 
@@ -14,6 +16,7 @@ import aero.modellib.render.Aero_RenderLod;
  * special-renderer limit scale with the player's render distance under a cap,
  * and provides an opt-in animation-tick LOD via {@link #shouldTickAnimation()}.
  */
+@OptimizationRef({"aero.render.be-skip-individual"})
 public class Aero_RenderDistanceBlockEntity extends BlockEntity implements Aero_CellRenderableBE {
 
     /** Monotonic counter for phase-stable tick LOD; incremented on every call. */

@@ -1,6 +1,8 @@
 package aero.modellib.render;
 
 
+
+import aero.modellib.optimization.OptimizationRef;
 import aero.modellib.model.Aero_MeshBlendMode;
 
 /**
@@ -11,6 +13,7 @@ import aero.modellib.model.Aero_MeshBlendMode;
  * blending off. Each setter returns a fresh builder; pre-build common
  * variants as static finals when you can.
  */
+@OptimizationRef({"aero.render.face-culling"})
 public final class Aero_RenderOptions {
 
     public static final Aero_RenderOptions DEFAULT = builder().build();

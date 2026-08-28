@@ -1,5 +1,7 @@
 package aero.modellib;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import net.minecraft.client.render.chunk.ChunkBuilder;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -47,6 +49,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
  * no flicker because chunk-frustum decisions stabilize when the camera
  * isn't actively moving.
  */
+@OptimizationRef({"aero.render.chunk-visibility"})
 public final class Aero_ChunkVisibility {
 
     public static final boolean ENABLED =

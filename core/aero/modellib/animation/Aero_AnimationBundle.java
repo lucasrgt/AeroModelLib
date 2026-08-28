@@ -1,5 +1,7 @@
 package aero.modellib.animation;
 
+
+import aero.modellib.optimization.OptimizationRef;
 import java.util.Collections;
 import java.util.Map;
 
@@ -20,6 +22,7 @@ import aero.modellib.skeletal.Aero_MorphTarget;
  * inside the map are still raw arrays — callers must not mutate them.
  * Use {@link #getPivotInto(String, float[])} for safe per-call reads.
  */
+@OptimizationRef({"aero.animation.lookup-caches"})
 public class Aero_AnimationBundle {
 
     static final float[] ZERO_PIVOT = {0f, 0f, 0f};

@@ -1,9 +1,5 @@
 package aero.modellib.animation;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Arrays;
-
 import aero.modellib.util.Aero_Profiler;
 
 /**
@@ -25,26 +21,8 @@ public class Aero_AnimationPlayback {
 
     private Aero_AnimationClip cachedClip;
     private int cachedClipState = -1;
-    private Aero_AnimationClip cursorClip;
-    private int[] rotCursors;
-    private int[] posCursors;
-    private int[] sclCursors;
-    private int[] uvOffsetCursors;
-    private int[] uvScaleCursors;
-
-    // Transition machinery — keeps the snapshotted pose from the previous
-    // clip alive while the new clip's first {transitionTicks} ticks blend
-    // toward it. Maps are name-indexed so they survive bone-index reshuffles
-    // when switching between clips that animate different sets of bones.
-    private int transitionTicks = 0;
-    private int transitionRemaining = 0;
-    private Map snapshotRot;   // Map<String, float[3]>
-    private Map snapshotPos;
-    private Map snapshotScl;
-    private Map snapshotUvOffset;
-    private Map snapshotUvScale;
-    // Reusable buffer to avoid allocating during the snapshot pass.
-    private final float[] snapshotScratch = new float[3];
+    private final Aero_AnimationSampleCursors cursors = new Aero_AnimationSampleCursors();
+    private final Aero_AnimationTransition transition = new Aero_AnimationTransition();
     private final float[] pivotScratch = new float[3];
 
     // Optional keyframe-event sink — set by the consumer to receive
@@ -78,7 +56,7 @@ public class Aero_AnimationPlayback {
     }
 
     private void tickBody() {
-        if (transitionRemaining > 0) transitionRemaining--;
+        transition.tick();
         prevPlaybackTime = playbackTime;
 
         Aero_AnimationClip clip = getCurrentClip();
@@ -112,72 +90,13 @@ public class Aero_AnimationPlayback {
         // counted. Non-wrap windows use the standard half-open interval.
         if (eventListener != null && clip.hasEvents()) {
             if (wrapped) {
-                fireEvents(clip, prevPlaybackTime, clip.length, false);
-                fireEvents(clip, 0f, playbackTime, true);
+                Aero_AnimationEventDispatcher.fire(eventListener, clip, prevPlaybackTime, clip.length, false);
+                Aero_AnimationEventDispatcher.fire(eventListener, clip, 0f, playbackTime, true);
             } else {
-                fireEvents(clip, prevPlaybackTime, playbackTime, false);
+                Aero_AnimationEventDispatcher.fire(
+                    eventListener, clip, prevPlaybackTime, playbackTime, false);
             }
         }
-    }
-
-    /**
-     * Fires every event in the clip whose time falls inside the advanced
-     * window. {@code includeFrom} controls whether the lower bound is
-     * inclusive — only the post-wrap leg of a looped tick passes
-     * {@code true}, so a {@code t = 0} event fires exactly once per loop
-     * cycle (it would otherwise be swallowed by the strict {@code t > 0}
-     * test that prevents double-firing on consecutive non-wrap ticks).
-     */
-    private void fireEvents(Aero_AnimationClip clip, float fromBound, float toInclusive,
-                            boolean includeFrom) {
-        if (toInclusive < fromBound || (toInclusive == fromBound && !includeFrom)) return;
-        Aero_AnimationClip.KeyframeEvent[] events = clip.events;
-        if (events.length == 0) return;
-
-        // Events are sorted by time at clip construction (see
-        // Aero_AnimationClip constructor). Binary-search for the first
-        // event whose time satisfies the lower bound; iterate forward
-        // and break when we pass the upper bound. Worst case becomes
-        // O(log n + matches) instead of O(n).
-        int start = lowerBound(events, fromBound, includeFrom);
-        for (int i = start; i < events.length; i++) {
-            Aero_AnimationClip.KeyframeEvent event = events[i];
-            float t = event.time;
-            if (t > toInclusive) break;
-            eventListener.onEvent(event.channel, event.data, event.locator, t);
-        }
-    }
-
-    /**
-     * Returns the index of the first event with {@code time >= bound}
-     * (when {@code inclusive}) or {@code time > bound} (when not). Events
-     * MUST be sorted by ascending time. Returns {@code events.length}
-     * when every event lies before the bound.
-     */
-    private static int lowerBound(Aero_AnimationClip.KeyframeEvent[] events,
-                                  float bound, boolean inclusive) {
-        int lo = 0, hi = events.length;
-        while (lo < hi) {
-            int mid = (lo + hi) >>> 1;
-            float t = events[mid].time;
-            boolean before = inclusive ? (t < bound) : (t <= bound);
-            if (before) lo = mid + 1;
-            else hi = mid;
-        }
-        return lo;
-    }
-
-    private static float normalizePlaybackTime(Aero_AnimationClip clip, float timeSeconds) {
-        if (clip == null || clip.length <= 0f || Float.isNaN(timeSeconds)
-            || Float.isInfinite(timeSeconds)) {
-            return 0f;
-        }
-        if (clip.loop == Aero_AnimationLoop.LOOP) {
-            float time = timeSeconds % clip.length;
-            return time < 0f ? time + clip.length : time;
-        }
-        if (timeSeconds <= 0f) return 0f;
-        return timeSeconds >= clip.length ? clip.length : timeSeconds;
     }
 
     /**
@@ -205,10 +124,10 @@ public class Aero_AnimationPlayback {
      */
     public void setPlaybackTime(float timeSeconds) {
         Aero_AnimationClip clip = getCurrentClip();
-        float time = normalizePlaybackTime(clip, timeSeconds);
+        float time = Aero_AnimationTime.normalize(clip, timeSeconds);
         playbackTime = time;
         prevPlaybackTime = time;
-        resetSampleCursors();
+        cursors.reset();
     }
 
     /**
@@ -241,7 +160,7 @@ public class Aero_AnimationPlayback {
         if (clipChanged) {
             playbackTime = 0f;
             prevPlaybackTime = 0f;
-            resetSampleCursors();
+            cursors.reset();
         }
     }
 
@@ -262,8 +181,7 @@ public class Aero_AnimationPlayback {
     public void setStateWithTransition(int stateId, int ticks) {
         if (ticks <= 0) {
             setState(stateId);
-            transitionTicks = 0;
-            transitionRemaining = 0;
+            transition.cancel();
             return;
         }
         String oldClip = def.getClipName(currentState);
@@ -274,15 +192,13 @@ public class Aero_AnimationPlayback {
             currentState = stateId;
             return;
         }
-        captureSnapshot();
-        transitionTicks = ticks;
-        transitionRemaining = ticks;
+        transition.start(getCurrentClip(), playbackTime, ticks);
         setState(stateId);
     }
 
     /** True while a transition is still ramping the snapshot toward the new clip. */
     public boolean inTransition() {
-        return transitionRemaining > 0 && transitionTicks > 0;
+        return transition.active();
     }
 
     /**
@@ -291,14 +207,7 @@ public class Aero_AnimationPlayback {
      * duration; clamps at 1 once the transition ends.
      */
     public float getTransitionAlpha(float partialTick) {
-        if (transitionTicks <= 0) return 1f;
-        // ticksDone counts from 1 on the first tick after setState until
-        // it reaches transitionTicks — partialTick smooths the boundaries
-        // so the blend doesn't step on tick edges.
-        float ticksDone = (transitionTicks - transitionRemaining) + partialTick;
-        if (ticksDone >= transitionTicks) return 1f;
-        if (ticksDone <= 0f) return 0f;
-        return ticksDone / (float) transitionTicks;
+        return transition.alpha(partialTick);
     }
 
     /**
@@ -313,25 +222,25 @@ public class Aero_AnimationPlayback {
     public boolean sampleRotBlended(Aero_AnimationClip clip, int boneIdx, String boneName,
                                     float time, float partialTick, float[] out) {
         boolean got = clip != null && boneIdx >= 0
-            && clip.sampleRotInto(boneIdx, time, out, ensureRotCursors(clip));
-        return blendWithSnapshot(snapshotRot, boneName, partialTick, got, out);
+            && clip.sampleRotInto(boneIdx, time, out, cursors.rotation(clip));
+        return transition.blend(Aero_AnimationTransition.ROTATION, boneName, partialTick, got, out);
     }
 
     public boolean samplePosBlended(Aero_AnimationClip clip, int boneIdx, String boneName,
                                     float time, float partialTick, float[] out) {
         boolean got = clip != null && boneIdx >= 0
-            && clip.samplePosInto(boneIdx, time, out, ensurePosCursors(clip));
-        return blendWithSnapshot(snapshotPos, boneName, partialTick, got, out);
+            && clip.samplePosInto(boneIdx, time, out, cursors.position(clip));
+        return transition.blend(Aero_AnimationTransition.POSITION, boneName, partialTick, got, out);
     }
 
     public boolean sampleSclBlended(Aero_AnimationClip clip, int boneIdx, String boneName,
                                     float time, float partialTick, float[] out) {
         boolean got = clip != null && boneIdx >= 0
-            && clip.sampleSclInto(boneIdx, time, out, ensureSclCursors(clip));
+            && clip.sampleSclInto(boneIdx, time, out, cursors.scale(clip));
         // Scale rests at 1 (identity), not 0. A bone present in the OLD clip
         // but absent from the NEW one must fade its scale toward 1, not 0 —
         // otherwise the part collapses into the pivot during crossfade.
-        return blendWithSnapshot(snapshotScl, boneName, partialTick, got, out, 1f);
+        return transition.blend(Aero_AnimationTransition.SCALE, boneName, partialTick, got, out);
     }
 
     /**
@@ -341,9 +250,9 @@ public class Aero_AnimationPlayback {
     public boolean sampleUvOffsetBlended(Aero_AnimationClip clip, int boneIdx, String boneName,
                                          float time, float partialTick, float[] out) {
         boolean got = clip != null && boneIdx >= 0
-            && clip.sampleUvOffsetInto(boneIdx, time, out, ensureUvOffsetCursors(clip));
+            && clip.sampleUvOffsetInto(boneIdx, time, out, cursors.uvOffset(clip));
         // UV offset rests at 0 (identity, no scroll).
-        return blendWithSnapshot(snapshotUvOffset, boneName, partialTick, got, out, 0f);
+        return transition.blend(Aero_AnimationTransition.UV_OFFSET, boneName, partialTick, got, out);
     }
 
     /**
@@ -353,166 +262,9 @@ public class Aero_AnimationPlayback {
     public boolean sampleUvScaleBlended(Aero_AnimationClip clip, int boneIdx, String boneName,
                                         float time, float partialTick, float[] out) {
         boolean got = clip != null && boneIdx >= 0
-            && clip.sampleUvScaleInto(boneIdx, time, out, ensureUvScaleCursors(clip));
+            && clip.sampleUvScaleInto(boneIdx, time, out, cursors.uvScale(clip));
         // UV scale rests at 1 (identity).
-        return blendWithSnapshot(snapshotUvScale, boneName, partialTick, got, out, 1f);
-    }
-
-    private int[] ensureRotCursors(Aero_AnimationClip clip) {
-        ensureCursorClip(clip);
-        if (rotCursors == null || rotCursors.length < clip.boneNames.length) {
-            rotCursors = newCursorArray(clip.boneNames.length);
-        }
-        return rotCursors;
-    }
-
-    private int[] ensurePosCursors(Aero_AnimationClip clip) {
-        ensureCursorClip(clip);
-        if (posCursors == null || posCursors.length < clip.boneNames.length) {
-            posCursors = newCursorArray(clip.boneNames.length);
-        }
-        return posCursors;
-    }
-
-    private int[] ensureSclCursors(Aero_AnimationClip clip) {
-        ensureCursorClip(clip);
-        if (sclCursors == null || sclCursors.length < clip.boneNames.length) {
-            sclCursors = newCursorArray(clip.boneNames.length);
-        }
-        return sclCursors;
-    }
-
-    private int[] ensureUvOffsetCursors(Aero_AnimationClip clip) {
-        ensureCursorClip(clip);
-        if (uvOffsetCursors == null || uvOffsetCursors.length < clip.boneNames.length) {
-            uvOffsetCursors = newCursorArray(clip.boneNames.length);
-        }
-        return uvOffsetCursors;
-    }
-
-    private int[] ensureUvScaleCursors(Aero_AnimationClip clip) {
-        ensureCursorClip(clip);
-        if (uvScaleCursors == null || uvScaleCursors.length < clip.boneNames.length) {
-            uvScaleCursors = newCursorArray(clip.boneNames.length);
-        }
-        return uvScaleCursors;
-    }
-
-    private void ensureCursorClip(Aero_AnimationClip clip) {
-        if (cursorClip == clip) return;
-        cursorClip = clip;
-        resetCursorArray(rotCursors);
-        resetCursorArray(posCursors);
-        resetCursorArray(sclCursors);
-        resetCursorArray(uvOffsetCursors);
-        resetCursorArray(uvScaleCursors);
-    }
-
-    private void resetSampleCursors() {
-        cursorClip = null;
-        resetCursorArray(rotCursors);
-        resetCursorArray(posCursors);
-        resetCursorArray(sclCursors);
-        resetCursorArray(uvOffsetCursors);
-        resetCursorArray(uvScaleCursors);
-    }
-
-    private static int[] newCursorArray(int length) {
-        int[] cursors = new int[length];
-        Arrays.fill(cursors, -1);
-        return cursors;
-    }
-
-    private static void resetCursorArray(int[] cursors) {
-        if (cursors != null) Arrays.fill(cursors, -1);
-    }
-
-    /**
-     * Shared blend kernel for the three sample channels. Picks one of three
-     * outcomes based on whether the new clip + the snapshot have data for
-     * the given bone:
-     *
-     * <ul>
-     *   <li>both → linear lerp from snapshot to new value, ratio = alpha</li>
-     *   <li>only new → return new value as-is (no fade-in needed since the
-     *       previous pose for this bone was identity)</li>
-     *   <li>only snapshot → fade snapshot value out toward {@code restValue}
-     *       as alpha→1 (rotation/position rest at 0, scale rests at 1) so a
-     *       bone present in the OLD clip but absent from the NEW one
-     *       returns to its rest pose smoothly instead of snapping</li>
-     * </ul>
-     */
-    private boolean blendWithSnapshot(Map snapshotMap, String boneName, float partialTick,
-                                      boolean newSampleValid, float[] out) {
-        return blendWithSnapshot(snapshotMap, boneName, partialTick, newSampleValid, out, 0f);
-    }
-
-    private boolean blendWithSnapshot(Map snapshotMap, String boneName, float partialTick,
-                                      boolean newSampleValid, float[] out, float restValue) {
-        if (!inTransition() || snapshotMap == null || boneName == null) {
-            return newSampleValid;
-        }
-        float[] snap = (float[]) snapshotMap.get(boneName);
-        if (snap == null) return newSampleValid;
-
-        float a = getTransitionAlpha(partialTick);
-        if (newSampleValid) {
-            out[0] = snap[0] + (out[0] - snap[0]) * a;
-            out[1] = snap[1] + (out[1] - snap[1]) * a;
-            out[2] = snap[2] + (out[2] - snap[2]) * a;
-        } else {
-            // Lerp snapshot → restValue as alpha goes 0 → 1.
-            out[0] = snap[0] + (restValue - snap[0]) * a;
-            out[1] = snap[1] + (restValue - snap[1]) * a;
-            out[2] = snap[2] + (restValue - snap[2]) * a;
-        }
-        return true;
-    }
-
-    /**
-     * Captures the OLD clip's pose at the current playback time into the
-     * snapshot maps, so subsequent sampleXxxBlended calls can fade from
-     * here to the new clip.
-     *
-     * <p>Reuses the same map instances across transitions to avoid GC
-     * pressure from repeated state changes. {@code snapshotScratch} holds
-     * the per-call read-out so each captured pose only allocates the
-     * tiny float[3] that will live in the map.
-     */
-    private void captureSnapshot() {
-        Aero_AnimationClip clip = getCurrentClip();
-        if (clip == null) return;
-
-        if (snapshotRot == null) snapshotRot = new HashMap();
-        else                     snapshotRot.clear();
-        if (snapshotPos == null) snapshotPos = new HashMap();
-        else                     snapshotPos.clear();
-        if (snapshotScl == null) snapshotScl = new HashMap();
-        else                     snapshotScl.clear();
-        if (snapshotUvOffset == null) snapshotUvOffset = new HashMap();
-        else                          snapshotUvOffset.clear();
-        if (snapshotUvScale == null) snapshotUvScale = new HashMap();
-        else                         snapshotUvScale.clear();
-
-        float time = playbackTime;
-        for (int bi = 0; bi < clip.boneNames.length; bi++) {
-            String name = clip.boneNames[bi];
-            if (clip.sampleRotInto(bi, time, snapshotScratch)) {
-                snapshotRot.put(name, new float[]{snapshotScratch[0], snapshotScratch[1], snapshotScratch[2]});
-            }
-            if (clip.samplePosInto(bi, time, snapshotScratch)) {
-                snapshotPos.put(name, new float[]{snapshotScratch[0], snapshotScratch[1], snapshotScratch[2]});
-            }
-            if (clip.sampleSclInto(bi, time, snapshotScratch)) {
-                snapshotScl.put(name, new float[]{snapshotScratch[0], snapshotScratch[1], snapshotScratch[2]});
-            }
-            if (clip.sampleUvOffsetInto(bi, time, snapshotScratch)) {
-                snapshotUvOffset.put(name, new float[]{snapshotScratch[0], snapshotScratch[1], snapshotScratch[2]});
-            }
-            if (clip.sampleUvScaleInto(bi, time, snapshotScratch)) {
-                snapshotUvScale.put(name, new float[]{snapshotScratch[0], snapshotScratch[1], snapshotScratch[2]});
-            }
-        }
+        return transition.blend(Aero_AnimationTransition.UV_SCALE, boneName, partialTick, got, out);
     }
 
     /**
