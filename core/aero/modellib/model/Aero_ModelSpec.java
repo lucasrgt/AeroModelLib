@@ -367,7 +367,7 @@ public final class Aero_ModelSpec {
 
         private Aero_MeshModel resolveMeshModel() {
             if (kind != Kind.MESH) return null;
-            return meshModel != null ? meshModel : Aero_ObjLoader.load(modelPath);
+            return meshModel != null ? meshModel : loadMesh(modelPath);
         }
 
         private Aero_MeshModel[] resolveMeshLodModels() {
@@ -379,7 +379,7 @@ public final class Aero_ModelSpec {
             for (int i = 0; i < n; i++) {
                 Aero_MeshModel model = (Aero_MeshModel) meshLodModels.get(i);
                 String path = (String) meshLodPaths.get(i);
-                out[i] = model != null ? model : Aero_ObjLoader.load(path);
+                out[i] = model != null ? model : loadMesh(path);
             }
             return out;
         }
@@ -409,6 +409,12 @@ public final class Aero_ModelSpec {
                 throw new IllegalArgumentException(name + " must be finite");
             }
             if (value < 0.0d) throw new IllegalArgumentException(name + " must be >= 0");
+        }
+
+        private static Aero_MeshModel loadMesh(String path) {
+            return path.toLowerCase(java.util.Locale.ROOT).endsWith(".three.json")
+                ? Aero_ThreeJsonLoader.load(path)
+                : Aero_ObjLoader.load(path);
         }
     }
 }

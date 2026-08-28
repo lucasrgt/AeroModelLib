@@ -575,7 +575,7 @@ bone-index lookups for each channel.
 | Layer | Classes | Responsibility |
 |-------|---------|---------------|
 | **Data (immutable)** | `Aero_JsonModel`, `Aero_MeshModel`, `Aero_AnimationBundle`, `Aero_AnimationClip` | Store loaded data. Thread-safe. Store as `static final`. |
-| **Loading (cached)** | `Aero_JsonModelLoader`, `Aero_ObjLoader`, `Aero_AnimationLoader` | Read files from classpath, parse, cache by path with synchronized bounded LRU caches. |
+| **Loading (cached)** | `Aero_JsonModelLoader`, `Aero_ObjLoader`, `Aero_ThreeJsonLoader`, `Aero_AnimationLoader` | Read files from classpath, parse, cache by path with synchronized bounded LRU caches. |
 | **Specs (declarative)** | `Aero_AnimationSpec`, `Aero_ModelSpec` | Bundle common integration wiring into reusable static declarations. |
 | **Definition** | `Aero_AnimationDefinition` | Maps state IDs to clip names. One per machine/entity type. |
 | **Playback (mutable)** | `Aero_AnimationPlayback` | Platform-neutral tick, setState, interpolation, clip cache. |
@@ -690,6 +690,49 @@ f ...
 ```java
 public static final Aero_MeshModel MODEL = Aero_ObjLoader.load("/models/MyMachine.obj");
 ```
+
+### Three.js Object/Scene JSON
+
+`Aero_ThreeJsonLoader` imports the JSON emitted by Three.js
+`Object3D.toJSON()` or `BufferGeometry.toJSON()` directly into the same
+`Aero_MeshModel` used by OBJ. Save these assets with the `.three.json` suffix:
+
+```java
+public static final Aero_MeshModel MODEL =
+    Aero_ThreeJsonLoader.load("/models/MyMachine.three.json");
+
+public static final Aero_ModelSpec SPEC =
+    Aero_ModelSpec.mesh("/models/MyMachine.three.json")
+        .texture("/block/my_machine.png")
+        .build();
+```
+
+The declarative `mesh(String)` API selects this loader automatically for
+`.three.json`; other mesh paths remain OBJ. The importer supports indexed and
+non-indexed `BufferGeometry`, composes parent/child matrices, flips texture V
+to Aero's convention, and merges children under their nearest named object.
+Named Three.js meshes or groups become `namedGroups`; unnamed meshes remain
+static geometry.
+
+Three.js procedural geometries serialize constructor parameters instead of
+vertex buffers until baked. Convert them to plain `BufferGeometry` before
+calling `toJSON()`:
+
+```js
+scene.traverse((object) => {
+  if (object.isMesh) {
+    object.geometry = new THREE.BufferGeometry().copy(object.geometry);
+  }
+});
+
+const json = JSON.stringify(scene.toJSON());
+```
+
+Materials, lights, cameras, embedded textures, Three.js animation clips,
+skinning, morph attributes, lines, points, and instanced-mesh transforms are
+not imported. Bind the texture and declare animation through Aero's existing
+APIs. Model units pass through unchanged; use `Aero_ModelSpec.scale(...)` when
+the Three.js scene was authored in pixels or another unit system.
 
 ### Brightness classification
 

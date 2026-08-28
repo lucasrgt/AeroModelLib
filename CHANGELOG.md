@@ -7,6 +7,10 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Direct Three.js scene JSON loading.** `Aero_ThreeJsonLoader` imports baked,
+  indexed or non-indexed `BufferGeometry` from `Object3D.toJSON()` and
+  `BufferGeometry.toJSON()`, including hierarchy transforms, UVs, and named
+  groups. `Aero_ModelSpec.mesh(...)` dispatches `.three.json` assets to it.
 - **Repository-owned optimization catalog.** Thirty-two stable `aero.*`
   records now live under `worldline/optimizations/catalog`, with status, defaults,
   behavioral deltas, risks, rollback paths, source symbols, and evidence. The

@@ -22,7 +22,7 @@
 </p>
 
 AeroModelLib brings a modern content-authoring workflow to Minecraft Beta
-1.7.3: Blockbench JSON models, named OBJ meshes, GeckoLib-style animation
+1.7.3: Blockbench JSON models, named OBJ and Three.js meshes, GeckoLib-style animation
 bundles, skeletal hierarchy, interpolation, events, morph targets, LOD, and
 batch-aware rendering on the fixed-function pipeline the game already ships.
 
@@ -33,7 +33,7 @@ surface.
 <table>
 <tr><td><b>One model contract</b></td><td><code>Aero_ModelSpec</code> keeps mesh, texture, animation, transform, style, culling, and LOD settings together.</td></tr>
 <tr><td><b>One shared core</b></td><td>Loaders, animation, model data, skeletal math, and render policy compile for both supported runtimes.</td></tr>
-<tr><td><b>Authoring-first</b></td><td>Use Blockbench, OBJ groups, and strict <code>.anim.json</code> files instead of hand-writing long OpenGL transform chains.</td></tr>
+<tr><td><b>Authoring-first</b></td><td>Use Blockbench, OBJ or Three.js scene JSON, and strict <code>.anim.json</code> files instead of hand-writing long OpenGL transform chains.</td></tr>
 <tr><td><b>Fixed-function honest</b></td><td>No shaders, modern instancing, or GPU features that Beta 1.7.3 cannot provide.</td></tr>
 <tr><td><b>Performance with rollback</b></td><td>Batching, culling, display-list pages, budgets, and experimental paths expose explicit flags or consumer opt-ins.</td></tr>
 </table>
@@ -85,6 +85,7 @@ Put model, texture, and animation resources on the mod classpath:
 assets/
   models/
     crusher.obj
+    robot.three.json
     crusher.anim.json
   block/
     crusher.png
@@ -182,6 +183,16 @@ Blockbench
                          ModLoader / RetroMCP      StationAPI / Babric
 ```
 
+Three.js scenes can join the same mesh path after their geometries are baked:
+
+```text
+Three.js Object3D.toJSON() --> robot.three.json --> Aero_ThreeJsonLoader
+```
+
+`Aero_ModelSpec.mesh("/models/robot.three.json")` selects the Three.js loader
+automatically. The resulting `Aero_MeshModel` uses the existing mesh renderer,
+LOD, named-group animation, and texture binding APIs.
+
 The converter is a standalone Java tool. It turns Blockbench `.bbmodel`
 animation data into Aero's strict animation schema:
 
@@ -205,6 +216,7 @@ tools\convert.bat path\to\crusher.bbmodel
 | --- | --- |
 | Blockbench JSON | Cached element-model loading and world/inventory rendering |
 | Wavefront OBJ | Flattened mesh loading with named groups for animated parts |
+| Three.js scene JSON | Baked BufferGeometry loading with hierarchy transforms and named groups |
 | Declarative model specs | One source of truth for model, texture, animation, transform, style, and LOD |
 | Per-call styling | Tint, alpha, alpha clipping, additive blending, depth test, and face culling |
 | Inventory thumbnails | Centralized auto-scale and vertical alignment |
