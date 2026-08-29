@@ -7,6 +7,13 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Dead batch-pose reset stores removed.** Reused batch rows now clear their
+  activity bits without first writing seventeen default fields into every
+  pose: active rows are fully overwritten by `copyPose`, while inactive rows
+  are never read. A diverse-phase 20-second pair improved from 39.26 to 40.96
+  FPS, cut Aero flush from 11.42 to 10.87 ms, and reduced p95 from 38.7 to
+  32.7 ms; a confirming candidate reached 44.84 FPS. Catalog:
+  `aero.render.animated-batcher` (active, default on).
 - **Unique-pose fused Tessellator staging.** Rotating animation poses that
   cannot share a transformed vertex stream now fuse the existing CPU pose
   transform with direct writes to StationAPI's eight-int Tessellator buffer.

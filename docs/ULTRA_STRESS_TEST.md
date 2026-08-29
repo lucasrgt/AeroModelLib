@@ -138,6 +138,19 @@ vertices/frame. One oracle run suffered unrelated tick/chunk slowdown and was
 retained as an invalid environmental outlier rather than selected as evidence.
 The feature is default-on; use `-Daero.tessellatorbulk=false` for rollback.
 
+### Dead batch-pose reset elision (promoted)
+
+Batch pose rows keep reusable mutable pose objects, but each active entry is
+fully overwritten by `copyPose` before rendering and inactive entries are
+guarded exclusively by their activity bit. The batcher therefore clears the
+activity bits without writing seventeen default fields into every pose first.
+
+In a counterbalanced 20-second diverse-phase pair, reset elision reached
+40.96 versus 39.26 FPS, reduced Aero flush from 11.42 to 10.87 ms, and
+improved p95 from 38.7 to 32.7 ms. A confirming candidate reached 44.84 FPS,
+10.29 ms of flush, and 27.8 ms p95. This is an internal removal of dead stores;
+the public pose-reset contract used by actual sampling remains unchanged.
+
 ### Animation curve LUT qualification (rejected)
 
 The diverse-phase tower was also used to qualify `-Daero.anim.lut=true` after

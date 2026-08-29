@@ -209,8 +209,6 @@ static void prepareBatchPoseRow(int instance, int boneCount) {
         for (int bone = 0; bone < boneCount; bone++) {
             if (BATCH_POSES[instance][bone] == null) {
                 BATCH_POSES[instance][bone] = new Aero_BoneRenderPose();
-            } else {
-                BATCH_POSES[instance][bone].reset();
             }
             BATCH_POSE_ACTIVE[instance][bone] = false;
         }
