@@ -32,8 +32,7 @@ import aero.modellib.util.Aero_Profiler;
  *   - Triangles pre-classified into 4 brightness groups at parse time
  *   - setColorOpaque_F called 4× per draw (vs N× in the naive approach)
  *   - Coordinate division by `sc` replaced with single multiplication
- *   - Smooth-light path samples each (x,z) world column once per draw and
- *     bilinearly interpolates from the cache (vs 4 lookups per triangle)
+ *   - Smooth-light drawing lives in Aero_MeshSmoothLightRenderer
  *   - renderAnimated batches GL state changes outside the named-group loop
  *     and iterates a precomputed entry array (no Iterator/Entry alloc)
  *   - Bone/pivot resolution is memoized per (clip identity) on the model,
@@ -77,7 +76,6 @@ class Aero_MeshRendererState {
         Math.max(0, Integer.getInteger("aero.skeletalLod.depth", 1).intValue());
 
     // Reusable scratch buffers — render thread is single-threaded in Beta 1.7.3.
-    static float[] LIGHT_CACHE = new float[64];
     static final float[] SCRATCH_ROT = new float[3];
     static final float[] SCRATCH_POS = new float[3];
     static final float[] SCRATCH_SCL = new float[3];

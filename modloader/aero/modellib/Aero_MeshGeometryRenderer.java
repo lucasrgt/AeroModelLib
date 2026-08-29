@@ -32,8 +32,7 @@ import aero.modellib.util.Aero_Profiler;
  *   - Triangles pre-classified into 4 brightness groups at parse time
  *   - setColorOpaque_F called 4× per draw (vs N× in the naive approach)
  *   - Coordinate division by `sc` replaced with single multiplication
- *   - Smooth-light path samples each (x,z) world column once per draw and
- *     bilinearly interpolates from the cache (vs 4 lookups per triangle)
+ *   - Smooth-light drawing lives in Aero_MeshSmoothLightRenderer
  *   - renderAnimated batches GL state changes outside the named-group loop
  *     and iterates a precomputed entry array (no Iterator/Entry alloc)
  *   - Bone/pivot resolution is memoized per (clip identity) on the model,
@@ -69,10 +68,9 @@ static void drawGroupsForInventory(Tessellator tess, float[][][] groups, float i
 static void drawGroupsMorph(Tessellator tess, Aero_MeshModel model,
                                          float brightness, Aero_RenderOptions options,
                                          Aero_MorphState morphState) {
-        // Snapshot active (target, weight) pairs so the inner loop is a flat
-        // index walk instead of a HashMap iteration per triangle.
-        java.util.Map weights = morphState.getWeightsView();
-        int upperBound = weights.size();
+        // Indexed weight reads — no map iterator, Map.Entry, or Float unboxing
+        // per draw (Aero_MorphState stores parallel name/weight arrays).
+        int upperBound = morphState.activeCount();
         if (SCRATCH_MORPH_TARGETS.length < upperBound) {
             SCRATCH_MORPH_TARGETS = new Aero_MorphTarget[upperBound];
             SCRATCH_MORPH_WEIGHTS = new float[upperBound];
@@ -80,15 +78,11 @@ static void drawGroupsMorph(Tessellator tess, Aero_MeshModel model,
         Aero_MorphTarget[] activeTargets = SCRATCH_MORPH_TARGETS;
         float[] activeWeights = SCRATCH_MORPH_WEIGHTS;
         int activeCount = 0;
-        java.util.Iterator it = weights.entrySet().iterator();
-        while (it.hasNext()) {
-            java.util.Map.Entry e = (java.util.Map.Entry) it.next();
-            float w = ((Float) e.getValue()).floatValue();
-            if (w == 0f) continue;
-            Aero_MorphTarget target = model.getMorphTarget((String) e.getKey());
+        for (int m = 0; m < upperBound; m++) {
+            Aero_MorphTarget target = model.getMorphTarget(morphState.nameAt(m));
             if (target == null) continue;
             activeTargets[activeCount] = target;
-            activeWeights[activeCount] = w;
+            activeWeights[activeCount] = morphState.weightAt(m);
             activeCount++;
         }
         if (activeCount == 0) {
@@ -157,64 +151,6 @@ static void drawGroups(Tessellator tess, float[][][] groups, float invSc,
                     tess.addVertexWithUV(t[10]*invSc, t[11]*invSc, t[12]*invSc,
                         t[13]*uScale + uOff, t[14]*vScale + vOff);
                 }
-            }
-        }
-        tess.draw();
-    }
-
-static void drawGroupsSmooth(Tessellator tess, float[][][] groups, float invSc,
-                                          Aero_MeshModel.SmoothLightData light,
-                                          World world, int ox, int topY, int oz,
-                                          Aero_RenderOptions options) {
-        if (!light.hasTriangles) return;
-        // +1 cell on the high side for the bilinear neighbor.
-        int xLo = Aero_MeshGeometryRenderer.fastFloor(ox + light.minX);
-        int xHi = Aero_MeshGeometryRenderer.fastFloor(ox + light.maxX) + 1;
-        int zLo = Aero_MeshGeometryRenderer.fastFloor(oz + light.minZ);
-        int zHi = Aero_MeshGeometryRenderer.fastFloor(oz + light.maxZ) + 1;
-        int w = xHi - xLo + 1;
-        int h = zHi - zLo + 1;
-
-        // 2. Populate the cache: one getLightBrightness per unique column.
-        int needed = w * h;
-        if (LIGHT_CACHE.length < needed) LIGHT_CACHE = new float[needed];
-        float[] cache = LIGHT_CACHE;
-        for (int zi = 0; zi < h; zi++) {
-            int row = zi * w;
-            int wz = zLo + zi;
-            for (int xi = 0; xi < w; xi++) {
-                cache[row + xi] = world.getLightBrightness(xLo + xi, topY, wz);
-            }
-        }
-
-        // 3. Draw using bilinear lookup from the cache.
-        tess.startDrawing(GL11.GL_TRIANGLES);
-        for (int g = 0; g < 4; g++) {
-            float[][] tris = groups[g];
-            if (tris.length == 0) continue;
-            float factor = Aero_MeshModel.BRIGHTNESS_FACTORS[g];
-            float[] centroidX = light.centroidX[g];
-            float[] centroidZ = light.centroidZ[g];
-            for (int i = 0; i < tris.length; i++) {
-                float[] t = tris[i];
-                float wx = ox + centroidX[i];
-                float wz = oz + centroidZ[i];
-                int x0i = Aero_MeshGeometryRenderer.fastFloor(wx);
-                int z0i = Aero_MeshGeometryRenderer.fastFloor(wz);
-                float tx = wx - x0i, tz = wz - z0i;
-                int cx = x0i - xLo;
-                int cz = z0i - zLo;
-                int row0 = cz * w;
-                int row1 = row0 + w;
-                float b00 = cache[row0 + cx];
-                float b10 = cache[row0 + cx + 1];
-                float b01 = cache[row1 + cx];
-                float b11 = cache[row1 + cx + 1];
-                float bright = Aero_MeshGeometryRenderer.lerp(Aero_MeshGeometryRenderer.lerp(b00, b10, tx), Aero_MeshGeometryRenderer.lerp(b01, b11, tx), tz) * factor;
-                tess.setColorRGBA_F(bright * options.tintR, bright * options.tintG, bright * options.tintB, options.alpha);
-                tess.addVertexWithUV(t[0]*invSc,  t[1]*invSc,  t[2]*invSc,  t[3],  t[4]);
-                tess.addVertexWithUV(t[5]*invSc,  t[6]*invSc,  t[7]*invSc,  t[8],  t[9]);
-                tess.addVertexWithUV(t[10]*invSc, t[11]*invSc, t[12]*invSc, t[13], t[14]);
             }
         }
         tess.draw();

@@ -112,7 +112,7 @@ static void renderModel(Aero_MeshModel model, double x, double y, double z,
                 Aero_MeshRenderer.applyRotation(rotation);
                 Aero_MeshRenderer.beginMeshState(options);
                 try {
-                    Aero_MeshGeometryRenderer.drawGroupsSmooth(tess, model.groups, model.invScale, model.getStaticSmoothLightData(),
+                    Aero_MeshSmoothLightRenderer.drawGroupsSmooth(tess, model.groups, model.invScale, model.getStaticSmoothLightData(),
                         world, ox, topY, oz, options);
                 } finally {
                     Aero_MeshRenderer.endMeshState();

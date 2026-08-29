@@ -1,7 +1,7 @@
 # Aero Optimization Catalog
 
 This repository owns the canonical metadata for AeroModelLib optimizations.
-The 44 records under `worldline/optimizations/catalog` describe Aero implementation
+The 46 records under `worldline/optimizations/catalog` describe Aero implementation
 details, defaults, risks, rollback paths, source symbols, and evidence using
 the neutral `worldline.optimization.v1` schema.
 
@@ -27,8 +27,8 @@ repository as the source of truth for every `aero.*` optimization ID.
 
 | Status | Count | Meaning in this inventory |
 | --- | ---: | --- |
-| Active | 27 | Shipped implementation with a supported production path; some still require consumer adoption. |
-| Candidate | 14 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
+| Active | 28 | Shipped implementation with a supported production path; some still require consumer adoption. |
+| Candidate | 15 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
 | Rejected | 2 | A known current implementation is unsafe or a measured regression. |
 | Retired | 1 | Historical implementation removed from current production source. |
 
@@ -40,8 +40,8 @@ remains active because the supported implementation is shipped.
 ### Active families
 
 - Allocation and cache control: bounded loader caches, hot-path sampling,
-  lookup and metadata caches, morph/IK scratch reuse, texture-ID caching, and
-  chunk-bake prewarm.
+  lookup and metadata caches, morph/IK scratch reuse, morph weight arrays,
+  texture-ID caching, and chunk-bake prewarm.
 - Render submission: animated batching, composite-state sorting, bone pages,
   at-rest display lists, block-entity cell indexing/pages, and
   individual-render skipping.
@@ -55,6 +55,7 @@ remains active because the supported implementation is shipped.
 
 - Animation LUT, motion-aware tick LOD, dense tick budget, and skeletal LOD.
 - OBJ hidden-face removal and consumer-authored mesh LODs.
+- TTL-bounded resolved smooth-light cache for static instances.
 - Cell-page fragmentation controls, prewarm, display-list budget, and the
   aggregate high-memory preset.
 - Chunk-scoped paletted cache, chunk compile budget, frame pacing, and the

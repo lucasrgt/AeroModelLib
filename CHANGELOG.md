@@ -7,6 +7,25 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Opt-in resolved smooth-light cache (smooth-light-resolved).**
+  `Aero_SmoothLightCache` keeps the resolved per-triangle brightness of each
+  (world, geometry, block position) smooth-lit instance under a bounded TTL
+  (`-Daero.smoothlight.cache=true`, `-Daero.smoothlight.cacheMs=50`,
+  `-Daero.smoothlight.cacheMax=1024`). Steady-state draws of static block
+  entities skip the world light-grid sampling and the per-triangle bilinear
+  blend entirely; a local light change may render at most one TTL late. The
+  smooth draw path itself moved into `Aero_MeshSmoothLightRenderer` on both
+  runtimes, split into resolve + emit passes that keep the GL stream
+  byte-identical when the cache is off. Catalog:
+  `aero.render.smooth-light-resolved-cache` (candidate, default off).
+- **Morph weights in parallel arrays (morph-weight-arrays).**
+  `Aero_MorphState` now stores (name, weight) pairs in parallel arrays and
+  exposes indexed accessors (`activeCount`/`nameAt`/`weightAt`). Both
+  runtimes' `drawGroupsMorph` read weights by index — no map iterator,
+  `Map.Entry` views, or `Float` unboxing per morph-active draw.
+  `getWeightsView()` becomes a per-call snapshot; validation, zero-eviction,
+  and NBT round-trip semantics are unchanged. Catalog:
+  `aero.skeletal.morph-weight-arrays` (active, default on).
 - **Direct Three.js scene JSON loading.** `Aero_ThreeJsonLoader` imports baked,
   indexed or non-indexed `BufferGeometry` from `Object3D.toJSON()` and
   `BufferGeometry.toJSON()`, including hierarchy transforms, UVs, and named
