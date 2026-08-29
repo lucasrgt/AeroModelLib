@@ -126,8 +126,17 @@ vertex calls.
 
 The synchronized candidate gained 18.8% throughput and reduced Aero flush by
 36.6%. Under deterministic diverse phases, the largest eligible batch stayed
-below the workload gate and `maxTessellatorBulkVertices` remained zero. The
-feature is default-on; use `-Daero.tessellatorbulk=false` for rollback.
+below the shared-stream workload gate. Direct staging now also covers unique
+rotating poses, fusing the unchanged CPU transform with the same eight-int
+buffer write.
+
+Two 30-second diverse-phase candidate runs reached 44.75 and 45.82 FPS,
+versus the prior 43.31-FPS exact baseline. The cleanest counterbalanced pair
+measured 45.82 versus 40.52 FPS, while Aero flush fell from 12.59 to 10.18 ms.
+The candidate also improved p99 from 52.1 to 45.2 ms and staged 544,320
+vertices/frame. One oracle run suffered unrelated tick/chunk slowdown and was
+retained as an invalid environmental outlier rather than selected as evidence.
+The feature is default-on; use `-Daero.tessellatorbulk=false` for rollback.
 
 ### Animation curve LUT qualification (rejected)
 

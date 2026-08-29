@@ -120,6 +120,8 @@ static void emitBoneInstanceBatched(Tessellator tess, float[][] tris, float invS
             }
             return;
         }
+        if (Aero_TessellatorBulkWriter.writeUniquePose(
+                tris, invSc, pose, instX, instY, instZ)) return;
 
         // Pre-compute trig once per (instance, bone). The same matrix
         // applies to every vertex of this bone for this instance.

@@ -7,6 +7,16 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Unique-pose fused Tessellator staging.** Rotating animation poses that
+  cannot share a transformed vertex stream now fuse the existing CPU pose
+  transform with direct writes to StationAPI's eight-int Tessellator buffer.
+  Unsupported/color-disabled paths retain ordinary vertex calls. In two
+  diverse-phase 30-second candidates,
+  throughput reached 44.75 and 45.82 FPS versus the prior 43.31-FPS baseline;
+  the clean counterbalanced pair measured 45.82 versus 40.52 FPS while Aero
+  flush fell from 12.59 to 10.18 ms. Disable all governed bulk staging with
+  `-Daero.tessellatorbulk=false`. Catalog:
+  `aero.render.tessellator-bulk-staging` (active, default on).
 - **Animation curve LUT qualified and rejected.** The opt-in LUT now stores
   samples in one contiguous float array, defaults to 256 samples, validates
   bounded interpolation error at load time, and leaves STEP tracks and unsafe
