@@ -15,6 +15,8 @@ import net.minecraft.client.Minecraft;
  */
 @OptimizationRef({"aero.render.texture-id-cache"})
 public final class Aero_TextureBinder {
+    private static final boolean CACHE_ENABLED =
+        !"false".equalsIgnoreCase(System.getProperty("aero.textureBinder.cache"));
     private static final HashMap<String, Integer> IDS_BY_PATH = new HashMap<String, Integer>();
     private static Object lastTextureManager;
 
@@ -27,6 +29,11 @@ public final class Aero_TextureBinder {
         if (!(game instanceof Minecraft)) return;
         Minecraft mc = (Minecraft) game;
         if (mc.textureManager == null) return;
+
+        if (!CACHE_ENABLED) {
+            mc.textureManager.bindTexture(mc.textureManager.getTextureId(path));
+            return;
+        }
 
         if (mc.textureManager != lastTextureManager) {
             IDS_BY_PATH.clear();

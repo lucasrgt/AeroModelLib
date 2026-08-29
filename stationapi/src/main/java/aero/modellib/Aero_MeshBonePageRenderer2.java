@@ -154,6 +154,7 @@ static void callPageBuckets(int[] ids, float brightness, Aero_RenderOptions opti
             GL11.glColor4f(bright * options.tintR, bright * options.tintG,
                            bright * options.tintB, options.alpha);
             GL11.glCallList(id);
+            bonePageListCallsThisFrame++;
         }
     }
 

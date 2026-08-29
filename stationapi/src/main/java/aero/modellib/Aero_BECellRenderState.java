@@ -28,7 +28,7 @@ class Aero_BECellRenderState {
     public static final boolean ENABLED =
         !"false".equalsIgnoreCase(System.getProperty("aero.becell.pages"));
     public static final boolean SKIP_INDIVIDUAL_RENDERERS =
-        !"false".equalsIgnoreCase(System.getProperty("aero.becell.skipIndividual"));
+        Boolean.parseBoolean(System.getProperty("aero.becell.skipIndividual", "false"));
 
     static final int MIN_INSTANCES =
         Aero_BECellGeometry.clampInt(Integer.getInteger("aero.becell.minInstances", 2).intValue(), 1, 4096);

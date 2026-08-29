@@ -379,6 +379,7 @@ tasks.register('runClientUltraStress') {
         def vertexReuse = (project.findProperty('ultraVertexReuse') ?: 'true').toString()
         def tessellatorBulk = (project.findProperty('ultraTessellatorBulk') ?: 'true').toString()
         def phaseSpread = (project.findProperty('ultraPhaseSpread') ?: 'false').toString()
+        def culls = (project.findProperty('ultraCulls') ?: 'false').toString()
         def worldName = 'AeroUltra-' + System.currentTimeMillis()
         def jfrFile = new File(runDir, 'aero-ultra.jfr').absolutePath
         def jfrRepo = new File(runDir, 'jfr-ultra-repo').absolutePath
@@ -394,8 +395,8 @@ tasks.register('runClientUltraStress') {
             '-Daero.ultra.world=' + worldName,
             '-Daero.ultra.durationSec=' + benchSec,
             '-Daero.animatedLOD=2048',
-            '-Daero.chunkvisibility=false',
-            '-Daero.frustumcull=false',
+            '-Daero.chunkvisibility=' + culls,
+            '-Daero.frustumcull=' + culls,
             '-Daero.profiler=' + profiler,
             '-Daero.clientarrays=' + clientArrays,
             '-Daero.batchposereuse=' + poseReuse,
@@ -419,7 +420,7 @@ tasks.register('runClientUltraStress') {
         runClient.ignoreExitValue = true
         println('[runClientUltraStress] layers=' + layers + ' (machines/tower='
             + (256 * Integer.parseInt(layers)) + ') spacing=' + spacing
-            + ' chunks; culls off; native saves on; profiler=' + profiler
+            + ' chunks; culls=' + culls + '; native saves on; profiler=' + profiler
             + '; clientArrays=' + clientArrays
             + '; poseReuse=' + poseReuse
             + '; vertexReuse=' + vertexReuse

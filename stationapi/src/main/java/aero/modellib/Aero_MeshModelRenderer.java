@@ -79,6 +79,7 @@ static void beginFrameCounters() {
         atRestRendersThisFrame = 0;
         atRestListCallsThisFrame = 0;
         atRestTessFallbacksThisFrame = 0;
+        bonePageListCallsThisFrame = 0;
     }
 
 static int atRestRendersThisFrame() {
@@ -91,6 +92,10 @@ static int atRestListCallsThisFrame() {
 
 static int atRestTessFallbacksThisFrame() {
         return atRestTessFallbacksThisFrame;
+    }
+
+static int bonePageListCallsThisFrame() {
+        return bonePageListCallsThisFrame;
     }
 
 static void renderModel(Aero_MeshModel model, double x, double y, double z,

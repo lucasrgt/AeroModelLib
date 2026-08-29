@@ -2,18 +2,22 @@ package aero.modellib.test;
 
 import aero.modellib.Aero_AnimatedBatcher;
 import aero.modellib.Aero_BECellRenderer;
+import aero.modellib.Aero_BECellIndex;
 import aero.modellib.Aero_DisplayListBudget;
 import aero.modellib.Aero_FrameSpikeLogger;
+import aero.modellib.Aero_ChunkVisibility;
+import aero.modellib.Aero_MeshRenderer;
+import aero.modellib.Aero_TextureBinder;
+import aero.modellib.render.Aero_AnimationRenderBudget;
+import aero.modellib.render.Aero_FrustumCull;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 /** Allocation-free online frame distribution for the ultra-stress client. */
 public final class AeroUltraStressCensus {
-    private static final long WARMUP_NS =
-        Long.getLong("aero.ultra.warmupSec", 30L).longValue() * 1_000_000_000L;
-    private static final long DURATION_NS =
-        Long.getLong("aero.ultra.durationSec", 180L).longValue() * 1_000_000_000L;
+    private static final long WARMUP_NS = AeroUltraStressConfig.WARMUP_SECONDS * 1_000_000_000L;
+    private static final long DURATION_NS = AeroUltraStressConfig.DURATION_SECONDS * 1_000_000_000L;
     private static final long BUCKET_NS = 100_000L;
     private static final long[] HISTOGRAM = new long[100_001];
     private static final String OUTPUT =
@@ -27,7 +31,11 @@ public final class AeroUltraStressCensus {
     private static int maxPosesReused, maxPosesResolved;
     private static int maxVerticesTransformed, maxVertexTransformsReused;
     private static int maxTessellatorBulkVertices;
-    private static int maxPages, maxCachedPages, maxLiveLists;
+    private static int maxPages, maxCachedPages, maxLiveLists, maxCellIndexEntries, maxTextureIds;
+    private static int maxImmediate, maxBonePageCalls, maxCellCalls;
+    private static int maxAtRestListCalls, maxAtRestFallbacks, maxViewCulled;
+    private static int maxVisibleChunks, maxAnimAccepted, maxAnimRejected;
+    private static int maxSmallObjectCulled;
     private static final long[] STAGE_SUMS = new long[9];
     private static final long[] WORST_STAGES = new long[9];
     private static final long[] CURRENT_STAGES = new long[9];
@@ -50,7 +58,10 @@ public final class AeroUltraStressCensus {
         long start = Aero_FrameSpikeLogger.frameStartNanos();
         if (start == 0L) return;
         long now = System.nanoTime();
-        if (firstFrameNs == 0L) firstFrameNs = now;
+        if (firstFrameNs == 0L) {
+            firstFrameNs = now;
+            AeroUltraJourney.beginAt(now);
+        }
         if (now - firstFrameNs < WARMUP_NS) return;
         if (measurementStartNs == 0L) {
             measurementStartNs = now;
@@ -91,6 +102,23 @@ public final class AeroUltraStressCensus {
         maxPages = Math.max(maxPages, Aero_BECellRenderer.pageRebuildsThisFrame());
         maxCachedPages = Math.max(maxCachedPages, Aero_BECellRenderer.cachedPageCount());
         maxLiveLists = Math.max(maxLiveLists, Aero_DisplayListBudget.liveLists());
+        maxCellIndexEntries = Math.max(maxCellIndexEntries, Aero_BECellIndex.entryCount());
+        maxTextureIds = Math.max(maxTextureIds, Aero_TextureBinder.cachedTextureCount());
+        maxImmediate = Math.max(maxImmediate, Aero_AnimatedBatcher.immediateRendersThisFrame());
+        maxBonePageCalls = Math.max(maxBonePageCalls, Aero_MeshRenderer.bonePageListCallsThisFrame());
+        maxCellCalls = Math.max(maxCellCalls, Aero_BECellRenderer.pageCallsThisFrame());
+        maxAtRestListCalls = Math.max(maxAtRestListCalls, Aero_MeshRenderer.atRestListCallsThisFrame());
+        maxAtRestFallbacks = Math.max(maxAtRestFallbacks, Aero_MeshRenderer.atRestTessFallbacksThisFrame());
+        maxViewCulled = Math.max(maxViewCulled, Aero_FrustumCull.beViewCulledThisFrame());
+        maxVisibleChunks = Math.max(maxVisibleChunks, Aero_ChunkVisibility.visibleChunkCount());
+        maxAnimAccepted = Math.max(maxAnimAccepted, Aero_AnimationRenderBudget.acceptedThisFrame());
+        maxAnimRejected = Math.max(maxAnimRejected, Aero_AnimationRenderBudget.rejectedThisFrame());
+        maxSmallObjectCulled = Math.max(maxSmallObjectCulled,
+            Aero_MeshRenderer.smallObjectCulledThisFrame());
+        AeroUltraJourneyCensus.record(AeroUltraJourney.phaseIndex(), frameNs,
+            Math.max(0L, Aero_FrameSpikeLogger.frameAllocatedBytes()),
+            Aero_AnimatedBatcher.queuedThisFrame(), Aero_AnimatedBatcher.immediateRendersThisFrame(),
+            Aero_FrustumCull.beViewCulledThisFrame(), Aero_ChunkVisibility.visibleChunkCount());
         if (frameNs > worstFrameNs) {
             worstFrameNs = frameNs;
             System.arraycopy(stages, 0, WORST_STAGES, 0, stages.length);
@@ -140,6 +168,10 @@ public final class AeroUltraStressCensus {
         pair(out, "schema", 1).append(',').append('\n');
         pair(out, "machinesPerChunk", AeroUltraStressConfig.machinesPerChunk()).append(',').append('\n');
         pair(out, "spacingChunks", AeroUltraStressConfig.SPACING_CHUNKS).append(',').append('\n');
+        pair(out, "towerChunksPopulated", AeroUltraStressScene.populatedTowerChunks()).append(',').append('\n');
+        pair(out, "machinesPlaced", AeroUltraStressScene.placedMachines()).append(',').append('\n');
+        pair(out, "benchmarkCameraProtected", 1).append(',').append('\n');
+        pair(out, "benchmarkCameraRescues", AeroUltraJourney.cameraRescues()).append(',').append('\n');
         pair(out, "frames", frames).append(',').append('\n');
         pair(out, "measurementStartEpochMillis", measurementStartEpochMillis).append(',').append('\n');
         pair(out, "measurementEndEpochMillis", measurementEndEpochMillis).append(',').append('\n');
@@ -171,6 +203,19 @@ public final class AeroUltraStressCensus {
         pair(out, "maxPageRebuilds", maxPages).append(',').append('\n');
         pair(out, "maxCachedPages", maxCachedPages).append(',').append('\n');
         pair(out, "maxLiveDisplayLists", maxLiveLists).append(',').append('\n');
+        pair(out, "maxCellIndexEntries", maxCellIndexEntries).append(',').append('\n');
+        pair(out, "maxTextureIds", maxTextureIds).append(',').append('\n');
+        pair(out, "maxImmediateRenders", maxImmediate).append(',').append('\n');
+        pair(out, "maxBonePageListCalls", maxBonePageCalls).append(',').append('\n');
+        pair(out, "maxCellPageCalls", maxCellCalls).append(',').append('\n');
+        pair(out, "maxAtRestListCalls", maxAtRestListCalls).append(',').append('\n');
+        pair(out, "maxAtRestFallbacks", maxAtRestFallbacks).append(',').append('\n');
+        pair(out, "maxViewCulled", maxViewCulled).append(',').append('\n');
+        pair(out, "maxVisibleChunks", maxVisibleChunks).append(',').append('\n');
+        pair(out, "maxAnimationAccepted", maxAnimAccepted).append(',').append('\n');
+        pair(out, "maxAnimationRejected", maxAnimRejected).append(',').append('\n');
+        pair(out, "maxSmallObjectCulled", maxSmallObjectCulled).append(',').append('\n');
+        AeroUltraJourneyCensus.appendJson(out);
         out.append("  \"stageOrder\": [\"clientTick\",\"worldSave\",\"chunkCompileMax\","
             + "\"terrainRender\",\"aeroPrepare\",\"cellRebuild\",\"entityRender\","
             + "\"aeroFlush\",\"displayUpdate\"],\n");

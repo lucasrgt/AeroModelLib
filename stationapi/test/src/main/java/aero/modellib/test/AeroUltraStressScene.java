@@ -8,6 +8,7 @@ import net.modificationstation.stationapi.api.event.world.gen.WorldGenEvent;
 final class AeroUltraStressScene {
     private static boolean announced;
     private static int centralBaseY;
+    private static int populatedTowerChunks, placedMachines;
 
     private AeroUltraStressScene() {}
 
@@ -27,6 +28,8 @@ final class AeroUltraStressScene {
             }
             if (AeroUltraStressConfig.SOLID_FLOORS) fillFloor(event, y + 1);
         }
+        populatedTowerChunks++;
+        placedMachines += AeroUltraStressConfig.machinesPerChunk();
         if (!announced) {
             announced = true;
             System.out.println("[AeroUltraStress] active machinesPerChunk="
@@ -41,6 +44,9 @@ final class AeroUltraStressScene {
     static int centralBaseY() {
         return centralBaseY;
     }
+
+    static int populatedTowerChunks() { return populatedTowerChunks; }
+    static int placedMachines() { return placedMachines; }
 
     private static void placeMachine(WorldGenEvent.ChunkDecoration event,
                                      int dx, int y, int dz, int kind) {

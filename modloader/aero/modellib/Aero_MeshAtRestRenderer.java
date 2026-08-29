@@ -113,6 +113,7 @@ static void renderModelAtRestBody(Aero_MeshModel model, double x, double y, doub
 
 static boolean renderAtRestViaLists(Aero_MeshModel model, float brightness,
                                                 Aero_RenderOptions options) {
+        if (!AT_REST_LISTS_ENABLED) return false;
         int[] ids = model.getAtRestListIds();
         if (ids == null) {
             if (model.atRestListsCompileFailed()) return false;

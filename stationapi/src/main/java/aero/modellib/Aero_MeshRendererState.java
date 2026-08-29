@@ -48,6 +48,8 @@ class Aero_MeshRendererState {
 
     static final boolean BONE_PAGES_ENABLED =
         !"false".equalsIgnoreCase(System.getProperty("aero.bonepages"));
+    static final boolean AT_REST_LISTS_ENABLED =
+        !"false".equalsIgnoreCase(System.getProperty("aero.atRestLists"));
     static final int BONE_PAGES_MIN_TRIS =
         Math.max(0, Integer.getInteger("aero.bonepages.minTris", 24).intValue());
     static final boolean SKELETAL_LOD_ENABLED =
@@ -69,6 +71,7 @@ class Aero_MeshRendererState {
     static int atRestRendersThisFrame;
     static int atRestListCallsThisFrame;
     static int atRestTessFallbacksThisFrame;
+    static int bonePageListCallsThisFrame;
 
     // Pose pool indexed by clip.boneNames[i]. Pre-resolved once per frame
     // so the hierarchical render walk + any IK pre-pass can read poses by

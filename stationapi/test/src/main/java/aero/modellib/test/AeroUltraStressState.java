@@ -12,8 +12,6 @@ public final class AeroUltraStressState {
     private static final String WORLD =
         System.getProperty("aero.ultra.world", "AeroUltraStress");
     private static final long SEED = Long.getLong("aero.ultra.seed", 17320110707L);
-    private static final long DURATION_SECONDS = Long.getLong("aero.ultra.durationSec", 180L);
-    private static final long WARMUP_SECONDS = Long.getLong("aero.ultra.warmupSec", 30L);
     private static int stage, waitingTicks;
     private static boolean ready;
 
@@ -30,7 +28,7 @@ public final class AeroUltraStressState {
             return;
         }
         if (game.world == null || game.player == null || ready) {
-            if (ready) holdCamera(game);
+            if (ready) AeroUltraJourney.drive(game);
             return;
         }
         game.world.getChunk(0, 0);
@@ -41,10 +39,12 @@ public final class AeroUltraStressState {
         }
         if (count < AeroUltraStressConfig.machinesPerChunk()) return;
         ready = true;
-        holdCamera(game);
+        AeroUltraJourney.prepare(game);
         startExitTimer();
         System.out.println("[AeroUltraStress] measurement-ready centralMachines=" + count
-            + " warmupSec=" + WARMUP_SECONDS + " durationSec=" + DURATION_SECONDS);
+            + " warmupSec=" + AeroUltraStressConfig.WARMUP_SECONDS
+            + " durationSec=" + AeroUltraStressConfig.DURATION_SECONDS
+            + " journey=" + AeroUltraStressConfig.JOURNEY);
     }
 
     public static boolean ready() {
@@ -59,14 +59,6 @@ public final class AeroUltraStressState {
                     && blockEntity.z >= 0 && blockEntity.z < 16) count++;
         }
         return count;
-    }
-
-    private static void holdCamera(Minecraft game) {
-        if (game.player == null) return;
-        int baseY = AeroUltraStressScene.centralBaseY();
-        double y = baseY > 0 ? baseY + Math.min(12, AeroUltraStressConfig.LAYERS) : 70.0d;
-        game.player.velocityX = game.player.velocityY = game.player.velocityZ = 0.0d;
-        game.player.setPositionAndAngles(-8.5d, y, 8.5d, -90.0f, 0.0f);
     }
 
     private static void prepareDisplay(Minecraft game) {
@@ -85,7 +77,8 @@ public final class AeroUltraStressState {
         Thread timer = new Thread(new Runnable() {
             public void run() {
                 try {
-                    Thread.sleep((WARMUP_SECONDS + DURATION_SECONDS + 120L) * 1000L);
+                    Thread.sleep((AeroUltraStressConfig.WARMUP_SECONDS
+                        + AeroUltraStressConfig.DURATION_SECONDS + 120L) * 1000L);
                 } catch (InterruptedException ignored) {
                     return;
                 }

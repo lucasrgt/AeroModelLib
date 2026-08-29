@@ -20,6 +20,7 @@ import aero.modellib.model.Aero_MeshModel;
 import aero.modellib.render.Aero_AnimationTickLOD;
 import aero.modellib.render.Aero_FrustumCull;
 import aero.modellib.render.Aero_RenderOptions;
+import aero.modellib.render.Aero_SmallObjectCull;
 import aero.modellib.skeletal.Aero_BonePageLists;
 import aero.modellib.skeletal.Aero_BoneRenderPose;
 import aero.modellib.skeletal.Aero_CCDSolver;
@@ -56,6 +57,8 @@ public class Aero_MeshRenderer extends Aero_MeshRendererState {
     public static int atRestRendersThisFrame() { return Aero_MeshModelRenderer.atRestRendersThisFrame(); }
     public static int atRestListCallsThisFrame() { return Aero_MeshModelRenderer.atRestListCallsThisFrame(); }
     public static int atRestTessFallbacksThisFrame() { return Aero_MeshModelRenderer.atRestTessFallbacksThisFrame(); }
+    public static int bonePageListCallsThisFrame() { return Aero_MeshModelRenderer.bonePageListCallsThisFrame(); }
+    public static int smallObjectCulledThisFrame() { return Aero_SmallObjectCull.culledThisFrame(); }
     public static void disposeModel(Aero_MeshModel model) { Aero_MeshAtRestRenderer.disposeModel(model); }
     static int[] ensureAtRestListIds(Aero_MeshModel model) { return Aero_MeshAtRestRenderer.ensureAtRestListIds(model); }
     public static void prewarmModel(Aero_MeshModel model) { Aero_MeshAtRestRenderer.prewarmModel(model); }

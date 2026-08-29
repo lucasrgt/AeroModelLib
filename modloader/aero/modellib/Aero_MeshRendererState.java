@@ -66,6 +66,8 @@ class Aero_MeshRendererState {
 
     static final boolean BONE_PAGES_ENABLED =
         !"false".equalsIgnoreCase(System.getProperty("aero.bonepages"));
+    static final boolean AT_REST_LISTS_ENABLED =
+        !"false".equalsIgnoreCase(System.getProperty("aero.atRestLists"));
     static final int BONE_PAGES_MIN_TRIS =
         Math.max(0, Integer.getInteger("aero.bonepages.minTris", 24).intValue());
     static final boolean SKELETAL_LOD_ENABLED =

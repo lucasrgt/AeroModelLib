@@ -27,15 +27,14 @@ repository as the source of truth for every `aero.*` optimization ID.
 
 | Status | Count | Meaning in this inventory |
 | --- | ---: | --- |
-| Active | 31 | Shipped implementation with a supported production path; some still require consumer adoption. |
+| Active | 30 | Shipped implementation with a supported production path; some still require consumer adoption. |
 | Candidate | 14 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
-| Rejected | 4 | A known current implementation is unsafe or a measured regression. |
+| Rejected | 5 | A known current implementation is unsafe or a measured regression. |
 | Retired | 1 | Historical implementation removed from current production source. |
 
 The `default.enabled` field records the source-level default, not proof of a
-performance win. For adoption-gated APIs such as `Aero_TextureBinder`, false
-means existing consumers are not intercepted automatically. The record itself
-remains active because the supported implementation is shipped.
+performance win. Adoption-gated APIs may remain active when their supported
+implementation is shipped but consumers must call them explicitly.
 
 ### Active families
 
@@ -43,8 +42,7 @@ remains active because the supported implementation is shipped.
   lookup and metadata caches, morph/IK scratch reuse, morph weight arrays,
   texture-ID caching, and chunk-bake prewarm.
 - Render submission: animated batching, composite-state sorting, bone pages,
-  at-rest display lists, block-entity cell indexing/pages, and
-  individual-render skipping.
+  at-rest display lists, and block-entity cell indexing/pages.
 - Visibility and detail: smart LOD, conservative cone culling, small-object
   culling, chunk visibility, and animation admission control.
 - Inner-loop work: animation event lower bounds and cursors, smooth-light grid
@@ -58,6 +56,7 @@ remains active because the supported implementation is shipped.
 - TTL-bounded resolved smooth-light cache for static instances.
 - Cell-page fragmentation controls, prewarm, display-list budget, and the
   aggregate high-memory preset.
+- Early individual-render skipping, demoted after a focused -37.0% A/B.
 - Chunk compile budget, frame pacing, and the adaptive render-load governor.
 
 ### Rejected implementations
@@ -132,3 +131,16 @@ heap start/maximum, render distance, and warmup fixed, then compare:
 
 A feature moves from candidate to active only after a representative
 differential or invariant test records its evidence and rollback path.
+
+Default-on features are now eligible for the same retroactive differential.
+Run `java tools/perf/AblationMatrix.java --list` for the end-to-end mechanisms
+that already have safe rollback switches and activating ULTRA scenes. The
+runner uses counterbalanced enabled/disabled order and preserves raw stage
+summaries; its method and interpretation rules live in
+[`tools/perf/README.md`](../tools/perf/README.md). Structural cache and
+inner-loop records without switches require focused allocation/algorithm
+benchmarks rather than permanent diagnostic branches in production paths.
+The end-to-end scene is now the ten-phase
+[`ULTRA journey`](ULTRA_JOURNEY.md), so camera-turn, movement, floor-occlusion,
+chunk-teleport, and post-transition recovery regressions are reported
+separately instead of being averaged into one stationary-wall number.

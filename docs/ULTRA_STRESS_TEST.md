@@ -240,6 +240,13 @@ multi-gigabyte worlds, or an out-of-memory exit. Start with the defaults. The
 bounded defaults are already substantially harsher than the older MEGA scene,
 which places 576 machines once every twelve chunks.
 
+For the reproducible horizontal-density envelope, run
+`java tools/perf/UltraDensityMatrix.java`. It preserves an isolated control,
+then exercises towers every four chunks, every two chunks, and every chunk.
+Both animated and at-rest field variants use the same ten-phase camera journey.
+Every summary records `towerChunksPopulated` and `machinesPlaced`, so a result
+only counts as multi-chunk evidence when more than one tower was actually built.
+
 ## Interpretation
 
 `aeroFlush` is the direct batched mesh-submission bucket; `entityRenderNanos`

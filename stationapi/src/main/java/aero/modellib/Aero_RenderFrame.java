@@ -24,6 +24,7 @@ final class Aero_RenderFrame {
         viewDistance = readViewDistance();
         refreshCamera();
         Aero_FrustumCull.beginFrameCounters();
+        Aero_SmallObjectCull.beginFrameCounters();
         Aero_AnimationRenderBudget.beginFrame();
         Aero_BECellIndex.beginFrame();
         Aero_Frustum6Plane.invalidateFrame();

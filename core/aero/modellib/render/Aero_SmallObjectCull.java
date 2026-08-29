@@ -50,6 +50,7 @@ public final class Aero_SmallObjectCull {
 
     public static final boolean ENABLED =
         !"false".equalsIgnoreCase(System.getProperty("aero.smallobj"));
+    private static final boolean COUNT_CULLS = Boolean.getBoolean("aero.ultra");
 
     private static final double THRESHOLD_PX;
     static {
@@ -74,6 +75,7 @@ public final class Aero_SmallObjectCull {
      */
     private static double coeff = 0.0d;
     private static int cachedDisplayHeight = -1;
+    private static int culledThisFrame;
 
     private Aero_SmallObjectCull() {}
 
@@ -106,6 +108,11 @@ public final class Aero_SmallObjectCull {
      */
     public static boolean isTooSmall(double distSq, double visualRadiusBlocks) {
         if (!ENABLED || coeff <= 0.0d || visualRadiusBlocks <= 0.0d) return false;
-        return distSq > coeff * visualRadiusBlocks * visualRadiusBlocks;
+        boolean culled = distSq > coeff * visualRadiusBlocks * visualRadiusBlocks;
+        if (culled && COUNT_CULLS) culledThisFrame++;
+        return culled;
     }
+
+    public static void beginFrameCounters() { if (COUNT_CULLS) culledThisFrame = 0; }
+    public static int culledThisFrame() { return culledThisFrame; }
 }
