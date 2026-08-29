@@ -129,6 +129,26 @@ The synchronized candidate gained 18.8% throughput and reduced Aero flush by
 below the workload gate and `maxTessellatorBulkVertices` remained zero. The
 feature is default-on; use `-Daero.tessellatorbulk=false` for rollback.
 
+### Animation curve LUT qualification (rejected)
+
+The diverse-phase tower was also used to qualify `-Daero.anim.lut=true` after
+moving its table to contiguous storage and adding load-time fidelity gates.
+STEP channels and unsafe Euler wraps retain exact evaluation; accepted tracks
+are bounded to 0.25 degrees, 0.02 pixels for position, and 0.001 for scale/UV.
+
+Counterbalanced 30-second runs with a 15-second warmup rejected both table
+sizes:
+
+| Metric | Exact evaluator | LUT 64 | LUT 256 |
+| --- | ---: | ---: | ---: |
+| Average FPS | 43.31 | 38.16 | 41.55 |
+| Average frame | 23.09 ms | 26.21 ms | 24.07 ms |
+| Average Aero flush | 11.50 ms | 14.56 ms | 12.17 ms |
+| p95 / p99 frame | 27.5 / 50.5 ms | 37.3 / 52.1 ms | 29.0 / 52.5 ms |
+
+The exact evaluator remains the default, including under the high-memory
+preset. The guarded LUT stays available only as a research oracle.
+
 The task creates a uniquely named fixed-seed world, loads the central tower,
 pins the camera beside it, waits for every central machine, warms up, measures
 for the requested benchmark duration, and exits without menu interaction. It

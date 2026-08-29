@@ -18,25 +18,22 @@ import aero.modellib.util.Aero_PerfConfig;
  *       (mul + index + 3 lerps). Hottest at high BE counts with
  *       complex easings (ELASTIC, BACK, BOUNCE) and rotations.</li>
  *   <li><strong>Cost:</strong> RAM. Each channel allocates
- *       {@code samples × 3 floats}. With the default 64 samples that's
- *       768 bytes per channel. A 30-channel mega-model adds ~24 KB —
- *       trivial.</li>
+ *       {@code samples × 3 floats}. With the default 256 samples that's
+ *       3 KiB per channel. A 30-channel mega-model adds ~90 KiB.</li>
  *   <li><strong>Accuracy:</strong> the LUT samples the FINAL output of
  *       the clip's evaluation pipeline (easing + slerp + decode), so
  *       inter-sample linear blending is the only approximation source.
- *       At 64 samples for a 1-second clip the time resolution is ~16 ms
- *       — comparable to a single 60 FPS frame. Visually invisible
- *       except on extremely sharp curves (ELASTIC at the bounce peak).
- *       Bump samples to 128/256 for those cases.</li>
+ *       At 256 samples for a 1-second clip the time resolution is ~4 ms.
+ *       Tracks with steps or excessive interpolation error automatically
+ *       retain the exact evaluator.</li>
  * </ul>
  *
  * <h2>Toggle</h2>
  * <ul>
- *   <li>{@code -Daero.anim.lut=true} enables. Default OFF, or ON under
- *       {@code -Daero.perf.memory=high}, so the normal path keeps exercising
- *       the exact non-baked evaluator unless the performance preset is
- *       explicitly selected.</li>
- *   <li>{@code -Daero.anim.lut.samples=N} (default 64, clamped to
+ *   <li>{@code -Daero.anim.lut=true} enables the research path. Default OFF,
+ *       including under {@code -Daero.perf.memory=high}: representative ULTRA
+ *       stress evidence found the exact evaluator faster.</li>
+ *   <li>{@code -Daero.anim.lut.samples=N} (default 256, clamped to
  *       [{@value #MIN_SAMPLES}, {@value #MAX_SAMPLES}]) sets the bake
  *       resolution.</li>
  * </ul>
@@ -48,16 +45,16 @@ import aero.modellib.util.Aero_PerfConfig;
 public final class Aero_AnimationLUTConfig {
 
     /**
-     * Default <strong>OFF</strong>, high-memory preset <strong>ON</strong>.
-     * The non-LUT path stays the canonical reference so tests aren't
-     * dependent on sample resolution unless the preset/property is enabled.
+     * Default <strong>OFF</strong>, including the high-memory preset.
+     * The exact path remains canonical after the LUT regressed in the
+     * representative diverse-phase stress scene.
      */
     public static final boolean ENABLED =
-        Aero_PerfConfig.booleanProperty("aero.anim.lut", false, true);
+        Aero_PerfConfig.booleanProperty("aero.anim.lut", false, false);
 
     public static final int MIN_SAMPLES = 4;
     public static final int MAX_SAMPLES = 1024;
-    public static final int DEFAULT_SAMPLES = 64;
+    public static final int DEFAULT_SAMPLES = 256;
 
     public static final int SAMPLES;
     static {

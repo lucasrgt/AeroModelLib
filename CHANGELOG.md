@@ -7,6 +7,14 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Animation curve LUT qualified and rejected.** The opt-in LUT now stores
+  samples in one contiguous float array, defaults to 256 samples, validates
+  bounded interpolation error at load time, and leaves STEP tracks and unsafe
+  Euler wraps on the exact evaluator. A diverse-phase 30-second ULTRA A/B still
+  favored exact sampling: 43.31 versus 41.55 FPS and 11.50 versus 12.17 ms of
+  Aero flush at 256 samples; 64 samples regressed further. The LUT remains a
+  research-only opt-in and is no longer enabled by the high-memory preset.
+  Catalog: `aero.animation.curve-lut` (rejected, default off).
 - **Governed Tessellator bulk staging.** Dense exact-pose batches now pack
   their already transformed vertices directly into StationAPI's existing
   eight-int Tessellator buffer, preserving its draw path, packed fields, and

@@ -332,7 +332,7 @@ paths remain opt-in.
 
 | Feature | Enable with | Main trade-off |
 | --- | --- | --- |
-| Animation curve LUT | `-Daero.anim.lut=true` | More memory and sampling approximation |
+| Animation curve LUT (rejected research path) | `-Daero.anim.lut=true` | Bounded approximation, more memory, and a measured dense-scene regression |
 | OBJ hidden-face removal | `-Daero.obj.cullhidden=true` | Load-time geometry decision needs asset validation |
 | Skeletal LOD | `-Daero.skeletalLod=true` | Distant poses become less detailed |
 | Prewarm queue | `-Daero.prewarm=true` | Earlier CPU/driver work and cache allocation |

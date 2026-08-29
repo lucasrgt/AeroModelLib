@@ -142,11 +142,13 @@ histórico detalhado e o protocolo experimental.
   - [x] Toggle: `-Daero.batcher.sort=false`.
   - [ ] Medir `glBindTexture`/estado GL em trace/JFR.
 
-- [x] **A4. Animation curve LUT bake - CONCLUÍDO, OPT-IN**
+- [x] **A4. Animation curve LUT bake - REJEITADO, PESQUISA OPT-IN**
   - [x] `Aero_AnimationLUTConfig` e LUT por canal.
   - [x] Flag: `-Daero.anim.lut=true`.
-  - [x] Flag: `-Daero.anim.lut.samples=N` (default `64`).
-  - [ ] Medir custo de easing / binary search / slerp em stress real.
+  - [x] Flag: `-Daero.anim.lut.samples=N` (default `256`).
+  - [x] Storage contíguo + gate de fidelidade; STEP/wrap inseguro ficam exatos.
+  - [x] ULTRA diverso 30 s: exato 43.31 FPS / 11.50 ms de flush; LUT 64
+    38.16 / 14.56; LUT 256 41.55 / 12.17. Mantido desligado.
 
 - [x] **A5. Composite-key sort do animated batcher - CONCLUÍDO**
 - [x] Batch key inclui modelo, textura, tint/alpha, `alphaClip`, blend,
@@ -360,7 +362,8 @@ histórico detalhado e o protocolo experimental.
     específica não for passada.
   - [x] `Aero_Prewarm.enqueueModel(...)` preaquece at-rest lists e bone pages
     em frames controlados.
-  - [x] LUT de animação liga por padrão dentro do preset high-memory.
+  - [x] LUT de animação permanece desligada no preset high-memory após a
+    regressão representativa A/B.
   - [x] Cache de OBJ/JSON runtime fica sem limite dentro do preset
     (`aero.modellib.cache.maxEntries=-1` efetivo).
   - [ ] Usar LODs reais em assets grandes.

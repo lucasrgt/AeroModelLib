@@ -1,7 +1,7 @@
 # Aero Optimization Catalog
 
 This repository owns the canonical metadata for AeroModelLib optimizations.
-The 46 records under `worldline/optimizations/catalog` describe Aero implementation
+The 50 records under `worldline/optimizations/catalog` describe Aero implementation
 details, defaults, risks, rollback paths, source symbols, and evidence using
 the neutral `worldline.optimization.v1` schema.
 
@@ -27,9 +27,9 @@ repository as the source of truth for every `aero.*` optimization ID.
 
 | Status | Count | Meaning in this inventory |
 | --- | ---: | --- |
-| Active | 28 | Shipped implementation with a supported production path; some still require consumer adoption. |
-| Candidate | 15 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
-| Rejected | 2 | A known current implementation is unsafe or a measured regression. |
+| Active | 31 | Shipped implementation with a supported production path; some still require consumer adoption. |
+| Candidate | 14 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
+| Rejected | 4 | A known current implementation is unsafe or a measured regression. |
 | Retired | 1 | Historical implementation removed from current production source. |
 
 The `default.enabled` field records the source-level default, not proof of a
@@ -53,7 +53,7 @@ remains active because the supported implementation is shipped.
 
 ### Candidate families
 
-- Animation LUT, motion-aware tick LOD, dense tick budget, and skeletal LOD.
+- Motion-aware tick LOD, dense tick budget, and skeletal LOD.
 - OBJ hidden-face removal and consumer-authored mesh LODs.
 - TTL-bounded resolved smooth-light cache for static instances.
 - Cell-page fragmentation controls, prewarm, display-list budget, and the
@@ -63,6 +63,9 @@ remains active because the supported implementation is shipped.
 
 ### Rejected implementations
 
+- `aero.animation.curve-lut`: bounded, contiguous 64- and 256-sample tables
+  both regressed the representative diverse-phase 30-second ULTRA workload.
+  The exact evaluator remains the default, including in the high-memory preset.
 - `aero.chunk.paletted-cache-global`: applying the injection to the hot
   `PalettedContainer.get(int)` path allocated `CallbackInfoReturnable` per
   read even while the cache was logically off. Aero reports roughly 20%
@@ -70,6 +73,8 @@ remains active because the supported implementation is shipped.
   opted in.
 - `aero.render.six-plane-frustum`: the current lazy plane capture can read
   stale or uninitialized data and over-cull visible block entities.
+- `aero.render.client-vertex-arrays`: duplicating Beta's already mature client
+  array submission path made the isolated Aero flush 11.6% slower.
 
 ### Retired implementation
 
