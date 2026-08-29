@@ -7,6 +7,16 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Unique rest-pose Tessellator staging.** Named body groups without an
+  active animated bone now write their unchanged scale-and-translate stream
+  directly into StationAPI's Tessellator buffer instead of calling `vertex`
+  three times per triangle. A diverse-phase 20-second pair increased staged
+  coverage from 544,320 to 931,680 vertices/frame, improved 39.09 to 46.18
+  FPS, and cut Aero flush from 12.72 to 9.17 ms; a confirmation retained 9.88
+  ms flush and full coverage. Disable with
+  `-Daero.tessellatorbulk.rest=false` or the global
+  `-Daero.tessellatorbulk=false`. Catalog:
+  `aero.render.tessellator-bulk-staging` (active, default on).
 - **Dead batch-pose reset stores removed.** Reused batch rows now clear their
   activity bits without first writing seventeen default fields into every
   pose: active rows are fully overwritten by `copyPose`, while inactive rows

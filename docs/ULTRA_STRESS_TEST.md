@@ -138,6 +138,16 @@ vertices/frame. One oracle run suffered unrelated tick/chunk slowdown and was
 retained as an invalid environmental outlier rather than selected as evidence.
 The feature is default-on; use `-Daero.tessellatorbulk=false` for rollback.
 
+Direct staging subsequently expanded to unique inactive/rest-pose groups,
+removing the remaining per-vertex Tessellator calls for static body parts in
+otherwise animated models. In a counterbalanced 20-second diverse-phase pair,
+coverage rose from 544,320 to 931,680 vertices/frame, throughput rose from
+39.09 to 46.18 FPS, Aero flush fell from 12.72 to 9.17 ms, and p99 improved
+from 53.0 to 45.2 ms. A confirmation retained all 931,680 staged vertices and
+9.88 ms flush despite unrelated entity-stage variance. The narrower rollback
+is `-Daero.tessellatorbulk.rest=false`; the global bulk rollback also disables
+this path.
+
 ### Dead batch-pose reset elision (promoted)
 
 Batch pose rows keep reusable mutable pose objects, but each active entry is

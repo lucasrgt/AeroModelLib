@@ -142,6 +142,7 @@ final class Aero_TessellatorBulkWriter {
             enabledThisBatch = false;
             return;
         }
+        Aero_TessellatorRestBulkWriter.beginBatch();
         if (UNIQUE_POSE_ENABLED) bindTessellator();
         if (sharedCount <= 0) {
             enabledThisBatch = false;
@@ -159,6 +160,7 @@ final class Aero_TessellatorBulkWriter {
     }
     static void beginFrameCounters() { verticesThisFrame = 0; }
     static int verticesThisFrame() { return verticesThisFrame; }
+    static void recordVertices(int count) { verticesThisFrame += count; }
 
     private static void bindTessellator() {
         try {

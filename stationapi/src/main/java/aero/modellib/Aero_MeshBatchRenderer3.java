@@ -77,6 +77,8 @@ static void emitBoneInstanceBatchedScaleTranslateUv(Tessellator tess, float[][] 
 
 static void emitBoneInstanceBatchedRest(Tessellator tess, float[][] tris, float invSc,
                                                      double instX, double instY, double instZ) {
+        if (Aero_TessellatorRestBulkWriter.write(
+                tris, invSc, instX, instY, instZ)) return;
         for (int t = 0; t < tris.length; t++) {
             float[] tri = tris[t];
             tess.vertex(instX + tri[0]*invSc,  instY + tri[1]*invSc,  instZ + tri[2]*invSc,  tri[3],  tri[4]);
