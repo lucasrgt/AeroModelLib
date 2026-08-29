@@ -50,7 +50,7 @@ dependencies {
     // built with Fabric-Loom 1.9.2 so they pass Loom's bundled-version
     // check at gradle-config time. Bumping past these requires Loom 1.11+
     // (which in turn needs Gradle 8.14 + JDK 21).
-    modRuntimeOnly "net.glasslauncher.mods:AlwaysMoreItems:1.6.0"
+    modRuntimeOnly "net.glasslauncher.mods:AlwaysMoreItems:1.10.1"
     modRuntimeOnly "net.glasslauncher.mods:glass-networking:1.0.6"
     modRuntimeOnly "net.glasslauncher.mods:GlassConfigAPI:3.2.2"
     // modmenu has no Loom-1.9.2-built release (every published version was
