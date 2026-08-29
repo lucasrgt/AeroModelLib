@@ -13,8 +13,10 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   submission order. A per-batch workload gate keeps smaller reuse sets on the
   ordinary `Tessellator.vertex` path. In the isolated synchronized ULTRA
   scene, 919,296 vertices/frame used bulk staging and throughput rose from
-  46.95 to 54.08 FPS while Aero flush fell from 9.24 to 8.30 ms/frame. The
-  diverse-phase scene stayed below the gate. Disable with
+  46.95 to 55.78 FPS while Aero flush fell from 9.24 to 5.86 ms/frame. The
+  writer hoists its StationAPI accessors and offsets per batch and avoids
+  discarded pre-rotation coordinate work. The diverse-phase scene stayed
+  below the gate. Disable with
   `-Daero.tessellatorbulk=false`. Catalog:
   `aero.render.tessellator-bulk-staging` (active, default on).
 - **Shared-pose transformed vertex reuse.** Once exact pose reuse identifies a

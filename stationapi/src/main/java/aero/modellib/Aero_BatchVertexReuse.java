@@ -154,7 +154,7 @@ final class Aero_BatchVertexReuse {
 
     private static void emit(Tessellator tess, double x, double y, double z) {
         if (emissions++ > 0) reusedThisFrame += vertexCount;
-        if (Aero_TessellatorBulkWriter.write(tess, vertices, vertexCount,
+        if (Aero_TessellatorBulkWriter.write(vertices, vertexCount,
                 mode, baseX, baseY, baseZ, x, y, z)) return;
         double bx = mode == TRANSLATE ? x + baseX : x;
         double by = mode == TRANSLATE ? y + baseY : y;

@@ -118,14 +118,14 @@ vertex calls.
 
 | Metric | Vertex reuse | + Governed bulk staging |
 | --- | ---: | ---: |
-| Average FPS | 46.95 | 54.08 |
-| Average frame | 21.30 ms | 18.49 ms |
-| Average Aero flush | 9.24 ms | 8.30 ms |
-| p95 / p99 frame | 26.3 / 45.6 ms | 23.7 / 42.6 ms |
+| Average FPS | 46.95 | 55.78 |
+| Average frame | 21.30 ms | 17.93 ms |
+| Average Aero flush | 9.24 ms | 5.86 ms |
+| p95 / p99 frame | 26.3 / 45.6 ms | 23.5 / 32.6 ms |
 | Bulk-staged vertices/frame | 0 | 919,296 |
 
-The synchronized candidate gained 15.2% throughput and reduced Aero flush by
-10.2%. Under deterministic diverse phases, the largest eligible batch stayed
+The synchronized candidate gained 18.8% throughput and reduced Aero flush by
+36.6%. Under deterministic diverse phases, the largest eligible batch stayed
 below the workload gate and `maxTessellatorBulkVertices` remained zero. The
 feature is default-on; use `-Daero.tessellatorbulk=false` for rollback.
 
