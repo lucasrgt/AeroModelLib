@@ -16,7 +16,7 @@ final class Aero_MeshClientArrayRenderer {
     static void render(Aero_AnimatedBatcher.Batch batch, Aero_MeshModel model,
             Aero_RenderOptions options, Aero_MeshRendererState.BatchPlan plan,
             Aero_MeshModel.NamedGroup[] entries,
-            Aero_BoneRenderPose[][] poses, boolean[][] active, int count) {
+            Aero_BoneRenderPose[][] poses, boolean[][] active, int[] poseSources, int count) {
         Aero_AnimatedBatcher.bindBatchTexture(batch);
         Aero_MeshRenderer.beginMeshState(options);
         Aero_ClientArrayBuffer.beginClientState();
@@ -24,7 +24,8 @@ final class Aero_MeshClientArrayRenderer {
             if (plan.hasStaticGeometry) renderStatic(batch, model, options, count);
             for (int d = 0; d < plan.drawableEntries.length; d++) {
                 int entry = plan.drawableEntries[d];
-                renderBone(batch, model, options, entries[entry], poses, active, entry, count);
+                renderBone(batch, model, options, entries[entry], poses, active,
+                    poseSources, entry, count);
             }
         } finally {
             Aero_ClientArrayBuffer.endClientState();
@@ -55,7 +56,8 @@ final class Aero_MeshClientArrayRenderer {
 
     private static void renderBone(Aero_AnimatedBatcher.Batch batch,
             Aero_MeshModel model, Aero_RenderOptions options, Aero_MeshModel.NamedGroup named,
-            Aero_BoneRenderPose[][] poses, boolean[][] active, int entry, int count) {
+            Aero_BoneRenderPose[][] poses, boolean[][] active, int[] poseSources,
+            int entry, int count) {
         Aero_ClientArrayBuffer.begin();
         float lastBrightness = Float.NaN;
         for (int group = 0; group < 4; group++) {
@@ -63,13 +65,14 @@ final class Aero_MeshClientArrayRenderer {
             if (tris.length == 0) continue;
             float factor = Aero_MeshModel.BRIGHTNESS_FACTORS[group];
             for (int i = 0; i < count; i++) {
+                int poseIndex = Aero_BatchPoseReuse.ENABLED ? poseSources[i] : i;
                 float brightness = batch.brightnesses[i] * factor;
                 if (brightness != lastBrightness) {
                     color(brightness, options);
                     lastBrightness = brightness;
                 }
-                if (active[i][entry]) {
-                    Aero_MeshClientArrayEmitter.emitBone(tris, model.invScale, poses[i][entry],
+                if (active[poseIndex][entry]) {
+                    Aero_MeshClientArrayEmitter.emitBone(tris, model.invScale, poses[poseIndex][entry],
                         batch.xs[i], batch.ys[i], batch.zs[i]);
                 } else {
                     Aero_MeshClientArrayEmitter.emitStatic(tris, model.invScale,

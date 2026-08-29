@@ -42,7 +42,8 @@ import aero.modellib.util.Aero_Profiler;
  *   - Bone/pivot resolution memoized per (clip identity) on the model.
  */
 @aero.modellib.optimization.OptimizationRef({
-    "aero.render.animated-batcher", "aero.render.client-vertex-arrays"
+    "aero.render.animated-batcher", "aero.render.client-vertex-arrays",
+    "aero.animation.batch-pose-reuse"
 })
 final class Aero_MeshBatchRenderer extends Aero_MeshRendererState {
     private Aero_MeshBatchRenderer() {}
@@ -63,14 +64,16 @@ static void renderAnimatedBatch(Aero_AnimatedBatcher.Batch batch) {
             BatchPlan renderPlan = Aero_MeshModelRenderer.batchPlanFor(model, null, batch.bundles[0], entries);
             // Per-instance, per-bone resolved poses. Lazy-resolve on first
             // need; null if instance has no named bones / nested skeleton.
-            Aero_BoneRenderPose[][] perInstancePoses = Aero_MeshBatchRenderer.ensureBatchPoseScratch(count, entries.length);
-            boolean[][] perInstancePoseActive = Aero_MeshBatchRenderer.ensureBatchPoseActiveScratch(count, entries.length);
+            Aero_BoneRenderPose[][] perInstancePoses = Aero_MeshBatchRenderer.ensureBatchPoseScratch(count);
+            boolean[][] perInstancePoseActive = Aero_MeshBatchRenderer.ensureBatchPoseActiveScratch(count);
+            int[] poseSources = Aero_BatchPoseReuse.ENABLED
+                ? Aero_BatchPoseReuse.beginBatch(count) : null;
 
             // Pre-resolve poses for all instances. Falls back to the
             // unbatched path (returns false) if any instance has nested
             // ancestor chain.
-            boolean canBatch = Aero_MeshBatchRenderer.resolveBatchPoses(model, batch, count, entries,
-                perInstancePoses, perInstancePoseActive);
+            boolean canBatch = Aero_BatchPoseResolver.resolve(model, batch, count, entries,
+                perInstancePoses, perInstancePoseActive, poseSources);
             if (!canBatch) {
                 Aero_MeshBatchRenderer3.drainAsUnbatched(batch, count);
                 return;
@@ -78,7 +81,7 @@ static void renderAnimatedBatch(Aero_AnimatedBatcher.Batch batch) {
 
             if (Aero_MeshClientArrayRenderer.ENABLED) {
                 Aero_MeshClientArrayRenderer.render(batch, model, options, renderPlan,
-                    entries, perInstancePoses, perInstancePoseActive, count);
+                    entries, perInstancePoses, perInstancePoseActive, poseSources, count);
                 return;
             }
 
@@ -128,13 +131,14 @@ static void renderAnimatedBatch(Aero_AnimatedBatcher.Batch batch) {
                         if (tris.length == 0) continue;
                         float bucketFactor = Aero_MeshModel.BRIGHTNESS_FACTORS[g];
                         for (int i = 0; i < count; i++) {
+                            int poseIndex = Aero_BatchPoseReuse.ENABLED ? poseSources[i] : i;
                             float bright = batch.brightnesses[i] * bucketFactor;
                             if (bright != lastBright) {
                                 tess.color(bright * options.tintR, bright * options.tintG,
                                            bright * options.tintB, options.alpha);
                                 lastBright = bright;
                             }
-                            if (!perInstancePoseActive[i][e]) {
+                            if (!perInstancePoseActive[poseIndex][e]) {
                                 // Named group with no animated bone in the
                                 // clip (e.g. static body parts of a model
                                 // whose only animated parts are sub-bones).
@@ -146,7 +150,7 @@ static void renderAnimatedBatch(Aero_AnimatedBatcher.Batch batch) {
                                     model.invScale,
                                     batch.xs[i], batch.ys[i], batch.zs[i]);
                             } else {
-                                Aero_BoneRenderPose pose = perInstancePoses[i][e];
+                                Aero_BoneRenderPose pose = perInstancePoses[poseIndex][e];
                                 Aero_MeshBatchRenderer2.emitBoneInstanceBatched(tess, tris, model.invScale, pose,
                                     batch.xs[i], batch.ys[i], batch.zs[i]);
                             }
@@ -167,80 +171,38 @@ static void renderAnimatedBatchUnbatched(Aero_AnimatedBatcher.Batch batch) {
         Aero_MeshBatchRenderer3.drainAsUnbatched(batch, batch.count);
     }
 
-static Aero_BoneRenderPose[][] ensureBatchPoseScratch(int instanceCount, int boneCount) {
+static Aero_BoneRenderPose[][] ensureBatchPoseScratch(int instanceCount) {
         if (BATCH_POSES.length < instanceCount) {
             BATCH_POSES = new Aero_BoneRenderPose[Math.max(instanceCount, BATCH_POSES.length * 2)][];
-        }
-        for (int i = 0; i < instanceCount; i++) {
-            if (BATCH_POSES[i] == null || BATCH_POSES[i].length < boneCount) {
-                BATCH_POSES[i] = new Aero_BoneRenderPose[Math.max(boneCount, 4)];
-            }
-            for (int b = 0; b < boneCount; b++) {
-                if (BATCH_POSES[i][b] == null) BATCH_POSES[i][b] = new Aero_BoneRenderPose();
-                else BATCH_POSES[i][b].reset();
-            }
         }
         return BATCH_POSES;
     }
 
-static boolean[][] ensureBatchPoseActiveScratch(int instanceCount, int boneCount) {
+static boolean[][] ensureBatchPoseActiveScratch(int instanceCount) {
         if (BATCH_POSE_ACTIVE.length < instanceCount) {
             boolean[][] grown = new boolean[Math.max(instanceCount, BATCH_POSE_ACTIVE.length * 2)][];
             System.arraycopy(BATCH_POSE_ACTIVE, 0, grown, 0, BATCH_POSE_ACTIVE.length);
             BATCH_POSE_ACTIVE = grown;
         }
-        for (int i = 0; i < instanceCount; i++) {
-            if (BATCH_POSE_ACTIVE[i] == null || BATCH_POSE_ACTIVE[i].length < boneCount) {
-                BATCH_POSE_ACTIVE[i] = new boolean[Math.max(boneCount, 4)];
-            } else {
-                for (int b = 0; b < boneCount; b++) BATCH_POSE_ACTIVE[i][b] = false;
-            }
-        }
         return BATCH_POSE_ACTIVE;
     }
 
-static boolean resolveBatchPoses(Aero_MeshModel model,
-                                              Aero_AnimatedBatcher.Batch batch, int count,
-                                              Aero_MeshModel.NamedGroup[] entries,
-                                              Aero_BoneRenderPose[][] perInstancePoses,
-                                              boolean[][] perInstancePoseActive) {
-        for (int i = 0; i < count; i++) {
-            Aero_AnimationPlayback state = batch.states[i];
-            Aero_AnimationBundle bundle = batch.bundles[i];
-            Aero_AnimationClip clip = state.getCurrentClip();
-            BatchPlan plan = Aero_MeshModelRenderer.batchPlanFor(model, clip, bundle, entries);
-            if (!plan.batchableFlat) return false;
-            if (clip == null) {
-                // No active clip — render named groups at rest.
-                continue;
-            }
-            float time = state.getInterpolatedTime(batch.partialTicks[i]);
-            Aero_BoneRenderPose[] pool = Aero_MeshPoseRenderer.ensurePoolSize(clip.boneNames.length);
-            float[][] clipPivots = bundle.resolvePivotsFor(clip);
-            for (int b = 0; b < clip.boneNames.length; b++) {
-                String boneName = clip.boneNames[b];
-                Aero_AnimationPoseResolver.resolveClip(b, boneName, clipPivots[b],
-                    clip, state, time, batch.partialTicks[i],
-                    SCRATCH_ROT, SCRATCH_POS, SCRATCH_SCL, pool[b]);
-            }
-            // Snapshot deepest (== self for flat skeletons) per bone group.
-            for (int e = 0; e < entries.length; e++) {
-                int idx = plan.entryBoneIdx[e];
-                if (idx >= 0) {
-                    Aero_MeshBatchRenderer.copyPose(pool[idx], perInstancePoses[i][e]);
-                    if (!Aero_AnimatedBatcher.UV_BATCH_ENABLED
-                        && !perInstancePoses[i][e].uvIsIdentity()) {
-                        // UV-scrolling/UV-scaling geometry relies on exact
-                        // per-vertex texture coordinates. Fall back to the
-                        // unbatched renderer, whose Tessellator path handles
-                        // those channels correctly.
-                        return false;
-                    }
-                    perInstancePoseActive[i][e] = true;
-                }
-            }
+static void prepareBatchPoseRow(int instance, int boneCount) {
+        if (BATCH_POSES[instance] == null || BATCH_POSES[instance].length < boneCount) {
+            BATCH_POSES[instance] = new Aero_BoneRenderPose[Math.max(boneCount, 4)];
         }
-        return true;
+        if (BATCH_POSE_ACTIVE[instance] == null
+                || BATCH_POSE_ACTIVE[instance].length < boneCount) {
+            BATCH_POSE_ACTIVE[instance] = new boolean[Math.max(boneCount, 4)];
+        }
+        for (int bone = 0; bone < boneCount; bone++) {
+            if (BATCH_POSES[instance][bone] == null) {
+                BATCH_POSES[instance][bone] = new Aero_BoneRenderPose();
+            } else {
+                BATCH_POSES[instance][bone].reset();
+            }
+            BATCH_POSE_ACTIVE[instance][bone] = false;
+        }
     }
 
 static void copyPose(Aero_BoneRenderPose src, Aero_BoneRenderPose dst) {

@@ -24,6 +24,7 @@ public final class AeroUltraStressCensus {
     private static long over16, over33, over50, over100, over250, over1000;
     private static long gcStartCount, gcStartMillis;
     private static int maxQueued, maxBatches, maxClientArrayDraws, maxClientArrayVertices;
+    private static int maxPosesReused, maxPosesResolved;
     private static int maxPages, maxCachedPages, maxLiveLists;
     private static final long[] STAGE_SUMS = new long[9];
     private static final long[] WORST_STAGES = new long[9];
@@ -75,6 +76,10 @@ public final class AeroUltraStressCensus {
             Aero_AnimatedBatcher.clientArrayDrawsThisFrame());
         maxClientArrayVertices = Math.max(maxClientArrayVertices,
             Aero_AnimatedBatcher.clientArrayVerticesThisFrame());
+        maxPosesReused = Math.max(maxPosesReused,
+            Aero_AnimatedBatcher.batchPosesReusedThisFrame());
+        maxPosesResolved = Math.max(maxPosesResolved,
+            Aero_AnimatedBatcher.batchPosesResolvedThisFrame());
         maxPages = Math.max(maxPages, Aero_BECellRenderer.pageRebuildsThisFrame());
         maxCachedPages = Math.max(maxCachedPages, Aero_BECellRenderer.cachedPageCount());
         maxLiveLists = Math.max(maxLiveLists, Aero_DisplayListBudget.liveLists());
@@ -150,6 +155,8 @@ public final class AeroUltraStressCensus {
         pair(out, "maxAnimatedBatches", maxBatches).append(',').append('\n');
         pair(out, "maxClientArrayDraws", maxClientArrayDraws).append(',').append('\n');
         pair(out, "maxClientArrayVertices", maxClientArrayVertices).append(',').append('\n');
+        pair(out, "maxBatchPosesReused", maxPosesReused).append(',').append('\n');
+        pair(out, "maxBatchPosesResolved", maxPosesResolved).append(',').append('\n');
         pair(out, "maxPageRebuilds", maxPages).append(',').append('\n');
         pair(out, "maxCachedPages", maxCachedPages).append(',').append('\n');
         pair(out, "maxLiveDisplayLists", maxLiveLists).append(',').append('\n');

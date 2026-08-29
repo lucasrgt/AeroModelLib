@@ -375,6 +375,8 @@ tasks.register('runClientUltraStress') {
         def warmupSec = (project.findProperty('warmup') ?: '30').toString()
         def profiler = (project.findProperty('ultraProfiler') ?: 'false').toString()
         def clientArrays = (project.findProperty('ultraClientArrays') ?: 'false').toString()
+        def poseReuse = (project.findProperty('ultraPoseReuse') ?: 'false').toString()
+        def phaseSpread = (project.findProperty('ultraPhaseSpread') ?: 'false').toString()
         def worldName = 'AeroUltra-' + System.currentTimeMillis()
         def jfrFile = new File(runDir, 'aero-ultra.jfr').absolutePath
         def jfrRepo = new File(runDir, 'jfr-ultra-repo').absolutePath
@@ -385,7 +387,7 @@ tasks.register('runClientUltraStress') {
             '-Daero.ultra.layers=' + layers,
             '-Daero.ultra.spacingChunks=' + spacing,
             '-Daero.ultra.solidFloors=true',
-            '-Daero.ultra.phaseSpread=false',
+            '-Daero.ultra.phaseSpread=' + phaseSpread,
             '-Daero.ultra.autoStart=true',
             '-Daero.ultra.world=' + worldName,
             '-Daero.ultra.durationSec=' + benchSec,
@@ -394,6 +396,7 @@ tasks.register('runClientUltraStress') {
             '-Daero.frustumcull=false',
             '-Daero.profiler=' + profiler,
             '-Daero.clientarrays=' + clientArrays,
+            '-Daero.batchposereuse=' + poseReuse,
             '-Daero.spikelog=true',
             '-Daero.spikelog.ms=16.67',
             '-Daero.spikelog.intervalMs=1000',
@@ -414,6 +417,8 @@ tasks.register('runClientUltraStress') {
             + (256 * Integer.parseInt(layers)) + ') spacing=' + spacing
             + ' chunks; culls off; native saves on; profiler=' + profiler
             + '; clientArrays=' + clientArrays
+            + '; poseReuse=' + poseReuse
+            + '; phaseSpread=' + phaseSpread
             + '; measured=' + benchSec + 's')
         println '[runClientUltraStress] fresh auto-start world=' + worldName
         println '[runClientUltraStress] summary -> ' + summary + ' · JFR -> ' + jfrFile

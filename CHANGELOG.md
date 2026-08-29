@@ -7,6 +7,16 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Exact pose reuse inside compatible animation batches.** Standard
+  non-transitioning playbacks that share the representative bundle, clip, and
+  bit-exact interpolated time now share one resolved pose row for the frame.
+  Custom playback subclasses and transitions remain per-instance. In the
+  isolated 1,024-animation ULTRA A/B this reduced pose resolutions from 1,024
+  to 6 and cut the synchronized Aero flush from 13.49 to 11.43 ms/frame
+  (15.3%); the diverse-phase case reused 509 poses and stayed neutral at
+  12.88 versus 12.80 ms/frame. Disable with
+  `-Daero.batchposereuse=false`. Catalog:
+  `aero.animation.batch-pose-reuse` (active, default on).
 - **Rejected OpenGL 1.1 client-array experiment retained behind an opt-in.**
   `-Daero.clientarrays=true` bypasses `Tessellator.vertex` with a specialized
   reusable `T2F_C4UB_V3F` buffer, but the isolated 1,024-animation A/B made

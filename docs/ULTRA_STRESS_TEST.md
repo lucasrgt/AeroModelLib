@@ -60,6 +60,32 @@ the flag remains off by default. This is not a GPU-feature gap: Beta's
 Tessellator already stages an on-heap integer array and submits client arrays;
 the alternative merely duplicated a mature path.
 
+### Isolated exact-pose reuse A/B (promoted)
+
+The same isolated tower also qualifies exact batch-local pose reuse. Set
+`-PultraPoseReuse=true|false` and choose synchronized or deterministic
+per-position loop phases with `-PultraPhaseSpread=false|true`.
+
+The final counterbalanced 15-second runs kept 1,024 animations and six batches
+visible in every frame:
+
+| Workload | Metric | Per-instance pose | Reused pose |
+| --- | --- | ---: | ---: |
+| Synchronized | Resolved / reused | 1,024 / 0 | 6 / 1,018 |
+| Synchronized | Average FPS | 39.02 | 40.72 |
+| Synchronized | Average Aero flush | 13.49 ms | 11.43 ms |
+| Synchronized | p99 frame | 56.4 ms | 50.5 ms |
+| Diverse phases | Resolved / reused | 1,024 / 0 | 515 / 509 |
+| Diverse phases | Average FPS | 39.42 | 40.27 |
+| Diverse phases | Average Aero flush | 12.88 ms | 12.80 ms |
+| Diverse phases | p99 frame | 53.6 ms | 51.7 ms |
+
+The synchronized flush improved 15.3%; the adversarial mixed-phase flush was
+neutral (+0.6% faster). Reuse is default-on. It is exact rather than temporal:
+bundle and clip identity plus raw float time bits must match. Transitions and
+custom `Aero_AnimationPlayback` subclasses are excluded. Use
+`-Daero.batchposereuse=false` as the rollback oracle.
+
 The task creates a uniquely named fixed-seed world, loads the central tower,
 pins the camera beside it, waits for every central machine, warms up, measures
 for the requested benchmark duration, and exits without menu interaction. It

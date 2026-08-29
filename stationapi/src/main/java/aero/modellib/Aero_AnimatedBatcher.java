@@ -102,6 +102,7 @@ public final class Aero_AnimatedBatcher {
     static void beginFrameCounters() {
         queued = flushedInstances = flushedBatches = bonePageDrained = immediate = 0;
         Aero_ClientArrayBuffer.beginFrameCounters();
+        Aero_BatchPoseReuse.beginFrameCounters();
     }
     public static int queuedThisFrame() { return queued; }
     public static int flushedInstancesThisFrame() { return flushedInstances; }
@@ -114,6 +115,8 @@ public final class Aero_AnimatedBatcher {
     public static int clientArrayVerticesThisFrame() {
         return Aero_ClientArrayBuffer.verticesThisFrame();
     }
+    public static int batchPosesReusedThisFrame() { return Aero_BatchPoseReuse.reusedThisFrame(); }
+    public static int batchPosesResolvedThisFrame() { return Aero_BatchPoseReuse.resolvedThisFrame(); }
 
     private static int integer(String name, int fallback, int min, int max) {
         try {
