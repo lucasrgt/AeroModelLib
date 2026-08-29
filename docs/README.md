@@ -10,6 +10,9 @@
   paths backed by `worldline/optimizations/catalog`. The source reconciliation and
   repeatable drift gate are in
   [`worldline/optimizations/AUDIT.md`](../worldline/optimizations/AUDIT.md).
+- [`ULTRA_STRESS_TEST.md`](ULTRA_STRESS_TEST.md) documents the deliberately
+  pathological StationAPI limit-discovery scene, its bounded controls, and
+  the interpretation of its complete-frame/JFR evidence.
 
 Repository-level `README.md`, `CHANGELOG.md`, and `LICENSE.md` remain at the
 root because hosting platforms and release tooling expect them there.

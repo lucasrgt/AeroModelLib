@@ -74,8 +74,11 @@ public class AeroTestMod {
      */
     static final boolean TEST_MOD_DISABLED = Boolean.getBoolean("aero.testmod.disabled");
 
+    /** Pathological limit-discovery scene. It wins over every other fixture. */
+    static final boolean ULTRA_TEST = AeroUltraStressConfig.ENABLED;
+
     static final boolean STRESS_TEST = Boolean.getBoolean("aero.stresstest")
-        && !TEST_MOD_DISABLED;
+        && !TEST_MOD_DISABLED && !ULTRA_TEST;
 
     /**
      * Factory mode — turn on with `-Daero.factory=true`. Builds an 8-floor
@@ -97,7 +100,7 @@ public class AeroTestMod {
      * (all motors share one model) at the largest scale we have.
      */
     static final boolean FACTORY_TEST = Boolean.getBoolean("aero.factory")
-        && !TEST_MOD_DISABLED;
+        && !TEST_MOD_DISABLED && !ULTRA_TEST;
 
     /**
      * Diagnostic — when {@code -Daero.factoryEmpty=true} is set with
@@ -128,7 +131,7 @@ public class AeroTestMod {
      * <p>Mutually exclusive with FACTORY/REALISTIC/STRESS — MEGA wins.
      */
     static final boolean MEGA_TEST = Boolean.getBoolean("aero.mega")
-        && !TEST_MOD_DISABLED;
+        && !TEST_MOD_DISABLED && !ULTRA_TEST;
 
     /**
      * Legacy MEGA terrain used full 16x16 cobblestone slabs on all 16 floors.
@@ -178,9 +181,11 @@ public class AeroTestMod {
      * stress wins (it's the "absolute worst case" mode).
      */
     static final boolean REALISTIC_TEST = Boolean.getBoolean("aero.realistic")
-        && !STRESS_TEST;
+        && !STRESS_TEST && !ULTRA_TEST;
 
-    private static final int DEMO_BLOCK_SPACING_CHUNKS = MEGA_TEST ? 12
+    private static final int DEMO_BLOCK_SPACING_CHUNKS = ULTRA_TEST
+        ? AeroUltraStressConfig.SPACING_CHUNKS
+        : MEGA_TEST ? 12
         : FACTORY_TEST ? 8
         : REALISTIC_TEST ? 6
         : 2;
@@ -205,6 +210,7 @@ public class AeroTestMod {
     public static double demoAnimatedLodDistance() {
         String override = System.getProperty("aero.animatedLOD");
         if (override != null) return Double.parseDouble(override);
+        if (ULTRA_TEST) return 2048d;
         if (STRESS_TEST) {
             return aero.modellib.render.Aero_AnimationTickLOD.recommendedAnimatedDistance(
                 aero.modellib.Aero_RenderDistance.currentViewDistance());
@@ -213,7 +219,8 @@ public class AeroTestMod {
     }
 
     static void seedMegaLoopPhase(Aero_AnimationState state, int stateId, int x, int y, int z) {
-        if (!MEGA_TEST || !MEGA_PHASE_SPREAD || state == null) return;
+        boolean spread = ULTRA_TEST ? AeroUltraStressConfig.PHASE_SPREAD : MEGA_PHASE_SPREAD;
+        if ((!MEGA_TEST && !ULTRA_TEST) || !spread || state == null) return;
         state.setState(stateId);
         state.setLoopPhase(hashToPhase(x, y, z, stateId));
     }
@@ -302,6 +309,11 @@ public class AeroTestMod {
     private static void populateChunk(WorldGenEvent.ChunkDecoration event) {
         if (TEST_MOD_DISABLED) return;
         if (!isChunkMultiple(event, DEMO_BLOCK_SPACING_CHUNKS)) return;
+
+        if (ULTRA_TEST) {
+            AeroUltraStressScene.populate(event);
+            return;
+        }
 
         // Realistic mode short-circuits the demo / stress placements with
         // a sparse "player tech base" layout — see populateChunkRealistic.

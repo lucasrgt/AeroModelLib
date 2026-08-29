@@ -44,6 +44,7 @@ static void beginFrame() {
             lastFrameAllocBytes = threadAllocBytes >= 0L && lastThreadAllocBytes >= 0L
                 ? Aero_FrameSpikeMetrics.positiveDelta(threadAllocBytes, lastThreadAllocBytes)
                 : -1L;
+            completedFrameAllocBytes = lastFrameAllocBytes;
             Aero_AnimationRenderBudget.recordFramePressure(frameMs,
                 lastDisplayUpdateNs / 1000000.0d,
                 lastRenderChunksNs / 1000000.0d,

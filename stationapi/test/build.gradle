@@ -96,9 +96,9 @@ tasks.named('runClient') {
             jvmArgs(extra)
             println '[runClient] extra Aero JVM args: ' + extra.join(' ')
         }
-        println '[runClient] PRODUCTION-LIKE: default Loom JVM (~2G heap), '
+        println('[runClient] PRODUCTION-LIKE: default Loom JVM (~2G heap), '
             + 'vanilla autosave on, no spike logger. Use runClientDev for '
-            + 'a tuned dev session.'
+            + 'a tuned dev session.')
     }
 }
 
@@ -351,6 +351,69 @@ tasks.register('runClientMegaDefault') {
             '-XX:FlightRecorderOptions=repository=' + jfrRepo
         )
         println '[runClientMegaDefault] 16-floor 3x3 stacks · default JVM · JFR -> ' + jfrFile
+    }
+}
+
+// Pathological limit-discovery profile. Unlike MEGA's one 576-BE tower every
+// 12 chunks, ULTRA fills each selected chunk with configurable 16x16 animated
+// layers, mixes twelve render/animation paths, keeps solid chunk geometry,
+// and disables Aero's visibility shortcuts. The defaults are deliberately
+// severe but bounded; -PultraLayers=48 -PultraSpacing=1 is the explicit
+// destructive-envelope setting and may reduce the game to seconds per frame.
+tasks.register('runClientUltraStress') {
+    group = 'fabric'
+    description = 'ULTRA limit test: dense mixed animation towers + full frame census + JFR.'
+    finalizedBy tasks.named('runClient')
+    outputs.upToDateWhen { false }
+    doLast {
+        def runClient = tasks.named('runClient').get()
+        def runDir = new File(project.projectDir, 'run')
+        runDir.mkdirs()
+        def layers = (project.findProperty('ultraLayers') ?: '8').toString()
+        def spacing = (project.findProperty('ultraSpacing') ?: '4').toString()
+        def benchSec = (project.findProperty('bench') ?: '180').toString()
+        def warmupSec = (project.findProperty('warmup') ?: '30').toString()
+        def profiler = (project.findProperty('ultraProfiler') ?: 'false').toString()
+        def worldName = 'AeroUltra-' + System.currentTimeMillis()
+        def jfrFile = new File(runDir, 'aero-ultra.jfr').absolutePath
+        def jfrRepo = new File(runDir, 'jfr-ultra-repo').absolutePath
+        def summary = new File(runDir, 'aero-ultra-summary.json').absolutePath
+        def spikeLog = new File(runDir, 'aero-ultra-spikes.log').absolutePath
+        runClient.jvmArgs(
+            '-Daero.ultra=true',
+            '-Daero.ultra.layers=' + layers,
+            '-Daero.ultra.spacingChunks=' + spacing,
+            '-Daero.ultra.solidFloors=true',
+            '-Daero.ultra.phaseSpread=false',
+            '-Daero.ultra.autoStart=true',
+            '-Daero.ultra.world=' + worldName,
+            '-Daero.ultra.durationSec=' + benchSec,
+            '-Daero.animatedLOD=2048',
+            '-Daero.chunkvisibility=false',
+            '-Daero.frustumcull=false',
+            '-Daero.profiler=' + profiler,
+            '-Daero.spikelog=true',
+            '-Daero.spikelog.ms=16.67',
+            '-Daero.spikelog.intervalMs=1000',
+            '-Daero.spikelog.flushMs=10000',
+            '-Daero.spikelog.heartbeatMs=5000',
+            '-Daero.spikelog.file=' + spikeLog,
+            '-Daero.ultra.warmupSec=' + warmupSec,
+            '-Daero.ultra.summary=' + summary,
+            '-Xms4G',
+            '-Xmx4G',
+            '-XX:+UseG1GC',
+            '-XX:StartFlightRecording=filename=' + jfrFile
+                + ',settings=profile,dumponexit=true,name=aero-ultra',
+            '-XX:FlightRecorderOptions=repository=' + jfrRepo
+        )
+        runClient.ignoreExitValue = true
+        println('[runClientUltraStress] layers=' + layers + ' (machines/tower='
+            + (256 * Integer.parseInt(layers)) + ') spacing=' + spacing
+            + ' chunks; culls off; native saves on; profiler=' + profiler
+            + '; measured=' + benchSec + 's')
+        println '[runClientUltraStress] fresh auto-start world=' + worldName
+        println '[runClientUltraStress] summary -> ' + summary + ' · JFR -> ' + jfrFile
     }
 }
 

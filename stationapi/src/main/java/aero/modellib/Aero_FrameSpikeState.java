@@ -51,6 +51,7 @@ class Aero_FrameSpikeState {
     static long lastThreadAllocBytes = -1L;
     static long lastFrameCpuNs;
     static long lastFrameAllocBytes;
+    static long completedFrameAllocBytes;
     static long gameRendererUpdateStartNs;
     static long gameRendererUpdateStartAllocBytes;
     static long lastGameRendererUpdateNs;

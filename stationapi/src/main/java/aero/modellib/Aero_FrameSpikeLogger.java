@@ -59,9 +59,10 @@ public final class Aero_FrameSpikeLogger extends Aero_FrameSpikeState {
     public static long terrainRenderNanos() { return lastRenderChunksNs; }
     public static long aeroPrepareNanos() { return lastAeroRenderPrepNs; }
     public static long entityRenderNanos() { return lastRenderEntitiesNs; }
+    public static long worldFlushNanos() { return lastWorldFlushNs; }
     public static long displayUpdateNanos() { return lastDisplayUpdateNs; }
     public static long cellRebuildNanos() { return lastCellRebuildNs; }
-    public static long frameAllocatedBytes() { return lastFrameAllocBytes; }
+    public static long frameAllocatedBytes() { return completedFrameAllocBytes; }
     public static long gcCollectionCount() { return Aero_FrameSpikeMetrics.gcCollectionCount(); }
     public static long gcCollectionTimeMillis() {
         return Aero_FrameSpikeMetrics.gcCollectionTimeMs();

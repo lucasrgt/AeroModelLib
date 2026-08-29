@@ -2887,6 +2887,21 @@ powershell -ExecutionPolicy Bypass -File modloader/tests/bench.ps1
 This benchmark is meant for regression checks. Final render performance should still
 be verified in-game because OpenGL 1.1 driver behavior and scene state matter.
 
+### Ultra stress profile
+
+The StationAPI test mod includes a bounded pathological scene for locating the
+renderer throughput knee. It emits a complete-frame histogram, stage totals,
+spike log, Aero profiler dump, and JFR recording:
+
+```powershell
+cd stationapi/test
+./gradlew runClientUltraStress -PultraLayers=8 -PultraSpacing=4 -Pbench=180
+```
+
+See [`ULTRA_STRESS_TEST.md`](ULTRA_STRESS_TEST.md) before increasing the
+defaults. The maximum 48-layer, every-chunk envelope can intentionally reduce
+the game to seconds per frame or exhaust the configured heap.
+
 ### CI and security checks
 
 `.github/workflows/ci.yml` mirrors the local validation path and adds security
