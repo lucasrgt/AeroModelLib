@@ -44,7 +44,8 @@ public final class AeroUltraStressState {
         System.out.println("[AeroUltraStress] measurement-ready centralMachines=" + count
             + " warmupSec=" + AeroUltraStressConfig.WARMUP_SECONDS
             + " durationSec=" + AeroUltraStressConfig.DURATION_SECONDS
-            + " journey=" + AeroUltraStressConfig.JOURNEY);
+            + " journey=" + AeroUltraStressConfig.JOURNEY
+            + " worldMode=" + AeroUltraStressConfig.WORLD_MODE);
     }
 
     public static boolean ready() {

@@ -30,7 +30,8 @@ public final class AeroUltraJourney {
         int phase = phaseIndex();
         double progress = phaseProgress();
         if (!AeroUltraStressConfig.JOURNEY || phase < 0) {
-            pose(game, -8.5d, middleY(), 8.5d, -90.0f, basePitch());
+            if (phase < 0 && AeroUltraStressConfig.steadyWorld()) rehearse(game);
+            else pose(game, -8.5d, middleY(), 8.5d, -90.0f, basePitch());
             return;
         }
         if (phase != announcedPhase) {
@@ -78,6 +79,24 @@ public final class AeroUltraJourney {
         else if (phase == 8) teleport(game, t);
         else pose(game, -8.5d, y, 8.5d + Math.sin(t * Math.PI * 4d) * 3d,
             -90f + (float) Math.sin(t * Math.PI * 2d) * 25f, basePitch());
+    }
+
+    /** Replays the route before measurement so steady mode visits every view set. */
+    private static void rehearse(Minecraft game) {
+        if (beginNs == 0L || AeroUltraStressConfig.WARMUP_SECONDS <= 0L) {
+            pose(game, -8.5d, middleY(), 8.5d, -90.0f, basePitch());
+            return;
+        }
+        double elapsed = (System.nanoTime() - beginNs) / 1_000_000_000.0d;
+        double warmup = AeroUltraStressConfig.WARMUP_SECONDS;
+        double scanFraction = 0.8d;
+        if (elapsed >= warmup * scanFraction) {
+            pose(game, -8.5d, middleY(), 8.5d, -90.0f, basePitch());
+            return;
+        }
+        double route = Math.max(0.0d, elapsed / (warmup * scanFraction)) * NAMES.length;
+        int phase = Math.min(NAMES.length - 1, (int) route);
+        applyPhase(game, phase, route - phase);
     }
 
     private static void orbit(Minecraft game, double y, double t) {

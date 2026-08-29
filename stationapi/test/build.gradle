@@ -380,6 +380,7 @@ tasks.register('runClientUltraStress') {
         def tessellatorBulk = (project.findProperty('ultraTessellatorBulk') ?: 'true').toString()
         def phaseSpread = (project.findProperty('ultraPhaseSpread') ?: 'false').toString()
         def culls = (project.findProperty('ultraCulls') ?: 'false').toString()
+        def worldMode = (project.findProperty('ultraWorldMode') ?: 'streaming').toString()
         def worldName = 'AeroUltra-' + System.currentTimeMillis()
         def jfrFile = new File(runDir, 'aero-ultra.jfr').absolutePath
         def jfrRepo = new File(runDir, 'jfr-ultra-repo').absolutePath
@@ -392,6 +393,7 @@ tasks.register('runClientUltraStress') {
             '-Daero.ultra.solidFloors=true',
             '-Daero.ultra.phaseSpread=' + phaseSpread,
             '-Daero.ultra.autoStart=true',
+            '-Daero.ultra.worldMode=' + worldMode,
             '-Daero.ultra.world=' + worldName,
             '-Daero.ultra.durationSec=' + benchSec,
             '-Daero.animatedLOD=2048',
@@ -426,6 +428,7 @@ tasks.register('runClientUltraStress') {
             + '; vertexReuse=' + vertexReuse
             + '; tessellatorBulk=' + tessellatorBulk
             + '; phaseSpread=' + phaseSpread
+            + '; worldMode=' + worldMode
             + '; measured=' + benchSec + 's')
         println '[runClientUltraStress] fresh auto-start world=' + worldName
         println '[runClientUltraStress] summary -> ' + summary + ' · JFR -> ' + jfrFile

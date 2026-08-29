@@ -76,6 +76,9 @@ static void beginClientTick() {
 static void endClientTick() {
         if (!TIMING_ENABLED || clientTickStartNs == 0L) return;
         lastClientTickNs = System.nanoTime() - clientTickStartNs;
+        clientTickTotalNs += lastClientTickNs;
+        if (lastClientTickNs > clientTickMaxNs) clientTickMaxNs = lastClientTickNs;
+        clientTickCalls++;
         lastClientTickAllocBytes = Aero_FrameSpikeMetrics.allocDeltaSince(clientTickStartAllocBytes);
         clientTickStartNs = 0L;
         clientTickStartAllocBytes = -1L;

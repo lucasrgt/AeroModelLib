@@ -51,7 +51,15 @@ public final class Aero_FrameSpikeLogger extends Aero_FrameSpikeState {
 
     /** Allocation-free read-only access for complete-census tooling. */
     public static long frameStartNanos() { return lastFrameStartNs; }
-    public static long clientTickNanos() { return lastClientTickNs; }
+    public static long clientTickNanos() { return clientTickTotalNs; }
+    public static long clientTickLastNanos() { return lastClientTickNs; }
+    public static long clientTickMaxNanos() { return clientTickMaxNs; }
+    public static long clientTickCalls() { return clientTickCalls; }
+    public static long currentThreadCpuNanos() {
+        return Aero_FrameSpikeMetrics.currentThreadCpuTimeNs();
+    }
+    public static long gameRendererUpdateNanos() { return lastGameRendererUpdateNs; }
+    public static long renderWorldNanos() { return lastRenderWorldNs; }
     public static long worldSaveNanos() { return lastWorldSaveNs; }
     public static long worldSaveSkipped() { return worldSaveSkipped; }
     public static long chunkCompileCalls() { return chunkCompileCalls; }

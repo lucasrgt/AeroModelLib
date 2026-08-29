@@ -12,6 +12,7 @@ final class AeroUltraStressConfig {
         Boolean.parseBoolean(System.getProperty("aero.ultra.phaseSpread", "false"));
     static final boolean JOURNEY =
         Boolean.parseBoolean(System.getProperty("aero.ultra.journey", "true"));
+    static final String WORLD_MODE = worldMode();
     static final int JOURNEY_CHECKPOINT =
         integer("aero.ultra.journeyCheckpoint", -1, -1, 9);
     static final long DURATION_SECONDS =
@@ -27,6 +28,19 @@ final class AeroUltraStressConfig {
 
     static int verticalStride() {
         return SOLID_FLOORS ? 2 : 1;
+    }
+
+    static boolean steadyWorld() {
+        return "steady".equals(WORLD_MODE);
+    }
+
+    private static String worldMode() {
+        String value = System.getProperty("aero.ultra.worldMode", "streaming")
+            .trim().toLowerCase();
+        if ("steady".equals(value) || "streaming".equals(value)) return value;
+        System.out.println("[AeroUltraStress] invalid aero.ultra.worldMode=" + value
+            + "; using streaming");
+        return "streaming";
     }
 
     private static int integer(String name, int fallback, int minimum, int maximum) {

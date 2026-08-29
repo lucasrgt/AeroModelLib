@@ -77,7 +77,13 @@ were actually generated, rather than inferring coverage from configuration.
 java tools/perf/UltraDensityMatrix.java --list
 java tools/perf/UltraDensityMatrix.java --warmup=10 --bench=15
 java tools/perf/UltraDensityMatrix.java --only=field-animated,dense-animated
+java tools/perf/UltraDensityMatrix.java --only=field-animated --mode=steady --warmup=30
 ```
+
+`--mode=streaming` measures traversal into cold view sets. `--mode=steady`
+rehearses the complete route during warmup and fails closed if any ULTRA tower
+is decorated during the measured window. The runner copies the per-profile
+JFR beside its JSON so a later profile cannot overwrite the causal evidence.
 
 The isolated profile is the causal control. Field and dense profiles qualify
 normal culling transitions across several chunks. Saturation places one tower

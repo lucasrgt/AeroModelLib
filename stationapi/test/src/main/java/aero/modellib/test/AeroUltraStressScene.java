@@ -9,10 +9,24 @@ final class AeroUltraStressScene {
     private static boolean announced;
     private static int centralBaseY;
     private static int populatedTowerChunks, placedMachines;
+    private static long pendingDecorationNanos, frameDecorationNanos;
+    private static int pendingDecorationChunks, frameDecorationChunks;
+    private static int pendingDecorationMachines, frameDecorationMachines;
 
     private AeroUltraStressScene() {}
 
     static void populate(WorldGenEvent.ChunkDecoration event) {
+        long startNs = System.nanoTime();
+        try {
+            populateTimed(event);
+        } finally {
+            pendingDecorationNanos += System.nanoTime() - startNs;
+            pendingDecorationChunks++;
+            pendingDecorationMachines += AeroUltraStressConfig.machinesPerChunk();
+        }
+    }
+
+    private static void populateTimed(WorldGenEvent.ChunkDecoration event) {
         int stride = AeroUltraStressConfig.verticalStride();
         int surfaceY = event.world.getTopSolidBlockY(event.x + 8, event.z + 8) + 1;
         int lastLayerOffset = (AeroUltraStressConfig.LAYERS - 1) * stride;
@@ -47,6 +61,19 @@ final class AeroUltraStressScene {
 
     static int populatedTowerChunks() { return populatedTowerChunks; }
     static int placedMachines() { return placedMachines; }
+
+    static void captureFrameDecoration() {
+        frameDecorationNanos = pendingDecorationNanos;
+        frameDecorationChunks = pendingDecorationChunks;
+        frameDecorationMachines = pendingDecorationMachines;
+        pendingDecorationNanos = 0L;
+        pendingDecorationChunks = 0;
+        pendingDecorationMachines = 0;
+    }
+
+    static long frameDecorationNanos() { return frameDecorationNanos; }
+    static int frameDecorationChunks() { return frameDecorationChunks; }
+    static int frameDecorationMachines() { return frameDecorationMachines; }
 
     private static void placeMachine(WorldGenEvent.ChunkDecoration event,
                                      int dx, int y, int dz, int kind) {

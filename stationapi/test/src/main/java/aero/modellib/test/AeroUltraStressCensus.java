@@ -54,7 +54,9 @@ public final class AeroUltraStressCensus {
     }
 
     public static void beforeFrame() {
-        if (!AeroUltraStressConfig.ENABLED || !AeroUltraStressState.ready()) return;
+        if (!AeroUltraStressConfig.ENABLED) return;
+        AeroUltraProfilerAdapter.captureFrameBoundary();
+        if (!AeroUltraStressState.ready()) return;
         long start = Aero_FrameSpikeLogger.frameStartNanos();
         if (start == 0L) return;
         long now = System.nanoTime();
@@ -70,6 +72,7 @@ public final class AeroUltraStressCensus {
             gcStartMillis = Aero_FrameSpikeLogger.gcCollectionTimeMillis();
         }
         long frameNs = Math.max(0L, now - start);
+        AeroUltraProfilerAdapter.record(frameNs);
         lastFrameNs = now;
         frames++;
         sumFrameNs += frameNs;
@@ -216,6 +219,7 @@ public final class AeroUltraStressCensus {
         pair(out, "maxAnimationRejected", maxAnimRejected).append(',').append('\n');
         pair(out, "maxSmallObjectCulled", maxSmallObjectCulled).append(',').append('\n');
         AeroUltraJourneyCensus.appendJson(out);
+        AeroUltraProfilerAdapter.appendJson(out);
         out.append("  \"stageOrder\": [\"clientTick\",\"worldSave\",\"chunkCompileMax\","
             + "\"terrainRender\",\"aeroPrepare\",\"cellRebuild\",\"entityRender\","
             + "\"aeroFlush\",\"displayUpdate\"],\n");

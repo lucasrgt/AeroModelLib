@@ -11,9 +11,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Diagnostic-only frame timings that used to live in
  * {@code aero.modellib.mixin.MinecraftFrameStageMixin} but are not needed
  * by any production opt-in feature. They populate
- * {@link Aero_FrameSpikeLogger}'s {@code lastClientTickNs} and
- * {@code lastProfilerChartNs} so the spike log line carries accurate
- * per-stage breakdowns when {@code -Daero.spikelog=true}. Lives in the
+ * {@link Aero_FrameSpikeLogger}'s last, cumulative, and maximum client-tick
+ * counters so the spike log line carries accurate per-stage breakdowns when
+ * {@code -Daero.spikelog=true}. Lives in the
  * test mod because cancelling/instrumenting these vanilla methods has no
  * place in a published model-rendering library.
  */

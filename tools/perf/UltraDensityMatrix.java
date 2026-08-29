@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 public final class UltraDensityMatrix {
     private static final Path TEST = Paths.get("stationapi", "test");
     private static final Path SUMMARY = TEST.resolve("run/aero-ultra-summary.json");
+    private static final Path JFR = TEST.resolve("run/aero-ultra.jfr");
     private static final Pattern NUMBER = Pattern.compile("\"([^\"]+)\"\\s*:\\s*(-?[0-9]+)");
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
@@ -60,18 +61,19 @@ public final class UltraDensityMatrix {
         int bench = integer(options, "bench", 15);
         int warmup = integer(options, "warmup", 10);
         int timeout = integer(options, "timeout", 600);
+        String mode = worldMode(options.get("mode"));
         Path output = TEST.resolve("run/density/" + STAMP.format(LocalDateTime.now()));
         Files.createDirectories(output);
         List<Result> results = new ArrayList<Result>();
         for (Profile profile : select(options.get("only"))) {
-            Result result = run(profile, bench, warmup, timeout, output);
+            Result result = run(profile, mode, bench, warmup, timeout, output);
             if (result != null) results.add(result);
             writeReports(results, output);
         }
         System.out.println("[Density] report=" + output.resolve("report.md").toAbsolutePath());
     }
 
-    private static Result run(Profile profile, int bench, int warmup, int timeout,
+    private static Result run(Profile profile, String mode, int bench, int warmup, int timeout,
                               Path output) throws Exception {
         List<String> command = new ArrayList<String>();
         command.add(TEST.resolve(isWindows() ? "gradlew.bat" : "gradlew").toAbsolutePath().toString());
@@ -80,13 +82,15 @@ public final class UltraDensityMatrix {
         command.add("-PultraSpacing=" + profile.spacing);
         command.add("-PultraPhaseSpread=" + profile.animated);
         command.add("-PultraCulls=" + profile.culls);
+        command.add("-PultraWorldMode=" + mode);
         command.add("-Pbench=" + bench);
         command.add("-Pwarmup=" + warmup);
         command.add("-PaeroJvmArgs=-Daero.benchmark.skipNonForcedSaves=true -Daero.animatedLOD="
             + (profile.animated ? "2048" : "0"));
         long started = System.currentTimeMillis();
-        System.out.println("[Density] " + profile.id + " layers=" + profile.layers
-            + " spacing=" + profile.spacing + " animated=" + profile.animated);
+        System.out.println("[Density] " + profile.id + " mode=" + mode
+            + " layers=" + profile.layers + " spacing=" + profile.spacing
+            + " animated=" + profile.animated);
         ProcessBuilder builder = new ProcessBuilder(command).directory(TEST.toFile());
         builder.redirectErrorStream(true);
         builder.redirectOutput(ProcessBuilder.Redirect.appendTo(output.resolve("runner.log").toFile()));
@@ -100,11 +104,17 @@ public final class UltraDensityMatrix {
             System.out.println("[Density] NO SUMMARY " + profile.id + " exit=" + process.exitValue());
             return null;
         }
-        Path copy = output.resolve(profile.id + ".json");
+        Path copy = output.resolve(profile.id + "-" + mode + ".json");
         Files.copy(SUMMARY, copy, StandardCopyOption.REPLACE_EXISTING);
+        if (Files.isRegularFile(JFR) && Files.getLastModifiedTime(JFR).toMillis() >= started)
+            Files.copy(JFR,
+            output.resolve(profile.id + "-" + mode + ".jfr"),
+            StandardCopyOption.REPLACE_EXISTING);
         Result result = new Result(profile, copy, numbers(copy));
         if (result.value("journeyCoverageComplete") != 1L)
             throw new IllegalStateException("Incomplete journey in " + copy);
+        if ("steady".equals(mode) && result.value("steadyWorldQualified") != 1L)
+            throw new IllegalStateException("Steady run decorated chunks during measurement: " + copy);
         System.out.printf(Locale.ROOT,
             "[Density] %.2f FPS p99=%.2f ms worst=%.2f ms towers=%d machines=%d%n",
             result.fps(), result.ms("p99FrameNanos"), result.ms("worstFrameNanos"),
@@ -114,7 +124,7 @@ public final class UltraDensityMatrix {
 
     private static void writeReports(List<Result> results, Path output) throws IOException {
         StringBuilder csv = new StringBuilder(
-            "profile,layers,spacing,animated,tower_chunks,machines,fps,p95_ms,p99_ms,worst_ms,over33,allocation_per_frame\n");
+            "profile,world_mode,layers,spacing,animated,tower_chunks,machines,fps,p95_ms,p99_ms,worst_ms,over33,allocation_per_frame\n");
         StringBuilder md = new StringBuilder("# ULTRA multi-chunk density envelope\n\n")
             .append("| Profile | Towers | Machines | FPS | p99 | Worst | >33 ms |\n")
             .append("| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n");
@@ -122,14 +132,16 @@ public final class UltraDensityMatrix {
             Profile p = result.profile;
             double allocation = result.value("frames") == 0L ? 0.0
                 : result.value("allocatedBytes") / (double) result.value("frames");
-            csv.append(p.id).append(',').append(p.layers).append(',').append(p.spacing).append(',')
+            String mode = string(result.source, "worldMode");
+            csv.append(p.id).append(',').append(mode).append(',').append(p.layers).append(',').append(p.spacing).append(',')
                 .append(p.animated).append(',').append(result.value("towerChunksPopulated")).append(',')
                 .append(result.value("machinesPlaced")).append(',').append(format(result.fps())).append(',')
                 .append(format(result.ms("p95FrameNanos"))).append(',')
                 .append(format(result.ms("p99FrameNanos"))).append(',')
                 .append(format(result.ms("worstFrameNanos"))).append(',')
                 .append(result.value("framesOver33ms")).append(',').append(format(allocation)).append('\n');
-            md.append("| ").append(p.id).append(" | ").append(result.value("towerChunksPopulated"))
+            md.append("| ").append(p.id).append(" (").append(mode).append(") | ")
+                .append(result.value("towerChunksPopulated"))
                 .append(" | ").append(result.value("machinesPlaced")).append(" | ")
                 .append(format(result.fps())).append(" | ").append(format(result.ms("p99FrameNanos")))
                 .append(" ms | ").append(format(result.ms("worstFrameNanos"))).append(" ms | ")
@@ -144,6 +156,13 @@ public final class UltraDensityMatrix {
         Map<String, Long> values = new LinkedHashMap<String, Long>();
         while (matcher.find()) values.put(matcher.group(1), Long.valueOf(matcher.group(2)));
         return values;
+    }
+
+    private static String string(Path file, String name) throws IOException {
+        Pattern pattern = Pattern.compile("\\\"" + Pattern.quote(name)
+            + "\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
+        Matcher matcher = pattern.matcher(Files.readString(file));
+        return matcher.find() ? matcher.group(1) : "unknown";
     }
 
     private static List<Profile> select(String requested) {
@@ -175,7 +194,15 @@ public final class UltraDensityMatrix {
         return options.containsKey(name) ? Integer.parseInt(options.get(name)) : fallback;
     }
 
+    private static String worldMode(String requested) {
+        String mode = requested == null ? "streaming" : requested.trim().toLowerCase(Locale.ROOT);
+        if ("steady".equals(mode) || "streaming".equals(mode)) return mode;
+        throw new IllegalArgumentException("Unknown world mode: " + mode
+            + " (expected steady or streaming)");
+    }
+
     private static void list() {
+        System.out.println("world modes: streaming, steady");
         for (Profile profile : PROFILES) System.out.println(profile.id + " layers="
             + profile.layers + " spacing=" + profile.spacing + " animated=" + profile.animated);
     }

@@ -37,6 +37,9 @@ static void logEvent(String kind, double frameMs, long gcCountDelta, long gcTime
             + " renderEntitiesMs=" + Aero_FrameSpikeFormat.round1(lastRenderEntitiesNs / 1000000.0d)
             + " renderEntitiesAllocMB=" + Aero_FrameSpikeFormat.round2(Aero_FrameSpikeFormat.bytesToMb(lastRenderEntitiesAllocBytes))
             + " clientTickMs=" + Aero_FrameSpikeFormat.round1(lastClientTickNs / 1000000.0d)
+            + " clientTickTotalMs=" + Aero_FrameSpikeFormat.round1(clientTickTotalNs / 1000000.0d)
+            + " clientTickMaxMs=" + Aero_FrameSpikeFormat.round1(clientTickMaxNs / 1000000.0d)
+            + " clientTickCalls=" + clientTickCalls
             + " clientTickAllocMB=" + Aero_FrameSpikeFormat.round2(Aero_FrameSpikeFormat.bytesToMb(lastClientTickAllocBytes))
             + " displayUpdateMs=" + Aero_FrameSpikeFormat.round1(lastDisplayUpdateNs / 1000000.0d)
             + " displayAllocMB=" + Aero_FrameSpikeFormat.round2(Aero_FrameSpikeFormat.bytesToMb(lastDisplayUpdateAllocBytes))

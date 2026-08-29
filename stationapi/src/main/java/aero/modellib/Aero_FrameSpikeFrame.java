@@ -96,6 +96,9 @@ static void resetFrameStageCounters() {
         lastRenderEntitiesAllocBytes = 0L;
         lastClientTickNs = 0L;
         lastClientTickAllocBytes = 0L;
+        clientTickTotalNs = 0L;
+        clientTickMaxNs = 0L;
+        clientTickCalls = 0L;
         lastDisplayUpdateNs = 0L;
         lastDisplayUpdateAllocBytes = 0L;
         lastProfilerChartNs = 0L;

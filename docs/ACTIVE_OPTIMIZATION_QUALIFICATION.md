@@ -83,3 +83,21 @@ performance. `tower-orbit`, `chunk-teleports`, and post-teleport recovery are
 the dominant hitch phases. Animation materially worsens the limit, but the
 at-rest run proves that chunk/world density alone can already exceed the frame
 budget.
+
+## Worldline Profiler follow-up
+
+The density runner now separates `streaming` from `steady` world state and
+preserves one JFR per profile. A focused field-animated causal pair found:
+
+| World mode | FPS | p99 | Worst | Frames >100 ms | Measured decoration |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Streaming | 63.47 | 37.5 ms | 268.4 ms | 3 | 5 chunks / 11.9 ms |
+| Steady | 58.90 | 30.9 ms | 36.2 ms | 0 | 0 chunks |
+
+The streaming worst frame contained one 253.4 ms client tick; ULTRA machine
+decoration did not occur in that frame. The measured-window JFR includes
+StationAPI paletted-state reads and Minecraft noise/world-generation methods
+among its hottest samples. This pair is causal evidence that the observed
+large field hitch belongs to cold world entry/tick work rather than Aero's
+steady render submission. It is not an FPS comparison: the short fresh-process
+runs were not counterbalanced for throughput.

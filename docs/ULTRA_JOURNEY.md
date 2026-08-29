@@ -25,6 +25,13 @@ The warmup is held at the canonical front pose. Measurement time is divided
 equally between the ten phases. The summary fails its coverage contract if any
 phase receives zero frames.
 
+`-Daero.ultra.worldMode=streaming` preserves that cold-route behavior. With
+`steady`, the warmup rehearses all ten camera phases, then spends its final
+20 percent back at the front pose. A steady result only qualifies when
+`steadyWorldQualified=1`, which requires `measurementDecoratedChunks=0`.
+Density remains an independent axis: the adversarial case is the saturation
+profile in streaming mode, not a third world mode.
+
 Multi-chunk profiles use a protected no-clip drone camera above the highest
 tower floor. This prevents suffocation or death from contaminating frame data
 and avoids placing the view inside a neighboring tower. The summary records
@@ -41,7 +48,8 @@ gradlew.bat runClientUltraStress -PultraCulls=true -PultraLayers=4 -Pbench=120 -
 
 `-PultraCulls=false` preserves the original raw-throughput envelope. Use true
 for visibility qualification. `-PultraLayers` controls density; `-Pbench`
-and `-Pwarmup` control measured and warmup seconds.
+and `-Pwarmup` control measured and warmup seconds. Pass
+`-PultraWorldMode=steady` to isolate an already visited route.
 
 For a frozen visual checkpoint, pass the zero-based phase index as a JVM
 property, for example `-Daero.ultra.journeyCheckpoint=7` for
@@ -50,7 +58,11 @@ Worldline can wait for render readiness and capture a stable framebuffer.
 
 The JSON summary includes aligned arrays for phase frame counts, average,
 p95, p99, worst frame, allocation, queued/immediate render counts, view culls,
-and visible chunks. `tools/perf/AblationMatrix.java` rejects incomplete
+and visible chunks. The Worldline Profiler adapter additionally records cumulative and
+maximum client-tick time, ticks per frame, game/render-world envelopes,
+unattributed wall/CPU time, and timed ULTRA decoration work. The logger's
+`clientTickTotalMs` is the sum of every catch-up tick between rendered frames;
+`clientTickMaxMs` is the slowest individual tick. `tools/perf/AblationMatrix.java` rejects incomplete
 journeys and writes both whole-run and per-phase CSV reports.
 
 ## Worldline binding
@@ -67,6 +79,12 @@ Performance and visual equivalence are separate gates. A faster phase is not
 accepted when its checkpoint image differs, and a matching image does not
 prove that the optimization activated. Activation counters and scene coverage
 must both be non-zero before a result is interpreted.
+
+The extension manifest binds the tick and camera roots. The neutral frame
+census, codec, aggregation vocabulary, paired plan, nonce, exact measurement
+window, and framebuffer decision belong to the Worldline Profiler. Aero's
+test extension owns only runtime-hook acquisition, ULTRA scene qualification,
+and Aero renderer counters.
 
 ## Deliberate non-claim
 

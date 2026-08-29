@@ -70,6 +70,9 @@ class Aero_FrameSpikeState {
     static long clientTickStartAllocBytes;
     static long lastClientTickNs;
     static long lastClientTickAllocBytes;
+    static long clientTickTotalNs;
+    static long clientTickMaxNs;
+    static long clientTickCalls;
     static long displayUpdateStartNs;
     static long displayUpdateStartAllocBytes;
     static long lastDisplayUpdateNs;
