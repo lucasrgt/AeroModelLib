@@ -20,7 +20,7 @@ histórico detalhado e o protocolo experimental.
 
 ## Validação Atual
 
-- [x] `modloader/tests/run.ps1`: 222 testes passando.
+- [x] Canonical pure-Java gate: 252 tests passing.
 - [x] `stationapi`: `compileJava remapJar` passando.
 - [x] `stationapi/test`: `compileJava` passando.
 - [x] Spike logger em torre densa: Cell Pages/BPDL não recompilam durante os
@@ -69,6 +69,16 @@ histórico detalhado e o protocolo experimental.
   `drawGroupsMorph` nos dois runtimes lê por índice — sem iterator de mapa,
   `Map.Entry` ou unboxing de `Float` por draw com morph ativo. Catálogo:
   `aero.skeletal.morph-weight-arrays`.
+- [x] Fresh-world A/B rejected the chunk-scoped PalettedContainer cache:
+  chunk compilation rose from `1.999` to `2.232 s`, measured allocation from
+  `882` to `1295 MB`, and throughput fell from `102.87` to `89.86 FPS`.
+- [x] The complete 14-OBJ test corpus produced zero removable hidden-face
+  pairs, so OBJ hidden-face removal remains an asset-specific opt-in.
+- [x] A matched 244-instance Cell Page A/B qualified high-memory flattening:
+  `145.31 -> 165.06 FPS`, `p99 16.6 -> 13.6 ms`, and average cell flush
+  `0.57 -> 0.20 ms`. It remains opt-in because the speedup duplicates geometry
+  in driver memory. `perInstanceLight` did not reduce the 40-page count, and
+  steady-state page rebuilds remained zero, leaving `stableMembership` idle.
 - [ ] Rodar benchmark visual/stress com muitos BEs reais.
 - [ ] Rodar JFR antes/depois para confirmar ganho real em produção.
 - [ ] Conferir adoção em mods consumidores reais.
@@ -91,14 +101,15 @@ histórico detalhado e o protocolo experimental.
 - [ ] Iteração vanilla por todos os BEs antes do skip por `distanceFrom`.
   - [x] Mitigação parcial: a chamada ainda existe, mas não força full
     `Aero_BECellIndex.track(...)` por BE/frame quando o BE não se moveu.
-- [ ] Triângulos desnecessários em OBJ grande sem
-  `-Daero.obj.cullhidden=true`.
-- [ ] Chunk meshing / `PalettedContainer.get` em entrada de mundo ou chunk novo,
-  agora com modo chunk-scoped para A/B; default-off não aplica mixin nenhum.
+- [ ] Hidden coincident triangles in consumer-authored OBJs; the current
+  14-asset corpus has none for `-Daero.obj.cullhidden=true` to remove.
+- [x] Chunk-scoped `PalettedContainer.get` caching rejected; default-off omits
+  the hot mixin and is the maintained path.
 - [ ] Falta de LODs reais nos assets dos consumidores.
-- [ ] Avaliar modo high-memory se CPU/driver continuarem no topo.
-- [ ] Validar flags de fragmentação de Cell Pages em cena real:
-  `perInstanceLight`, `lightBuckets`, `stableMembership`, `maxCachedPages`.
+- [x] High-memory mode qualified for dense at-rest Cell Pages, but remains
+  explicit because flattened pages trade driver memory for fewer nested calls.
+- [x] Cell Page fragmentation flags qualified in ULTRA: no brightness page
+  reduction and no membership churn were present; keep those controls opt-in.
 - [ ] Validar em jogo se os lag spikes ritmados perto da torre sumiram com
   heap inicial maior (`-Xms2G`) e, se persistirem, capturar JFR para separar
   GC/JIT/chunk rebuild/driver.
@@ -233,14 +244,15 @@ histórico detalhado e o protocolo experimental.
   - [ ] Precisa desenho seguro para contrato vanilla/StationAPI.
   - [ ] Flag proposta: `-Daero.chunkmesh.async=true` default off.
 
-- [x] **B9. Cache chunk-scope no caller de `PalettedContainer.get` - CONCLUÍDO, OPT-IN**
+- [x] **B9. Cache chunk-scope no caller de `PalettedContainer.get` - REJEITADO**
   - [x] `ChunkBuilderPalettedCacheScopeMixin` abre escopo em
     `ChunkBuilder.rebuild()` somente quando chunk-scope está opt-in.
   - [x] `PalettedContainerCacheMixin` é aplicado somente no modo global antigo
     ou no escopo opt-in; default-off não injeta no método quente.
   - [x] Flag nova: `-Daero.palettedcache.chunkScope=true`.
   - [x] Flag A/B antiga: `-Daero.palettedcache=true`.
-  - [ ] Benchmark de entrada de mundo/chunk novo antes de ligar por padrão.
+  - [x] Fresh-world benchmark regressed chunk compile by 11.7%, allocation by
+    46.8%, and throughput by 12.7%; retained only as an explicit oracle.
 
 - [x] **B10. Motion-based animation simplification - CONCLUÍDO**
   - [x] `Aero_AnimationTickLOD.tickStrideWithMotion(...)`.
@@ -318,7 +330,12 @@ histórico detalhado e o protocolo experimental.
     evicção por menor `lastUsedFrame` (`-1` = sem limite/default normal).
   - [x] Métricas: `compiledCachedPages`, `expiredCachedPages`,
     `evictedCachedPages`, `cachedPageCount`, `directFallbacksThisFrame`.
-  - [ ] Rodar A/B com muitos BEs reais para escolher defaults por mod/cena.
+  - [x] ULTRA A/B queued 244 at-rest instances into 40 pages with zero
+    steady-state rebuilds. `perInstanceLight` kept the same page count;
+    `stableMembership` had no churn to remove. Both remain opt-in.
+  - [x] `-Daero.becell.flatten=true` reduced average flush from `0.57` to
+    `0.23 ms`; the high-memory aggregate reached `0.20 ms`, but remains opt-in
+    because it duplicates full geometry in driver memory.
 
 - [x] **C4. Central cell flush - CONCLUÍDO**
   - [x] `Aero_BECellRenderer.flush(...)` no fim de
@@ -354,7 +371,7 @@ histórico detalhado e o protocolo experimental.
 
 ## Grupo E - High-Memory Performance Mode
 
-- [x] **E1. Preset agressivo de cache RAM/driver - INFRA CONCLUÍDA, BENCH PENDENTE**
+- [x] **E1. Preset agressivo de cache RAM/driver - QUALIFICADO, OPT-IN**
   - [x] Preset `-Daero.perf.memory=high`.
   - [x] TTL de Cell Pages sobe de `600` para `1800` se a flag específica não
     for passada.
@@ -366,6 +383,8 @@ histórico detalhado e o protocolo experimental.
     regressão representativa A/B.
   - [x] Cache de OBJ/JSON runtime fica sem limite dentro do preset
     (`aero.modellib.cache.maxEntries=-1` efetivo).
+  - [x] Matched 244-instance Cell Page A/B: `145.31 -> 165.06 FPS`,
+    `p99 16.6 -> 13.6 ms`, cell flush `0.57 -> 0.20 ms`.
   - [ ] Usar LODs reais em assets grandes.
   - [x] `Aero_DisplayListBudget` limita display lists vivas em StationAPI.
   - [x] Métricas: `liveLists`, `peakLiveLists`, `totalAllocatedLists`,
@@ -400,13 +419,16 @@ histórico detalhado e o protocolo experimental.
   page.
 - [ ] Criar assets `lod1/lod2` reais e declarar via
   `Aero_ModelSpec.meshLod(...)`.
-- [ ] Rodar A/B de `-Daero.obj.cullhidden=true` em OBJs grandes.
-- [ ] Rodar A/B de `-Daero.palettedcache.chunkScope=true` em entrada de mundo.
-- [ ] Rodar A/B de `-Daero.perf.memory=high` e conferir stutter/VRAM/driver.
-- [ ] Rodar A/B de `-Daero.becell.perInstanceLight=true` se
-  `directFallbacksThisFrame`/páginas pequenas indicarem fragmentação por luz.
-- [ ] Rodar A/B de `-Daero.becell.stableMembership=true` se
-  `pageRebuildsThisFrame` ficar alto sem mudança visual real.
+- [x] Audit `-Daero.obj.cullhidden=true`: all 14 current OBJs retained their
+  original triangle counts; repeat only when a consumer supplies a qualifying
+  asset.
+- [x] Reject `-Daero.palettedcache.chunkScope=true` after fresh-world A/B.
+- [x] Qualify `-Daero.perf.memory=high`: materially faster for dense Cell
+  Pages, still opt-in pending weak-GPU/VRAM validation.
+- [x] `-Daero.becell.perInstanceLight=true` A/B kept the same 40 cached pages
+  and did not remove brightness fragmentation in the current scene.
+- [x] `-Daero.becell.stableMembership=true` had no trigger to address:
+  `pageRebuildsThisFrame` stayed zero after warmup.
 - [ ] Só considerar A6 dispatcher/cell iteration invasivo se iteração vanilla
   por BE continuar cara depois do skip individual.
 

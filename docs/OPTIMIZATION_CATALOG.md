@@ -58,8 +58,7 @@ remains active because the supported implementation is shipped.
 - TTL-bounded resolved smooth-light cache for static instances.
 - Cell-page fragmentation controls, prewarm, display-list budget, and the
   aggregate high-memory preset.
-- Chunk-scoped paletted cache, chunk compile budget, frame pacing, and the
-  adaptive render-load governor.
+- Chunk compile budget, frame pacing, and the adaptive render-load governor.
 
 ### Rejected implementations
 
@@ -71,6 +70,11 @@ remains active because the supported implementation is shipped.
   read even while the cache was logically off. Aero reports roughly 20%
   lower steady-state FPS. The mixin plugin now omits it unless explicitly
   opted in.
+- `aero.chunk.paletted-cache-scope`: limiting that cache to
+  `ChunkBuilder.rebuild()` still requires the injected callback on every
+  mixed-in read. In a fresh-world A/B it made chunk compilation 11.7% slower,
+  raised measured allocation 46.8%, and reduced throughput 12.7%. The flag is
+  retained only as a research oracle.
 - `aero.render.six-plane-frustum`: the current lazy plane capture can read
   stale or uninitialized data and over-cull visible block entities.
 - `aero.render.client-vertex-arrays`: duplicating Beta's already mature client

@@ -7,6 +7,15 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Remaining candidate qualification.** Fresh-world evidence rejects the
+  chunk-scoped PalettedContainer cache: chunk compilation regressed 11.7%,
+  allocation rose 46.8%, and throughput fell 12.7%. The 14-OBJ corpus gave
+  hidden-face culling nothing to remove. In the matched at-rest Cell Page
+  scene, high-memory flattening improved 145.31 to 165.06 FPS and cut average
+  cell flush from 0.57 to 0.20 ms; it remains opt-in because geometry is
+  duplicated in driver memory. Per-instance light did not reduce page count,
+  membership remained stable, and a bounded auto-flatten experiment was
+  neutral and removed.
 - **Unique rest-pose Tessellator staging.** Named body groups without an
   active animated bone now write their unchanged scale-and-translate stream
   directly into StationAPI's Tessellator buffer instead of calling `vertex`

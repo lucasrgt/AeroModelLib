@@ -181,6 +181,24 @@ sizes:
 The exact evaluator remains the default, including under the high-memory
 preset. The guarded LUT stays available only as a research oracle.
 
+### At-rest Cell Page qualification
+
+Set `-Daero.animatedLOD=0` to route eligible machines through Cell Pages. A
+matched one-layer, 244-instance pair produced 40 cached pages and zero
+steady-state rebuilds. Enabling `perInstanceLight` did not reduce that page
+count, and `stableMembership` had no rebuild churn to remove.
+
+Full flattening was valuable: the matched high-memory run improved 145.31 to
+165.06 FPS, reduced p99 from 16.6 to 13.6 ms, and cut average world flush from
+0.57 to 0.20 ms. Isolating `-Daero.becell.flatten=true` cut flush to 0.23 ms.
+The option remains explicit because flattened pages duplicate model geometry
+in driver memory. A bounded 4,096-vertex auto-flatten experiment was neutral
+(147.41 versus 148.62 FPS, 0.52 versus 0.53 ms flush) and was removed.
+
+The fresh-world chunk-scoped PalettedContainer cache was also rejected. It
+raised measured chunk compile time from 1.999 to 2.232 seconds and allocation
+from 882 to 1,295 MB while reducing throughput from 102.87 to 89.86 FPS.
+
 The task creates a uniquely named fixed-seed world, loads the central tower,
 pins the camera beside it, waits for every central machine, warms up, measures
 for the requested benchmark duration, and exits without menu interaction. It
