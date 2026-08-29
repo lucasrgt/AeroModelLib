@@ -7,6 +7,11 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Rejected OpenGL 1.1 client-array experiment retained behind an opt-in.**
+  `-Daero.clientarrays=true` bypasses `Tessellator.vertex` with a specialized
+  reusable `T2F_C4UB_V3F` buffer, but the isolated 1,024-animation A/B made
+  the Aero flush 11.6% slower. It remains off by default so the measured
+  failure and its telemetry prevent accidental promotion or reinvention.
 - **Dense BlockEntity hot-path cleanup.**
   `Aero_RenderDistanceBlockEntity` now shadows its last cell-relevant state
   and only enters the global `IdentityHashMap` index when world, position,

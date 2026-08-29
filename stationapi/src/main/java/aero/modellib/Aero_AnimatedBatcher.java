@@ -101,12 +101,19 @@ public final class Aero_AnimatedBatcher {
 
     static void beginFrameCounters() {
         queued = flushedInstances = flushedBatches = bonePageDrained = immediate = 0;
+        Aero_ClientArrayBuffer.beginFrameCounters();
     }
     public static int queuedThisFrame() { return queued; }
     public static int flushedInstancesThisFrame() { return flushedInstances; }
     public static int flushedBatchesThisFrame() { return flushedBatches; }
     public static int bonePageDrainedInstancesThisFrame() { return bonePageDrained; }
     public static int immediateRendersThisFrame() { return immediate; }
+    public static int clientArrayDrawsThisFrame() {
+        return Aero_ClientArrayBuffer.drawsThisFrame();
+    }
+    public static int clientArrayVerticesThisFrame() {
+        return Aero_ClientArrayBuffer.verticesThisFrame();
+    }
 
     private static int integer(String name, int fallback, int min, int max) {
         try {

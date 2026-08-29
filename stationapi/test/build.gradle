@@ -374,6 +374,7 @@ tasks.register('runClientUltraStress') {
         def benchSec = (project.findProperty('bench') ?: '180').toString()
         def warmupSec = (project.findProperty('warmup') ?: '30').toString()
         def profiler = (project.findProperty('ultraProfiler') ?: 'false').toString()
+        def clientArrays = (project.findProperty('ultraClientArrays') ?: 'false').toString()
         def worldName = 'AeroUltra-' + System.currentTimeMillis()
         def jfrFile = new File(runDir, 'aero-ultra.jfr').absolutePath
         def jfrRepo = new File(runDir, 'jfr-ultra-repo').absolutePath
@@ -392,6 +393,7 @@ tasks.register('runClientUltraStress') {
             '-Daero.chunkvisibility=false',
             '-Daero.frustumcull=false',
             '-Daero.profiler=' + profiler,
+            '-Daero.clientarrays=' + clientArrays,
             '-Daero.spikelog=true',
             '-Daero.spikelog.ms=16.67',
             '-Daero.spikelog.intervalMs=1000',
@@ -411,6 +413,7 @@ tasks.register('runClientUltraStress') {
         println('[runClientUltraStress] layers=' + layers + ' (machines/tower='
             + (256 * Integer.parseInt(layers)) + ') spacing=' + spacing
             + ' chunks; culls off; native saves on; profiler=' + profiler
+            + '; clientArrays=' + clientArrays
             + '; measured=' + benchSec + 's')
         println '[runClientUltraStress] fresh auto-start world=' + worldName
         println '[runClientUltraStress] summary -> ' + summary + ' · JFR -> ' + jfrFile

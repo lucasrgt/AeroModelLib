@@ -41,6 +41,9 @@ import aero.modellib.util.Aero_Profiler;
  *     and iterates a precomputed entry array (no Iterator/Entry alloc).
  *   - Bone/pivot resolution memoized per (clip identity) on the model.
  */
+@aero.modellib.optimization.OptimizationRef({
+    "aero.render.animated-batcher", "aero.render.client-vertex-arrays"
+})
 final class Aero_MeshBatchRenderer extends Aero_MeshRendererState {
     private Aero_MeshBatchRenderer() {}
 
@@ -70,6 +73,12 @@ static void renderAnimatedBatch(Aero_AnimatedBatcher.Batch batch) {
                 perInstancePoses, perInstancePoseActive);
             if (!canBatch) {
                 Aero_MeshBatchRenderer3.drainAsUnbatched(batch, count);
+                return;
+            }
+
+            if (Aero_MeshClientArrayRenderer.ENABLED) {
+                Aero_MeshClientArrayRenderer.render(batch, model, options, renderPlan,
+                    entries, perInstancePoses, perInstancePoseActive, count);
                 return;
             }
 

@@ -23,7 +23,8 @@ public final class AeroUltraStressCensus {
     private static long frames, sumFrameNs, worstFrameNs, allocatedBytes;
     private static long over16, over33, over50, over100, over250, over1000;
     private static long gcStartCount, gcStartMillis;
-    private static int maxQueued, maxBatches, maxPages, maxCachedPages, maxLiveLists;
+    private static int maxQueued, maxBatches, maxClientArrayDraws, maxClientArrayVertices;
+    private static int maxPages, maxCachedPages, maxLiveLists;
     private static final long[] STAGE_SUMS = new long[9];
     private static final long[] WORST_STAGES = new long[9];
     private static final long[] CURRENT_STAGES = new long[9];
@@ -70,6 +71,10 @@ public final class AeroUltraStressCensus {
         allocatedBytes += Math.max(0L, Aero_FrameSpikeLogger.frameAllocatedBytes());
         maxQueued = Math.max(maxQueued, Aero_AnimatedBatcher.queuedThisFrame());
         maxBatches = Math.max(maxBatches, Aero_AnimatedBatcher.flushedBatchesThisFrame());
+        maxClientArrayDraws = Math.max(maxClientArrayDraws,
+            Aero_AnimatedBatcher.clientArrayDrawsThisFrame());
+        maxClientArrayVertices = Math.max(maxClientArrayVertices,
+            Aero_AnimatedBatcher.clientArrayVerticesThisFrame());
         maxPages = Math.max(maxPages, Aero_BECellRenderer.pageRebuildsThisFrame());
         maxCachedPages = Math.max(maxCachedPages, Aero_BECellRenderer.cachedPageCount());
         maxLiveLists = Math.max(maxLiveLists, Aero_DisplayListBudget.liveLists());
@@ -143,6 +148,8 @@ public final class AeroUltraStressCensus {
         pair(out, "gcNanos", gcMillis * 1_000_000L).append(',').append('\n');
         pair(out, "maxAnimatedQueued", maxQueued).append(',').append('\n');
         pair(out, "maxAnimatedBatches", maxBatches).append(',').append('\n');
+        pair(out, "maxClientArrayDraws", maxClientArrayDraws).append(',').append('\n');
+        pair(out, "maxClientArrayVertices", maxClientArrayVertices).append(',').append('\n');
         pair(out, "maxPageRebuilds", maxPages).append(',').append('\n');
         pair(out, "maxCachedPages", maxCachedPages).append(',').append('\n');
         pair(out, "maxLiveDisplayLists", maxLiveLists).append(',').append('\n');

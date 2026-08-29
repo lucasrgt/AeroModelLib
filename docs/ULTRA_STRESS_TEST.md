@@ -31,6 +31,35 @@ From `stationapi/test`:
 ./gradlew runClientUltraStress -PultraLayers=8 -PultraSpacing=4 -Pbench=180 -Pwarmup=30
 ```
 
+To compare the OpenGL 1.1 client-array candidate against the Tessellator
+oracle, run the same fixed level twice and change only this property:
+
+```text
+./gradlew runClientUltraStress -PultraLayers=8 -PultraSpacing=4 -Pbench=180 -Pwarmup=30 -PultraClientArrays=true
+```
+
+The summary reports `maxClientArrayDraws` and `maxClientArrayVertices`; both
+must remain zero in the oracle run and become non-zero in the candidate run.
+
+### Isolated client-array A/B (rejected)
+
+The August 29, 2026 isolated run used one central 2,048-machine tower
+(`spacing=32`), 1,024 simultaneously animated instances, a 5-second warmup,
+and a 15-second measured window. The specialized client-array path submitted
+up to 1,026,528 vertices in 170 draws per frame, but lost to Tessellator:
+
+| Metric | Tessellator | Client arrays |
+| --- | ---: | ---: |
+| Average FPS | 25.73 | 24.16 |
+| Average frame | 38.86 ms | 41.39 ms |
+| Average Aero flush | 17.03 ms | 19.00 ms |
+| Allocation/frame | 2.62 MiB | 3.04 MiB |
+
+The client-array flush was 11.6% slower. The record is therefore rejected and
+the flag remains off by default. This is not a GPU-feature gap: Beta's
+Tessellator already stages an on-heap integer array and submits client arrays;
+the alternative merely duplicated a mature path.
+
 The task creates a uniquely named fixed-seed world, loads the central tower,
 pins the camera beside it, waits for every central machine, warms up, measures
 for the requested benchmark duration, and exits without menu interaction. It
