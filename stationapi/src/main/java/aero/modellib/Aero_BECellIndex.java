@@ -18,6 +18,11 @@ public final class Aero_BECellIndex {
     public static void track(BlockEntity blockEntity) {
         if (ENABLED) Aero_BECellStore.track(blockEntity);
     }
+    static void trackState(BlockEntity blockEntity, int state, int orientation,
+            boolean page, boolean animation) {
+        if (ENABLED) Aero_BECellStore.trackState(
+            blockEntity, state, orientation, page, animation);
+    }
     public static void untrack(BlockEntity blockEntity) { Aero_BECellStore.untrack(blockEntity); }
     public static void markDirty(BlockEntity blockEntity) { Aero_BECellStore.markDirty(blockEntity); }
     public static ArrayList<Cell> snapshotCells() { return Aero_BECellStore.snapshot(false); }

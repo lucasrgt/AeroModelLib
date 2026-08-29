@@ -287,6 +287,8 @@ histórico detalhado e o protocolo experimental.
   - [x] `Aero_RenderDistanceBlockEntity.distanceFrom(...)` evita revalidar
     estado/célula por frame quando mundo/posição não mudaram; o full track
     continua no tick/lifecycle.
+  - [x] O tick mantém uma sombra local de estado/orientação/paging/animação e
+    só consulta/muta o `IdentityHashMap` global quando essa assinatura muda.
   - [ ] BEs que não herdam a base precisam chamar track/untrack ou ganhar hook.
   - [ ] Migrar consumidores reais.
 

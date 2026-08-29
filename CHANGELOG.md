@@ -7,6 +7,13 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Dense BlockEntity hot-path cleanup.**
+  `Aero_RenderDistanceBlockEntity` now shadows its last cell-relevant state
+  and only enters the global `IdentityHashMap` index when world, position,
+  render state, orientation, paging, or animation membership changes. The
+  automatic per-tick dirty detection remains intact. StationAPI also reuses
+  the sound-coalescing dispatcher instead of allocating one adapter per world
+  flush.
 - **Opt-in resolved smooth-light cache (smooth-light-resolved).**
   `Aero_SmoothLightCache` keeps the resolved per-triangle brightness of each
   (world, geometry, block position) smooth-lit instance under a bounded TTL

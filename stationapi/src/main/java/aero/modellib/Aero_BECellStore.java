@@ -27,21 +27,30 @@ final class Aero_BECellStore {
 
     static void track(BlockEntity blockEntity) {
         if (blockEntity == null || !(blockEntity instanceof Aero_CellRenderableBE)) return;
+        Aero_CellRenderableBE renderable = (Aero_CellRenderableBE) blockEntity;
+        if (blockEntity.world == null) { untrack(blockEntity); return; }
+        trackState(blockEntity, renderable.aeroRenderStateHash(),
+            renderable.aeroOrientationHash(), renderable.aeroCanCellPage(),
+            renderable.aeroWantsAnimation());
+    }
+
+    static void trackState(BlockEntity blockEntity, int state, int orientation,
+            boolean page, boolean animation) {
+        if (blockEntity == null || !(blockEntity instanceof Aero_CellRenderableBE)) return;
         Object world = blockEntity.world;
         if (world == null) { untrack(blockEntity); return; }
-        Aero_CellRenderableBE renderable = (Aero_CellRenderableBE) blockEntity;
         int x = Math.floorDiv(blockEntity.x, Aero_BECellIndex.CELL_SIZE);
         int y = Math.floorDiv(blockEntity.y, Aero_BECellIndex.CELL_SIZE);
         int z = Math.floorDiv(blockEntity.z, Aero_BECellIndex.CELL_SIZE);
         long key = pack(x, y, z);
         Entry existing = ENTRIES.get(blockEntity);
         if (existing != null && existing.world == world && existing.key == key) {
-            update(existing, renderable);
+            update(existing, state, orientation, page, animation);
             return;
         }
         if (existing != null) { remove(blockEntity, existing, true); moves++; }
         Aero_BECellIndex.Cell cell = cell(world, key, x, y, z);
-        Entry entry = new Entry(world, key, cell, renderable);
+        Entry entry = new Entry(world, key, cell, state, orientation, page, animation);
         cell.entries.add(blockEntity);
         ENTRIES.put(blockEntity, entry);
         dirty(cell);
@@ -87,11 +96,8 @@ final class Aero_BECellStore {
         dirty--;
     }
 
-    private static void update(Entry entry, Aero_CellRenderableBE renderable) {
-        int state = renderable.aeroRenderStateHash();
-        int orientation = renderable.aeroOrientationHash();
-        boolean page = renderable.aeroCanCellPage();
-        boolean animation = renderable.aeroWantsAnimation();
+    private static void update(Entry entry, int state, int orientation,
+            boolean page, boolean animation) {
         if (entry.state == state && entry.orientation == orientation
                 && entry.page == page && entry.animation == animation) return;
         entry.state = state; entry.orientation = orientation;
@@ -155,10 +161,11 @@ final class Aero_BECellStore {
         final Aero_BECellIndex.Cell cell;
         int state, orientation;
         boolean page, animation;
-        Entry(Object world, long key, Aero_BECellIndex.Cell cell, Aero_CellRenderableBE renderable) {
+        Entry(Object world, long key, Aero_BECellIndex.Cell cell, int state,
+                int orientation, boolean page, boolean animation) {
             this.world = world; this.key = key; this.cell = cell;
-            state = renderable.aeroRenderStateHash(); orientation = renderable.aeroOrientationHash();
-            page = renderable.aeroCanCellPage(); animation = renderable.aeroWantsAnimation();
+            this.state = state; this.orientation = orientation;
+            this.page = page; this.animation = animation;
         }
     }
 }

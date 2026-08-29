@@ -16,7 +16,7 @@ import aero.modellib.render.Aero_RenderLod;
  * special-renderer limit scale with the player's render distance under a cap,
  * and provides an opt-in animation-tick LOD via {@link #shouldTickAnimation()}.
  */
-@OptimizationRef({"aero.render.be-skip-individual"})
+@OptimizationRef({"aero.render.be-skip-individual", "aero.render.be-cell-index"})
 public class Aero_RenderDistanceBlockEntity extends BlockEntity implements Aero_CellRenderableBE {
 
     /** Monotonic counter for phase-stable tick LOD; incremented on every call. */
@@ -25,6 +25,10 @@ public class Aero_RenderDistanceBlockEntity extends BlockEntity implements Aero_
     private int aeroCellTrackedX;
     private int aeroCellTrackedY;
     private int aeroCellTrackedZ;
+    private int aeroCellTrackedState;
+    private int aeroCellTrackedOrientation;
+    private boolean aeroCellTrackedPage;
+    private boolean aeroCellTrackedAnimation;
     private boolean aeroCellTracked;
 
     protected double getAeroRenderRadius() {
@@ -38,7 +42,7 @@ public class Aero_RenderDistanceBlockEntity extends BlockEntity implements Aero_
     @Override
     public void tick() {
         super.tick();
-        aeroTrackCellFull();
+        aeroRefreshCellTrack();
     }
 
     @Override
@@ -166,16 +170,45 @@ public class Aero_RenderDistanceBlockEntity extends BlockEntity implements Aero_
     }
 
     private void aeroTrackCellFull() {
-        Aero_BECellIndex.track(this);
         if (this.world == null) {
+            Aero_BECellIndex.untrack(this);
             aeroClearCellTrack();
             return;
         }
+        int state = aeroRenderStateHash();
+        int orientation = aeroOrientationHash();
+        boolean page = aeroCanCellPage();
+        boolean animation = aeroWantsAnimation();
+        Aero_BECellIndex.trackState(this, state, orientation, page, animation);
         aeroCellTrackedWorld = this.world;
         aeroCellTrackedX = this.x;
         aeroCellTrackedY = this.y;
         aeroCellTrackedZ = this.z;
+        aeroCellTrackedState = state;
+        aeroCellTrackedOrientation = orientation;
+        aeroCellTrackedPage = page;
+        aeroCellTrackedAnimation = animation;
         aeroCellTracked = true;
+    }
+
+    private void aeroRefreshCellTrack() {
+        if (!aeroCellTracked || aeroCellTrackedWorld != this.world
+                || aeroCellTrackedX != this.x || aeroCellTrackedY != this.y
+                || aeroCellTrackedZ != this.z) {
+            aeroTrackCellFull();
+            return;
+        }
+        int state = aeroRenderStateHash();
+        int orientation = aeroOrientationHash();
+        boolean page = aeroCanCellPage();
+        boolean animation = aeroWantsAnimation();
+        if (state == aeroCellTrackedState && orientation == aeroCellTrackedOrientation
+                && page == aeroCellTrackedPage && animation == aeroCellTrackedAnimation) return;
+        Aero_BECellIndex.trackState(this, state, orientation, page, animation);
+        aeroCellTrackedState = state;
+        aeroCellTrackedOrientation = orientation;
+        aeroCellTrackedPage = page;
+        aeroCellTrackedAnimation = animation;
     }
 
     private void aeroTrackCellIfMoved() {
@@ -200,6 +233,10 @@ public class Aero_RenderDistanceBlockEntity extends BlockEntity implements Aero_
         aeroCellTrackedX = 0;
         aeroCellTrackedY = 0;
         aeroCellTrackedZ = 0;
+        aeroCellTrackedState = 0;
+        aeroCellTrackedOrientation = 0;
+        aeroCellTrackedPage = false;
+        aeroCellTrackedAnimation = false;
         aeroCellTracked = false;
     }
 }

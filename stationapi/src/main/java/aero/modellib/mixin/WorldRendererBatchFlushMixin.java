@@ -39,7 +39,9 @@ import aero.modellib.util.Aero_SoundCoalesce;
  * rather than leaking memory.
  */
 @Mixin(WorldRenderer.class)
+@aero.modellib.optimization.OptimizationRef({"aero.audio.sound-coalescing"})
 public abstract class WorldRendererBatchFlushMixin {
+    private static final SoundDispatcher SOUND_DISPATCHER = new SoundDispatcher();
 
     @Inject(
         method = "renderEntities(Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/client/render/Culler;F)V",
@@ -142,9 +144,13 @@ public abstract class WorldRendererBatchFlushMixin {
             if (game instanceof Minecraft) {
                 World w = ((Minecraft) game).world;
                 if (w != null) {
-                    Aero_SoundCoalesce.flush(
-                        cameraPos.x, cameraPos.y, cameraPos.z,
-                        new SoundDispatcher(w));
+                    SOUND_DISPATCHER.world = w;
+                    try {
+                        Aero_SoundCoalesce.flush(
+                            cameraPos.x, cameraPos.y, cameraPos.z, SOUND_DISPATCHER);
+                    } finally {
+                        SOUND_DISPATCHER.world = null;
+                    }
                 }
             }
         } finally {
@@ -153,13 +159,11 @@ public abstract class WorldRendererBatchFlushMixin {
     }
 
     /**
-     * Small adapter that holds a {@link World} reference for the duration
-     * of one flush. Allocated once per flush — could be pooled but the
-     * cost is one short-lived object per ~16 ms render frame.
+     * Reused adapter that holds a {@link World} only for the synchronous
+     * duration of one flush.
      */
     private static final class SoundDispatcher implements Aero_SoundCoalesce.Dispatcher {
-        private final World world;
-        SoundDispatcher(World world) { this.world = world; }
+        private World world;
         @Override
         public void play(double x, double y, double z, String name, float volume, float pitch) {
             world.playSound(x, y, z, name, volume, pitch);
