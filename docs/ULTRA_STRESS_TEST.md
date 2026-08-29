@@ -107,6 +107,28 @@ In the synchronized run, only 6,096 local vertices were transformed and
 1,020,432 repeated transforms were avoided per frame. The feature is
 default-on; use `-Daero.batchvertexreuse=false` for rollback.
 
+### Governed Tessellator bulk staging (promoted)
+
+Set `-PultraTessellatorBulk=true|false` with pose and transformed-vertex reuse
+enabled. The candidate writes the same XYZ, UV, and packed color fields into
+StationAPI's existing eight-int Tessellator buffer, then uses the unchanged
+`Tessellator.draw()` path. A batch must contain at least 262,144 eligible
+vertices before bulk staging activates; smaller workloads retain ordinary
+vertex calls.
+
+| Metric | Vertex reuse | + Governed bulk staging |
+| --- | ---: | ---: |
+| Average FPS | 46.95 | 54.08 |
+| Average frame | 21.30 ms | 18.49 ms |
+| Average Aero flush | 9.24 ms | 8.30 ms |
+| p95 / p99 frame | 26.3 / 45.6 ms | 23.7 / 42.6 ms |
+| Bulk-staged vertices/frame | 0 | 919,296 |
+
+The synchronized candidate gained 15.2% throughput and reduced Aero flush by
+10.2%. Under deterministic diverse phases, the largest eligible batch stayed
+below the workload gate and `maxTessellatorBulkVertices` remained zero. The
+feature is default-on; use `-Daero.tessellatorbulk=false` for rollback.
+
 The task creates a uniquely named fixed-seed world, loads the central tower,
 pins the camera beside it, waits for every central machine, warms up, measures
 for the requested benchmark duration, and exits without menu interaction. It

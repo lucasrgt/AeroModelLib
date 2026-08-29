@@ -61,6 +61,7 @@ final class Aero_BatchPoseReuse {
     static int sharedSource() {
         return ENABLED && reusedThisBatch > 0 ? representativeSource : -1;
     }
+    static int sharedCount() { return reusedThisBatch > 0 ? reusedThisBatch + 1 : 0; }
 
     private static void setRepresentative(Aero_AnimationBundle bundle,
             Aero_AnimationClip clip, int time, int source) {

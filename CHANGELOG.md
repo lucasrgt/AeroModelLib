@@ -7,6 +7,16 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Governed Tessellator bulk staging.** Dense exact-pose batches now pack
+  their already transformed vertices directly into StationAPI's existing
+  eight-int Tessellator buffer, preserving its draw path, packed fields, and
+  submission order. A per-batch workload gate keeps smaller reuse sets on the
+  ordinary `Tessellator.vertex` path. In the isolated synchronized ULTRA
+  scene, 919,296 vertices/frame used bulk staging and throughput rose from
+  46.95 to 54.08 FPS while Aero flush fell from 9.24 to 8.30 ms/frame. The
+  diverse-phase scene stayed below the gate. Disable with
+  `-Daero.tessellatorbulk=false`. Catalog:
+  `aero.render.tessellator-bulk-staging` (active, default on).
 - **Shared-pose transformed vertex reuse.** Once exact pose reuse identifies a
   repeated batch representative, its local XYZ/UV stream is transformed once
   per geometry bucket and replayed with the original per-instance translation

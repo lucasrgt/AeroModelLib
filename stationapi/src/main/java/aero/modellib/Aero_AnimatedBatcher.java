@@ -104,6 +104,7 @@ public final class Aero_AnimatedBatcher {
         Aero_ClientArrayBuffer.beginFrameCounters();
         Aero_BatchPoseReuse.beginFrameCounters();
         Aero_BatchVertexReuse.beginFrameCounters();
+        Aero_TessellatorBulkWriter.beginFrameCounters();
     }
     public static int queuedThisFrame() { return queued; }
     public static int flushedInstancesThisFrame() { return flushedInstances; }
@@ -123,6 +124,9 @@ public final class Aero_AnimatedBatcher {
     }
     public static int batchVertexTransformsReusedThisFrame() {
         return Aero_BatchVertexReuse.reusedThisFrame();
+    }
+    public static int tessellatorBulkVerticesThisFrame() {
+        return Aero_TessellatorBulkWriter.verticesThisFrame();
     }
 
     private static int integer(String name, int fallback, int min, int max) {

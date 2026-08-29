@@ -377,6 +377,7 @@ tasks.register('runClientUltraStress') {
         def clientArrays = (project.findProperty('ultraClientArrays') ?: 'false').toString()
         def poseReuse = (project.findProperty('ultraPoseReuse') ?: 'true').toString()
         def vertexReuse = (project.findProperty('ultraVertexReuse') ?: 'true').toString()
+        def tessellatorBulk = (project.findProperty('ultraTessellatorBulk') ?: 'true').toString()
         def phaseSpread = (project.findProperty('ultraPhaseSpread') ?: 'false').toString()
         def worldName = 'AeroUltra-' + System.currentTimeMillis()
         def jfrFile = new File(runDir, 'aero-ultra.jfr').absolutePath
@@ -399,6 +400,7 @@ tasks.register('runClientUltraStress') {
             '-Daero.clientarrays=' + clientArrays,
             '-Daero.batchposereuse=' + poseReuse,
             '-Daero.batchvertexreuse=' + vertexReuse,
+            '-Daero.tessellatorbulk=' + tessellatorBulk,
             '-Daero.spikelog=true',
             '-Daero.spikelog.ms=16.67',
             '-Daero.spikelog.intervalMs=1000',
@@ -421,6 +423,7 @@ tasks.register('runClientUltraStress') {
             + '; clientArrays=' + clientArrays
             + '; poseReuse=' + poseReuse
             + '; vertexReuse=' + vertexReuse
+            + '; tessellatorBulk=' + tessellatorBulk
             + '; phaseSpread=' + phaseSpread
             + '; measured=' + benchSec + 's')
         println '[runClientUltraStress] fresh auto-start world=' + worldName

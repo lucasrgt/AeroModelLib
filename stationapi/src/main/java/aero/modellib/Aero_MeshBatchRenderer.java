@@ -43,7 +43,8 @@ import aero.modellib.util.Aero_Profiler;
  */
 @aero.modellib.optimization.OptimizationRef({
     "aero.render.animated-batcher", "aero.render.client-vertex-arrays",
-    "aero.animation.batch-pose-reuse", "aero.render.batch-transformed-vertex-reuse"
+    "aero.animation.batch-pose-reuse", "aero.render.batch-transformed-vertex-reuse",
+    "aero.render.tessellator-bulk-staging"
 })
 final class Aero_MeshBatchRenderer extends Aero_MeshRendererState {
     private Aero_MeshBatchRenderer() {}
@@ -78,6 +79,8 @@ static void renderAnimatedBatch(Aero_AnimatedBatcher.Batch batch) {
                 Aero_MeshBatchRenderer3.drainAsUnbatched(batch, count);
                 return;
             }
+            Aero_TessellatorBulkWriter.beginBatch(entries, renderPlan.drawableEntries,
+                Aero_BatchPoseReuse.sharedCount());
 
             if (Aero_MeshClientArrayRenderer.ENABLED) {
                 Aero_MeshClientArrayRenderer.render(batch, model, options, renderPlan,

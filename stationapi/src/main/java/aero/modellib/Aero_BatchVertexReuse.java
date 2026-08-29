@@ -9,7 +9,7 @@ import net.minecraft.client.render.Tessellator;
 final class Aero_BatchVertexReuse {
     static final boolean ENABLED =
         !"false".equalsIgnoreCase(System.getProperty("aero.batchvertexreuse"));
-    private static final int REST = 0, TRANSLATE = 1, SCALE = 2, ROTATE = 3;
+    static final int REST = 0, TRANSLATE = 1, SCALE = 2, ROTATE = 3;
     private static float[] vertices = new float[0];
     private static int sharedSource, mode, vertexCount, emissions;
     private static float baseX, baseY, baseZ;
@@ -154,6 +154,8 @@ final class Aero_BatchVertexReuse {
 
     private static void emit(Tessellator tess, double x, double y, double z) {
         if (emissions++ > 0) reusedThisFrame += vertexCount;
+        if (Aero_TessellatorBulkWriter.write(tess, vertices, vertexCount,
+                mode, baseX, baseY, baseZ, x, y, z)) return;
         double bx = mode == TRANSLATE ? x + baseX : x;
         double by = mode == TRANSLATE ? y + baseY : y;
         double bz = mode == TRANSLATE ? z + baseZ : z;
