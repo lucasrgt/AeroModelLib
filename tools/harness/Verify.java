@@ -151,15 +151,21 @@ public final class Verify {
     }
 
     private void buildPlatforms() throws Exception {
-        buildPlatform(root.resolve("stationapi"));
-        buildPlatform(root.resolve("stationapi/test"));
+        buildPlatform(root.resolve("stationapi"), false);
+        // Loom keys its remapped composite dependency by the stable mod GAV.
+        // Refresh after building the parent so the integration mod cannot
+        // compile against an older checkout's remapped Aero jar.
+        buildPlatform(root.resolve("stationapi/test"), true);
         System.out.println("  platform builds: stationapi library + integration mod");
     }
 
-    private void buildPlatform(Path directory) throws Exception {
+    private void buildPlatform(Path directory, boolean refreshDependencies) throws Exception {
         boolean windows = System.getProperty("os.name").toLowerCase().contains("win");
         String wrapper = windows ? directory.resolve("gradlew.bat").toString() : "./gradlew";
-        run(Arrays.asList(wrapper, "--no-daemon", "build"), directory);
+        List<String> command = new ArrayList<String>(Arrays.asList(wrapper, "--no-daemon"));
+        if (refreshDependencies) command.add("--refresh-dependencies");
+        command.add("build");
+        run(command, directory);
     }
 
     private String testClass(Path path) {

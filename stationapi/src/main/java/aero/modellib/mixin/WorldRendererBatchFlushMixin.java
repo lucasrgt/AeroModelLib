@@ -4,6 +4,7 @@ import aero.modellib.Aero_AnimatedBatcher;
 import aero.modellib.Aero_BECellRenderer;
 import aero.modellib.Aero_ChunkCompileBudget;
 import aero.modellib.Aero_FrameSpikeLogger;
+import aero.modellib.Aero_SoundDispatcher;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.WorldRenderer;
@@ -41,7 +42,7 @@ import aero.modellib.util.Aero_SoundCoalesce;
 @Mixin(WorldRenderer.class)
 @aero.modellib.optimization.OptimizationRef({"aero.audio.sound-coalescing"})
 public abstract class WorldRendererBatchFlushMixin {
-    private static final SoundDispatcher SOUND_DISPATCHER = new SoundDispatcher();
+    private static final Aero_SoundDispatcher SOUND_DISPATCHER = new Aero_SoundDispatcher();
 
     @Inject(
         method = "renderEntities(Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/client/render/Culler;F)V",
@@ -144,12 +145,12 @@ public abstract class WorldRendererBatchFlushMixin {
             if (game instanceof Minecraft) {
                 World w = ((Minecraft) game).world;
                 if (w != null) {
-                    SOUND_DISPATCHER.world = w;
+                    SOUND_DISPATCHER.setWorld(w);
                     try {
                         Aero_SoundCoalesce.flush(
                             cameraPos.x, cameraPos.y, cameraPos.z, SOUND_DISPATCHER);
                     } finally {
-                        SOUND_DISPATCHER.world = null;
+                        SOUND_DISPATCHER.clearWorld();
                     }
                 }
             }
@@ -158,15 +159,4 @@ public abstract class WorldRendererBatchFlushMixin {
         }
     }
 
-    /**
-     * Reused adapter that holds a {@link World} only for the synchronous
-     * duration of one flush.
-     */
-    private static final class SoundDispatcher implements Aero_SoundCoalesce.Dispatcher {
-        private World world;
-        @Override
-        public void play(double x, double y, double z, String name, float volume, float pitch) {
-            world.playSound(x, y, z, name, volume, pitch);
-        }
-    }
 }
