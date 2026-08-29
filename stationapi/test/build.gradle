@@ -375,7 +375,8 @@ tasks.register('runClientUltraStress') {
         def warmupSec = (project.findProperty('warmup') ?: '30').toString()
         def profiler = (project.findProperty('ultraProfiler') ?: 'false').toString()
         def clientArrays = (project.findProperty('ultraClientArrays') ?: 'false').toString()
-        def poseReuse = (project.findProperty('ultraPoseReuse') ?: 'false').toString()
+        def poseReuse = (project.findProperty('ultraPoseReuse') ?: 'true').toString()
+        def vertexReuse = (project.findProperty('ultraVertexReuse') ?: 'true').toString()
         def phaseSpread = (project.findProperty('ultraPhaseSpread') ?: 'false').toString()
         def worldName = 'AeroUltra-' + System.currentTimeMillis()
         def jfrFile = new File(runDir, 'aero-ultra.jfr').absolutePath
@@ -397,6 +398,7 @@ tasks.register('runClientUltraStress') {
             '-Daero.profiler=' + profiler,
             '-Daero.clientarrays=' + clientArrays,
             '-Daero.batchposereuse=' + poseReuse,
+            '-Daero.batchvertexreuse=' + vertexReuse,
             '-Daero.spikelog=true',
             '-Daero.spikelog.ms=16.67',
             '-Daero.spikelog.intervalMs=1000',
@@ -418,6 +420,7 @@ tasks.register('runClientUltraStress') {
             + ' chunks; culls off; native saves on; profiler=' + profiler
             + '; clientArrays=' + clientArrays
             + '; poseReuse=' + poseReuse
+            + '; vertexReuse=' + vertexReuse
             + '; phaseSpread=' + phaseSpread
             + '; measured=' + benchSec + 's')
         println '[runClientUltraStress] fresh auto-start world=' + worldName

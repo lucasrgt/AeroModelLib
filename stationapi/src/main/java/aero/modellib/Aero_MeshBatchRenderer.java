@@ -43,7 +43,7 @@ import aero.modellib.util.Aero_Profiler;
  */
 @aero.modellib.optimization.OptimizationRef({
     "aero.render.animated-batcher", "aero.render.client-vertex-arrays",
-    "aero.animation.batch-pose-reuse"
+    "aero.animation.batch-pose-reuse", "aero.render.batch-transformed-vertex-reuse"
 })
 final class Aero_MeshBatchRenderer extends Aero_MeshRendererState {
     private Aero_MeshBatchRenderer() {}
@@ -129,6 +129,7 @@ static void renderAnimatedBatch(Aero_AnimatedBatcher.Batch batch) {
                     for (int g = 0; g < 4; g++) {
                         float[][] tris = ng.tris[g];
                         if (tris.length == 0) continue;
+                        Aero_BatchVertexReuse.beginBucket(Aero_BatchPoseReuse.sharedSource());
                         float bucketFactor = Aero_MeshModel.BRIGHTNESS_FACTORS[g];
                         for (int i = 0; i < count; i++) {
                             int poseIndex = Aero_BatchPoseReuse.ENABLED ? poseSources[i] : i;
@@ -146,13 +147,20 @@ static void renderAnimatedBatch(Aero_AnimatedBatcher.Batch batch) {
                                 // pose, no transform — just instance
                                 // translate. Otherwise the static body
                                 // disappears, leaving "fans floating in air".
-                                Aero_MeshBatchRenderer3.emitBoneInstanceBatchedRest(tess, tris,
-                                    model.invScale,
-                                    batch.xs[i], batch.ys[i], batch.zs[i]);
+                                if (!Aero_BatchVertexReuse.emitRest(tess, tris, model.invScale,
+                                        poseIndex, batch.xs[i], batch.ys[i], batch.zs[i])) {
+                                    Aero_MeshBatchRenderer3.emitBoneInstanceBatchedRest(tess, tris,
+                                        model.invScale,
+                                        batch.xs[i], batch.ys[i], batch.zs[i]);
+                                }
                             } else {
                                 Aero_BoneRenderPose pose = perInstancePoses[poseIndex][e];
-                                Aero_MeshBatchRenderer2.emitBoneInstanceBatched(tess, tris, model.invScale, pose,
-                                    batch.xs[i], batch.ys[i], batch.zs[i]);
+                                if (!Aero_BatchVertexReuse.emitPose(tess, tris, model.invScale,
+                                        pose, poseIndex, batch.xs[i], batch.ys[i], batch.zs[i])) {
+                                    Aero_MeshBatchRenderer2.emitBoneInstanceBatched(tess, tris,
+                                        model.invScale, pose,
+                                        batch.xs[i], batch.ys[i], batch.zs[i]);
+                                }
                             }
                         }
                     }

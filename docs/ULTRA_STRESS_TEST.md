@@ -86,6 +86,27 @@ bundle and clip identity plus raw float time bits must match. Transitions and
 custom `Aero_AnimationPlayback` subclasses are excluded. Use
 `-Daero.batchposereuse=false` as the rollback oracle.
 
+### Shared-pose transformed vertex reuse (promoted)
+
+Set `-PultraVertexReuse=true|false` while leaving pose reuse enabled. The
+candidate does not change submission order or arithmetic: it stores the first
+representative instance's exact local XYZ/UV results and repeats the same
+Tessellator calls with each instance translation. Unique pose rows keep the
+direct emitter.
+
+| Workload | Metric | Pose reuse only | + Vertex reuse |
+| --- | --- | ---: | ---: |
+| Synchronized (30 s, 15 s warmup) | Average FPS | 42.43 | 47.87 |
+| Synchronized (30 s, 15 s warmup) | Average Aero flush | 11.21 ms | 9.44 ms |
+| Synchronized (30 s, 15 s warmup) | p95 / p99 frame | 29.7 / 52.1 ms | 25.9 / 44.6 ms |
+| Diverse phases (15 s, 10 s warmup) | Average FPS | 39.80 | 40.38 |
+| Diverse phases (15 s, 10 s warmup) | Average Aero flush | 15.43 ms | 11.93 ms |
+| Diverse phases (15 s, 10 s warmup) | p95 / p99 frame | 33.8 / 53.1 ms | 31.2 / 50.0 ms |
+
+In the synchronized run, only 6,096 local vertices were transformed and
+1,020,432 repeated transforms were avoided per frame. The feature is
+default-on; use `-Daero.batchvertexreuse=false` for rollback.
+
 The task creates a uniquely named fixed-seed world, loads the central tower,
 pins the camera beside it, waits for every central machine, warms up, measures
 for the requested benchmark duration, and exits without menu interaction. It

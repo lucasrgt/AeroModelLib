@@ -14,7 +14,8 @@ final class Aero_BatchPoseReuse {
     private static Aero_AnimationBundle representativeBundle;
     private static Aero_AnimationClip representativeClip;
     private static int representativeTime, representativeSource;
-    private static int reusedThisFrame, resolvedThisFrame;
+    private static int reusedThisBatch, reusedThisFrame, resolvedThisFrame;
+    private static boolean representativeLocked;
 
     private Aero_BatchPoseReuse() {}
 
@@ -23,26 +24,31 @@ final class Aero_BatchPoseReuse {
         for (int i = 0; i < count; i++) poseSources[i] = i;
         representativeBundle = null;
         representativeClip = null;
+        representativeLocked = false;
+        reusedThisBatch = 0;
         return poseSources;
     }
 
     static int sourceFor(Aero_AnimationBundle bundle, Aero_AnimationClip clip,
             float time, Aero_AnimationPlayback playback, int instance) {
-        if (!ENABLED || playback.getClass() != Aero_AnimationPlayback.class
-                || playback.inTransition()) {
+        Class<?> playbackType = playback.getClass();
+        boolean standard = playbackType == Aero_AnimationPlayback.class
+            || playbackType == Aero_AnimationState.class;
+        if (!ENABLED || !standard || playback.inTransition()) {
             resolvedThisFrame++;
             return instance;
         }
         int timeBits = Float.floatToRawIntBits(time);
         if (representativeClip == null) {
-            representativeBundle = bundle;
-            representativeClip = clip;
-            representativeTime = timeBits;
-            representativeSource = instance;
+            setRepresentative(bundle, clip, timeBits, instance);
         } else if (representativeBundle == bundle && representativeClip == clip
                 && representativeTime == timeBits) {
+            representativeLocked = true;
+            reusedThisBatch++;
             reusedThisFrame++;
             return representativeSource;
+        } else if (!representativeLocked) {
+            setRepresentative(bundle, clip, timeBits, instance);
         }
         resolvedThisFrame++;
         return instance;
@@ -52,6 +58,17 @@ final class Aero_BatchPoseReuse {
     static void recordResolved() { resolvedThisFrame++; }
     static int reusedThisFrame() { return reusedThisFrame; }
     static int resolvedThisFrame() { return resolvedThisFrame; }
+    static int sharedSource() {
+        return ENABLED && reusedThisBatch > 0 ? representativeSource : -1;
+    }
+
+    private static void setRepresentative(Aero_AnimationBundle bundle,
+            Aero_AnimationClip clip, int time, int source) {
+        representativeBundle = bundle;
+        representativeClip = clip;
+        representativeTime = time;
+        representativeSource = source;
+    }
 
     private static void ensureSources(int count) {
         if (poseSources.length >= count) return;

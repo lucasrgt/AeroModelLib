@@ -7,6 +7,15 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Shared-pose transformed vertex reuse.** Once exact pose reuse identifies a
+  repeated batch representative, its local XYZ/UV stream is transformed once
+  per geometry bucket and replayed with the original per-instance translation
+  and Tessellator call order. A synchronized 1,024-animation ULTRA run avoided
+  1,020,432 of 1,026,528 vertex transforms per frame and cut Aero flush from
+  11.21 to 9.44 ms/frame (15.8%); deterministic diverse phases cut it from
+  15.43 to 11.93 ms/frame (22.7%). Disable with
+  `-Daero.batchvertexreuse=false`. Catalog:
+  `aero.render.batch-transformed-vertex-reuse` (active, default on).
 - **Exact pose reuse inside compatible animation batches.** Standard
   non-transitioning playbacks that share the representative bundle, clip, and
   bit-exact interpolated time now share one resolved pose row for the frame.
