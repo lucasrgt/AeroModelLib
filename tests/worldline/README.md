@@ -5,6 +5,9 @@ This isolated Java 8 suite is a real external consumer of Worldline TestKit
 CPU paths against small independent reference models. It does not compile or
 replace either legacy loader build and it does not start Minecraft.
 
+The current suite covers morph-array parity, bounded and starvation-safe chunk
+scheduling, and camera-relative pre-bake reprioritization after teleport.
+
 Run with Gradle 8.14.4 or newer:
 
 ```text

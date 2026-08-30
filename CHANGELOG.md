@@ -7,6 +7,14 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Camera-aware incremental chunk pre-bake candidate.** The opt-in chunk-work
+  scheduler now prioritizes the player's current chunk, adjacent or visible
+  chunks, and a bounded look-ahead ring before background work. Priorities are
+  recomputed from the current camera after walking, turning, or teleporting;
+  age/debt still guarantees background service, and the absolute per-frame
+  rebuild budget is unchanged. Frame-spike output now separates speculative
+  `chunkWorkPrebake` rebuilds. This remains an AERO-M118 candidate pending a
+  first-visit, movement, turn, and teleport A/B matrix.
 - **Worldline CPU-path consumer adopted.** AeroModelLib now owns an isolated
   Java 8 Worldline TestKit project that compiles maintained core product code
   without Minecraft and differentially verifies morph-array parity, bounded

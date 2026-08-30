@@ -5,6 +5,7 @@ import static worldline.test.Worldline.describe;
 import static worldline.test.Worldline.test;
 
 import aero.modellib.render.Aero_ChunkWorkScheduler;
+import aero.modellib.render.Aero_ChunkPrebakePriority;
 import aero.modellib.skeletal.Aero_MorphState;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +23,8 @@ public final class AeroCpuPathsWorldlineTest extends WorldlineSpec {
                     schedulerDifferential());
             test("chunk debt prevents hidden-work starvation", context ->
                     schedulerFairness());
+            test("camera pre-bake reprioritizes after teleport", context ->
+                    cameraPrebakeReprioritization());
         });
     }
 
@@ -72,6 +75,15 @@ public final class AeroCpuPathsWorldlineTest extends WorldlineSpec {
         expect(hidden.dirty).toBeFalse();
         expect(adapter.rebuilt.contains("hidden")).toBeTrue();
         expect(scheduler.urgentBuilt()).toEqual(1);
+    }
+
+    private static void cameraPrebakeReprioritization() {
+        int before = Aero_ChunkPrebakePriority.tier(
+                false, 160, 160, 8.0D, 8.0D, 0.0F, 3);
+        int after = Aero_ChunkPrebakePriority.tier(
+                false, 160, 160, 168.0D, 168.0D, 0.0F, 3);
+        expect(before).toEqual(Aero_ChunkPrebakePriority.BACKGROUND);
+        expect(after).toEqual(Aero_ChunkPrebakePriority.CURRENT);
     }
 
     private static final class Work {

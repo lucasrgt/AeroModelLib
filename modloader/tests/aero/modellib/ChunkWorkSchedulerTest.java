@@ -73,6 +73,18 @@ public class ChunkWorkSchedulerTest {
     }
 
     @Test
+    public void prebakeTierWinsBeforeNearBackgroundWork() {
+        Fake background = new Fake("background", false, 1.0d, 3, false);
+        Fake adjacent = new Fake("adjacent", false, 100.0d, 1, true);
+        Aero_ChunkWorkScheduler<Fake> scheduler = scheduler();
+
+        scheduler.schedule(list(background, adjacent), adapter, 1, 10, 10);
+
+        assertEquals(Arrays.asList("adjacent"), adapter.rebuilt);
+        assertEquals(1, scheduler.prebakeBuilt());
+    }
+
+    @Test
     public void queueIdentityChangeDropsOldWorldDebt() {
         Aero_ChunkWorkScheduler<Fake> scheduler = scheduler();
         Fake old = new Fake("old", false, 1.0d);
@@ -114,12 +126,21 @@ public class ChunkWorkSchedulerTest {
         final String name;
         final boolean visible;
         final double distance;
+        final int priority;
+        final boolean prebake;
         boolean dirty = true;
 
         Fake(String name, boolean visible, double distance) {
+            this(name, visible, distance, visible ? 0 : 1, false);
+        }
+
+        Fake(String name, boolean visible, double distance,
+             int priority, boolean prebake) {
             this.name = name;
             this.visible = visible;
             this.distance = distance;
+            this.priority = priority;
+            this.prebake = prebake;
         }
     }
 
@@ -129,6 +150,8 @@ public class ChunkWorkSchedulerTest {
 
         public boolean isDirty(Fake work) { return work.dirty; }
         public boolean isVisible(Fake work) { return work.visible; }
+        public int priority(Fake work) { return work.priority; }
+        public boolean isPrebake(Fake work, int priority) { return work.prebake; }
         public double squaredDistance(Fake work) { return work.distance; }
         public void rebuild(Fake work) { rebuilt.add(work.name); }
         public void markClean(Fake work) { work.dirty = false; }

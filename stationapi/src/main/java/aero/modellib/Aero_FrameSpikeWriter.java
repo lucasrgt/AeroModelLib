@@ -54,6 +54,7 @@ static void logEvent(String kind, double frameMs, long gcCountDelta, long gcTime
             + " compileChunksSkipped=" + chunkCompileSkipped
             + " chunkWorkBuilt=" + Aero_ChunkCompileBudget.builtLastFrame()
             + " chunkWorkVisible=" + Aero_ChunkCompileBudget.visibleBuiltLastFrame()
+            + " chunkWorkPrebake=" + Aero_ChunkCompileBudget.prebakeBuiltLastFrame()
             + " chunkWorkUrgent=" + Aero_ChunkCompileBudget.urgentBuiltLastFrame()
             + " chunkWorkOldestAge=" + Aero_ChunkCompileBudget.oldestAge()
             + " chunkWorkMaxDebt=" + Aero_ChunkCompileBudget.maximumDebt()

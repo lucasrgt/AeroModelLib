@@ -338,13 +338,18 @@ paths remain opt-in.
 | Prewarm queue | `-Daero.prewarm=true` | Earlier CPU/driver work and cache allocation |
 | High-memory preset | `-Daero.perf.memory=high` | Higher heap and display-list retention |
 | Chunk-scoped palette cache | `-Daero.palettedcache.chunkScope=true` | Experimental injection during chunk rebuild |
-| Chunk work scheduler | `-Daero.chunkCompileBudget=true` | Bounded non-forced rebuilds; visible first, then age/debt starvation recovery |
+| Chunk work scheduler | `-Daero.chunkCompileBudget=true` | Bounded non-forced rebuilds; current/adjacent/visible and camera look-ahead first, then age/debt recovery |
 | Frame pacing | `-Daero.framePacing=true` | Caps submission rate and may add latency |
 
 Do not enable every experiment at once. Change one family at a time and record
 frame-stage evidence. The old global `-Daero.palettedcache=true` mode remains
 an A/B diagnostic path, not a recommended gameplay default: the hot-method
 injection measured as a steady-state regression.
+
+The chunk scheduler's speculative look-ahead defaults to three chunks and can
+be adjusted with `-Daero.chunkCompileBudget.lookAheadRadius=1..8`. It does not
+create a second cache or block world entry: priorities are recomputed from the
+current camera every frame, and the existing rebuild budget remains absolute.
 
 The canonical optimization IDs, ownership, status, defaults, risks, and
 rollback paths are in

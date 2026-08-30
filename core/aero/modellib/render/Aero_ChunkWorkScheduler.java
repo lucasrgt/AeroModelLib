@@ -13,6 +13,8 @@ public final class Aero_ChunkWorkScheduler<T> {
     public interface Adapter<T> {
         boolean isDirty(T work);
         boolean isVisible(T work);
+        default int priority(T work) { return isVisible(work) ? 0 : 1; }
+        default boolean isPrebake(T work, int priority) { return false; }
         double squaredDistance(T work);
         void rebuild(T work);
         void markClean(T work);
@@ -22,7 +24,8 @@ public final class Aero_ChunkWorkScheduler<T> {
         new IdentityHashMap<T, State>();
     private Object activeQueue;
     private int invocation;
-    private int built, visibleBuilt, urgentBuilt, oldestAge, maximumDebt;
+    private int built, visibleBuilt, prebakeBuilt, urgentBuilt;
+    private int oldestAge, maximumDebt;
 
     public int schedule(List<T> queue, Adapter<T> adapter, int budget,
                         int maximumAge, int debtLimit) {
@@ -35,14 +38,14 @@ public final class Aero_ChunkWorkScheduler<T> {
             if (selected < 0) break;
             T work = queue.get(selected);
             State state = states.get(work);
-            boolean visible = adapter.isVisible(work);
             boolean urgent = urgent(state, maximumAge, debtLimit);
             adapter.rebuild(work);
             adapter.markClean(work);
             queue.remove(selected);
             states.remove(work);
             built++;
-            if (visible) visibleBuilt++;
+            if (state.visible) visibleBuilt++;
+            if (state.prebake) prebakeBuilt++;
             if (urgent) urgentBuilt++;
         }
         ageDebtAndSweep(adapter);
@@ -58,6 +61,7 @@ public final class Aero_ChunkWorkScheduler<T> {
 
     public int built() { return built; }
     public int visibleBuilt() { return visibleBuilt; }
+    public int prebakeBuilt() { return prebakeBuilt; }
     public int urgentBuilt() { return urgentBuilt; }
     public int oldestAge() { return oldestAge; }
     public int maximumDebt() { return maximumDebt; }
@@ -94,6 +98,10 @@ public final class Aero_ChunkWorkScheduler<T> {
             }
             state.seen = invocation;
             state.age = increment(state.age);
+            state.visible = adapter.isVisible(work);
+            state.priority = adapter.priority(work);
+            state.prebake = adapter.isPrebake(work, state.priority);
+            state.distance = distance(adapter.squaredDistance(work));
         }
     }
 
@@ -103,25 +111,21 @@ public final class Aero_ChunkWorkScheduler<T> {
         for (int index = 0; index < queue.size(); index++) {
             T candidate = queue.get(index);
             if (candidate == null || !adapter.isDirty(candidate)) continue;
-            if (best < 0 || before(candidate, queue.get(best), adapter,
+            if (best < 0 || before(candidate, queue.get(best),
                     maximumAge, debtLimit)) best = index;
         }
         return best;
     }
 
-    private boolean before(T left, T right, Adapter<T> adapter,
-                           int maximumAge, int debtLimit) {
+    private boolean before(T left, T right, int maximumAge, int debtLimit) {
         State a = states.get(left), b = states.get(right);
         boolean urgentA = urgent(a, maximumAge, debtLimit);
         boolean urgentB = urgent(b, maximumAge, debtLimit);
         if (urgentA != urgentB) return urgentA;
-        boolean visibleA = adapter.isVisible(left);
-        boolean visibleB = adapter.isVisible(right);
-        if (visibleA != visibleB) return visibleA;
+        if (a.priority != b.priority) return a.priority < b.priority;
         if (a.debt != b.debt) return a.debt > b.debt;
         if (a.age != b.age) return a.age > b.age;
-        return distance(adapter.squaredDistance(left))
-            < distance(adapter.squaredDistance(right));
+        return a.distance < b.distance;
     }
 
     private void ageDebtAndSweep(Adapter<T> adapter) {
@@ -140,7 +144,8 @@ public final class Aero_ChunkWorkScheduler<T> {
     }
 
     private void clearMetrics() {
-        built = visibleBuilt = urgentBuilt = oldestAge = maximumDebt = 0;
+        built = visibleBuilt = prebakeBuilt = urgentBuilt = 0;
+        oldestAge = maximumDebt = 0;
     }
 
     private static boolean urgent(State state, int maximumAge, int debtLimit) {
@@ -164,5 +169,8 @@ public final class Aero_ChunkWorkScheduler<T> {
 
     private static final class State {
         int seen, age, debt;
+        int priority;
+        double distance;
+        boolean visible, prebake;
     }
 }

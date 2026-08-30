@@ -3,6 +3,7 @@ package aero.modellib;
 import java.util.List;
 
 import aero.modellib.optimization.OptimizationRef;
+import aero.modellib.render.Aero_ChunkPrebakePriority;
 import aero.modellib.render.Aero_ChunkWorkScheduler;
 import net.minecraft.client.render.chunk.ChunkBuilder;
 import net.minecraft.entity.LivingEntity;
@@ -19,13 +20,15 @@ public final class Aero_ChunkCompileBudget {
         intProperty("aero.chunkCompileBudget.maximumAge", 120, 1, 3600);
     private static final int DEBT_LIMIT =
         intProperty("aero.chunkCompileBudget.debtLimit", 30, 1, 3600);
+    private static final int LOOK_AHEAD_RADIUS =
+        intProperty("aero.chunkCompileBudget.lookAheadRadius", 3, 1, 8);
     private static final Aero_ChunkWorkScheduler<ChunkBuilder> SCHEDULER =
         new Aero_ChunkWorkScheduler<ChunkBuilder>();
     private static final ChunkAdapter ADAPTER = new ChunkAdapter();
 
-    private static int builtThisFrame, visibleBuiltThisFrame;
+    private static int builtThisFrame, visibleBuiltThisFrame, prebakeBuiltThisFrame;
     private static int urgentBuiltThisFrame, oldestAge, maximumDebt;
-    private static int builtLastFrame, visibleBuiltLastFrame;
+    private static int builtLastFrame, visibleBuiltLastFrame, prebakeBuiltLastFrame;
     private static int urgentBuiltLastFrame, remainingThisFrame;
 
     private Aero_ChunkCompileBudget() {}
@@ -33,8 +36,10 @@ public final class Aero_ChunkCompileBudget {
     public static void beginFrame() {
         builtLastFrame = builtThisFrame;
         visibleBuiltLastFrame = visibleBuiltThisFrame;
+        prebakeBuiltLastFrame = prebakeBuiltThisFrame;
         urgentBuiltLastFrame = urgentBuiltThisFrame;
-        builtThisFrame = visibleBuiltThisFrame = urgentBuiltThisFrame = 0;
+        builtThisFrame = visibleBuiltThisFrame = prebakeBuiltThisFrame = 0;
+        urgentBuiltThisFrame = 0;
         remainingThisFrame = BUDGET;
     }
 
@@ -45,15 +50,16 @@ public final class Aero_ChunkCompileBudget {
     public static boolean schedule(List<ChunkBuilder> dirtyChunks,
                                    LivingEntity camera) {
         if (remainingThisFrame <= 0) return dirtyChunks.isEmpty();
-        ADAPTER.camera = camera;
+        ADAPTER.setCamera(camera);
         try {
             SCHEDULER.schedule(dirtyChunks, ADAPTER, remainingThisFrame,
                 MAXIMUM_AGE, DEBT_LIMIT);
         } finally {
-            ADAPTER.camera = null;
+            ADAPTER.setCamera(null);
         }
         builtThisFrame += SCHEDULER.built();
         visibleBuiltThisFrame += SCHEDULER.visibleBuilt();
+        prebakeBuiltThisFrame += SCHEDULER.prebakeBuilt();
         urgentBuiltThisFrame += SCHEDULER.urgentBuilt();
         remainingThisFrame -= SCHEDULER.built();
         oldestAge = SCHEDULER.oldestAge();
@@ -64,6 +70,7 @@ public final class Aero_ChunkCompileBudget {
     public static int builtThisFrame() { return builtThisFrame; }
     public static int builtLastFrame() { return builtLastFrame; }
     public static int visibleBuiltLastFrame() { return visibleBuiltLastFrame; }
+    public static int prebakeBuiltLastFrame() { return prebakeBuiltLastFrame; }
     public static int urgentBuiltLastFrame() { return urgentBuiltLastFrame; }
     public static int oldestAge() { return oldestAge; }
     public static int maximumDebt() { return maximumDebt; }
@@ -82,14 +89,35 @@ public final class Aero_ChunkCompileBudget {
     private static final class ChunkAdapter
             implements Aero_ChunkWorkScheduler.Adapter<ChunkBuilder> {
         LivingEntity camera;
+        double forwardX, forwardZ;
 
         public boolean isDirty(ChunkBuilder chunk) { return chunk.dirty; }
         public boolean isVisible(ChunkBuilder chunk) { return chunk.inFrustum; }
+        public int priority(ChunkBuilder chunk) { return tier(chunk); }
+        public boolean isPrebake(ChunkBuilder chunk, int priority) {
+            return Aero_ChunkPrebakePriority.isPrebakeTier(
+                priority, chunk.inFrustum);
+        }
         public double squaredDistance(ChunkBuilder chunk) {
             return camera == null ? Double.POSITIVE_INFINITY
                 : chunk.squaredDistanceTo(camera);
         }
         public void rebuild(ChunkBuilder chunk) { chunk.rebuild(); }
         public void markClean(ChunkBuilder chunk) { chunk.dirty = false; }
+
+        private int tier(ChunkBuilder chunk) {
+            if (camera == null) return chunk.inFrustum ? 0 : 3;
+            return Aero_ChunkPrebakePriority.tierWithForward(chunk.inFrustum,
+                chunk.x, chunk.z, camera.x, camera.z, forwardX, forwardZ,
+                LOOK_AHEAD_RADIUS);
+        }
+
+        private void setCamera(LivingEntity value) {
+            camera = value;
+            if (value == null) return;
+            double radians = Math.toRadians(value.yaw);
+            forwardX = -Math.sin(radians);
+            forwardZ = Math.cos(radians);
+        }
     }
 }
