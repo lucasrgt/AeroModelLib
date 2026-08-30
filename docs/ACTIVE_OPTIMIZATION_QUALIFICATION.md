@@ -1,4 +1,4 @@
-# Active Optimization Qualification — 2026-08-29
+# Active Optimization Qualification — 2026-08-30
 
 This qualification combines focused allocation microbenchmarks, a 60-run
 counterbalanced StationAPI ablation, targeted reruns, and a deterministic
@@ -101,3 +101,17 @@ among its hottest samples. This pair is causal evidence that the observed
 large field hitch belongs to cold world entry/tick work rather than Aero's
 steady render submission. It is not an FPS comparison: the short fresh-process
 runs were not counterbalanced for throughput.
+
+## AERO-M116 chunk-work scheduling
+
+Worldline M773 qualified the opt-in chunk scheduler with four counterbalanced
+pairs in the 576-machine solid-tower scene. Every candidate frame respected the
+absolute one-rebuild budget, hidden work received service, and all backlogs
+drained to zero. Candidate maximum rebuild time was smaller in three of four
+pairs. Hitch rate changed by 163 ppm, inside the predeclared 1,000 ppm
+equivalence margin, so the candidate is behaviorally bounded and hitch-neutral
+rather than promoted by throughput alone.
+
+The scheduler remains default-off pending the later AERO adoption and matrix
+milestones. Qualified Worldline revision:
+`bc3e415f20a6b1050f80af14ed6fcf8d02df7216`.

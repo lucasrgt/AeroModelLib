@@ -7,6 +7,14 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Bounded chunk-work scheduler qualified.** The opt-in scheduler now applies
+  one absolute non-forced rebuild budget across the whole frame, prioritizes
+  visible work, and recovers hidden work through age and debt. Worldline
+  AERO-M116 completed four counterbalanced 576-machine pairs with zero final
+  backlog, hidden-work service in every candidate, and a hitch-rate delta
+  inside the 1,000 ppm equivalence margin. It remains default-off while the
+  adoption and matrix milestones proceed. Catalog:
+  `aero.chunk.compile-budget` (candidate, default off).
 - **Remaining candidate qualification.** Fresh-world evidence rejects the
   chunk-scoped PalettedContainer cache: chunk compilation regressed 11.7%,
   allocation rose 46.8%, and throughput fell 12.7%. The 14-OBJ corpus gave
