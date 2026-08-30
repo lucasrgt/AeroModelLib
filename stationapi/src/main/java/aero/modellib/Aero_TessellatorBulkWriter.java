@@ -28,7 +28,7 @@ final class Aero_TessellatorBulkWriter {
     static boolean write(float[] source, int vertexCount, int mode,
             float baseX, float baseY, float baseZ,
             double instanceX, double instanceY, double instanceZ) {
-        if (!enabledThisBatch || !supported || vertexCount <= 0) return false;
+        if (!writeReady(vertexCount)) return false;
         if (access.getColorDisabled()) return false;
         ensureCapacity(vertexCount * 8);
         try {
@@ -36,12 +36,9 @@ final class Aero_TessellatorBulkWriter {
             int position = access.stationapi$getBufferPosition();
             int color = access.getColor();
             if (position == 0) access.setHasTexture(true);
-            double translatedX = mode == Aero_BatchVertexReuse.TRANSLATE
-                ? instanceX + baseX : instanceX;
-            double translatedY = mode == Aero_BatchVertexReuse.TRANSLATE
-                ? instanceY + baseY : instanceY;
-            double translatedZ = mode == Aero_BatchVertexReuse.TRANSLATE
-                ? instanceZ + baseZ : instanceZ;
+            double translatedX = translated(mode, instanceX, baseX);
+            double translatedY = translated(mode, instanceY, baseY);
+            double translatedZ = translated(mode, instanceZ, baseZ);
             for (int vertex = 0, src = 0; vertex < vertexCount; vertex++, src += 5) {
                 double x, y, z;
                 if (mode == Aero_BatchVertexReuse.ROTATE) {
@@ -76,9 +73,7 @@ final class Aero_TessellatorBulkWriter {
     static boolean writeUniquePose(float[][] triangles, float invScale,
             Aero_BoneRenderPose pose, double instanceX, double instanceY, double instanceZ) {
         int vertexCount = triangles.length * 3;
-        if (!UNIQUE_POSE_ENABLED || !supported || vertexCount == 0) return false;
-        if (access == null) bindTessellator();
-        if (!supported || access.getColorDisabled()) return false;
+        if (!uniquePoseReady(vertexCount)) return false;
         ensureCapacity(vertexCount * 8);
         try {
             int[] target = access.stationapi$getBuffer();
@@ -134,6 +129,20 @@ final class Aero_TessellatorBulkWriter {
             supported = false;
             return false;
         }
+    }
+
+    private static boolean writeReady(int vertexCount) {
+        return enabledThisBatch && supported && vertexCount > 0;
+    }
+
+    private static double translated(int mode, double instance, float base) {
+        return mode == Aero_BatchVertexReuse.TRANSLATE ? instance + base : instance;
+    }
+
+    private static boolean uniquePoseReady(int vertexCount) {
+        if (!UNIQUE_POSE_ENABLED || !supported || vertexCount == 0) return false;
+        if (access == null) bindTessellator();
+        return supported && !access.getColorDisabled();
     }
 
     static void beginBatch(Aero_MeshModel.NamedGroup[] entries,

@@ -13,6 +13,10 @@ final class Aero_AnimationBudgetAdmission {
         if (cached != null) return cached;
         if (!Aero_AnimationBudgetConfig.ENABLED || Aero_AnimationBudgetConfig.MAX_ANIMATED < 0) return remember(key, lod);
         double distance = x * x + y * y + z * z, pixels = projected(distance, radius);
+        return admit(key, lod, distance, pixels);
+    }
+    private static Aero_RenderLod admit(Object key, Aero_RenderLod lod,
+            double distance, double pixels) {
         if (held(key) && Aero_AnimationBudgetEngine.accepted < hysteresisLimit()) { accept(key, true, false); return remember(key, lod); }
         if (critical(distance, pixels) && Aero_AnimationBudgetEngine.accepted < criticalLimit()) { accept(key, false, true); return remember(key, lod); }
         if (priorityReject(pixels)) { Aero_AnimationBudgetEngine.rejected++; Aero_AnimationBudgetEngine.priorityRejected++; return remember(key, Aero_RenderLod.STATIC); }
@@ -26,6 +30,10 @@ final class Aero_AnimationBudgetAdmission {
         if (ordinal >= 0) return Aero_RenderLod.values()[ordinal];
         if (!Aero_AnimationBudgetConfig.ENABLED || Aero_AnimationBudgetConfig.MAX_ANIMATED < 0) return remember(key, lod);
         double distance = x * x + y * y + z * z, pixels = projected(distance, radius);
+        return admit(key, lod, distance, pixels);
+    }
+    private static Aero_RenderLod admit(long key, Aero_RenderLod lod,
+            double distance, double pixels) {
         if (held(key) && Aero_AnimationBudgetEngine.accepted < hysteresisLimit()) { accept(key, true, false); return remember(key, lod); }
         if (critical(distance, pixels) && Aero_AnimationBudgetEngine.accepted < criticalLimit()) { accept(key, false, true); return remember(key, lod); }
         if (priorityReject(pixels)) { Aero_AnimationBudgetEngine.rejected++; Aero_AnimationBudgetEngine.priorityRejected++; return remember(key, Aero_RenderLod.STATIC); }

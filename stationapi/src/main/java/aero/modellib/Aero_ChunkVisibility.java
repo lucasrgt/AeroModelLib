@@ -106,9 +106,7 @@ public final class Aero_ChunkVisibility {
     public static void snapshot(ChunkBuilder[] chunks) {
         frameIndex++;
         if (!ENABLED) {
-            snapshotValid = false;
-            lastQueryValid = false;
-            RECENT_UNTIL.clear();
+            disableSnapshot();
             return;
         }
         VISIBLE.clear();
@@ -118,33 +116,24 @@ public final class Aero_ChunkVisibility {
             return;
         }
         for (int i = 0; i < chunks.length; i++) {
-            ChunkBuilder cb = chunks[i];
-            if (cb == null || !cb.inFrustum) continue;
-            // Hardware-occlusion-query check: vanilla Beta issues HOQ
-            // per chunk via the "Advanced OpenGL" option. If queries are
-            // running and the result says "no samples passed" (chunk is
-            // entirely behind solid terrain), skip the BEs in that chunk.
-            // Otherwise (query not ready yet, or HOQ disabled, or chunk
-            // is genuinely visible) — pass through. This is the GPU-
-            // accurate version of the raycast occlusion we tried earlier;
-            // no flicker because GPU samples are stable per-frame, no
-            // false-cull because we only act on a confirmed "0 samples"
-            // result.
-            if (HONOR_OCCLUSION_QUERY && cb.occlusionQueryReady && !cb.unoccluded) continue;
-            // ChunkBuilder.x/y/z is the BLOCK-coord origin of this chunk
-            // builder. Beta chunks are 16x16x16 in render terms (the
-            // chunk-builder grid; world chunks are 16×128×16 split into
-            // 8 builder slices). We collapse Y — BE columns share x/z.
-            long key = packChunkKey(cb.x >> 4, cb.z >> 4);
-            VISIBLE.add(key);
-            if (HOLD_FRAMES > 0) {
-                RECENT_UNTIL.put(key, frameIndex + HOLD_FRAMES);
-            }
+            addVisibleChunk(chunks[i]);
         }
         snapshotValid = true;
-        if ((frameIndex & 63) == 0) {
-            sweepRecentChunks();
-        }
+        if ((frameIndex & 63) == 0) sweepRecentChunks();
+    }
+
+    private static void disableSnapshot() {
+        snapshotValid = false;
+        lastQueryValid = false;
+        RECENT_UNTIL.clear();
+    }
+
+    private static void addVisibleChunk(ChunkBuilder chunk) {
+        if (chunk == null || !chunk.inFrustum) return;
+        if (HONOR_OCCLUSION_QUERY && chunk.occlusionQueryReady && !chunk.unoccluded) return;
+        long key = packChunkKey(chunk.x >> 4, chunk.z >> 4);
+        VISIBLE.add(key);
+        if (HOLD_FRAMES > 0) RECENT_UNTIL.put(key, frameIndex + HOLD_FRAMES);
     }
 
     /**

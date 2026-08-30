@@ -64,17 +64,22 @@ final class Aero_AnimationJsonParser {
             char value = source.charAt(position++);
             if (value == '"') return result.toString();
             if (value != '\\' || position >= source.length()) { result.append(value); continue; }
-            char escaped = source.charAt(position++);
-            if (escaped == '"') result.append('"');
-            else if (escaped == '\\') result.append('\\');
-            else if (escaped == '/') result.append('/');
-            else if (escaped == 'n') result.append('\n');
-            else if (escaped == 'r') result.append('\r');
-            else if (escaped == 't') result.append('\t');
-            else result.append(escaped);
+            appendEscape(source.charAt(position++), result);
         }
         fail("Unterminated string");
         return null;
+    }
+
+    private static void appendEscape(char escape, StringBuilder output) {
+        switch (escape) {
+            case '"': output.append('"'); break;
+            case '\\': output.append('\\'); break;
+            case '/': output.append('/'); break;
+            case 'n': output.append('\n'); break;
+            case 'r': output.append('\r'); break;
+            case 't': output.append('\t'); break;
+            default: output.append(escape);
+        }
     }
 
     private Float parseNumber() {

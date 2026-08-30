@@ -37,53 +37,14 @@ static Aero_BECellCachedPage compilePage(Aero_BECellQueuedPage page, int[] model
             int[] ids = new int[4];
             for (int g = 0; g < 4; g++) {
                 int modelList = modelIds != null ? modelIds[g] : 0;
-                if (FLATTENED_PAGES) {
-                    if (!Aero_BECellCompile.hasBucketGeometry(page.key.model, g)) continue;
-                } else if (modelList == 0) {
-                    continue;
-                }
+                if (!shouldCompile(page, g, modelList)) continue;
                 int id = Aero_DisplayListBudget.glGenList();
                 if (id == 0) {
                     Aero_BECellCache.deleteIds(ids);
                     return null;
                 }
                 GL11.glNewList(id, GL11.GL_COMPILE);
-                if (FLATTENED_PAGES) {
-                    GL11.glBegin(GL11.GL_TRIANGLES);
-                    for (int i = 0; i < page.count; i++) {
-                        if (PER_INSTANCE_LIGHT) {
-                            float bright = page.brightnesses[i] * Aero_MeshModel.BRIGHTNESS_FACTORS[g];
-                            GL11.glColor4f(bright * page.key.options.tintR,
-                                           bright * page.key.options.tintG,
-                                           bright * page.key.options.tintB,
-                                           page.key.options.alpha);
-                        }
-                        Aero_BECellGeometry.emitModelBucketFlattened(page.key.model, g,
-                            page.worldXs[i] - page.key.originX(),
-                            page.worldYs[i] - page.key.originY(),
-                            page.worldZs[i] - page.key.originZ(),
-                            page.key.rotation);
-                    }
-                    GL11.glEnd();
-                } else {
-                    for (int i = 0; i < page.count; i++) {
-                        if (PER_INSTANCE_LIGHT) {
-                            float bright = page.brightnesses[i] * Aero_MeshModel.BRIGHTNESS_FACTORS[g];
-                            GL11.glColor4f(bright * page.key.options.tintR,
-                                           bright * page.key.options.tintG,
-                                           bright * page.key.options.tintB,
-                                           page.key.options.alpha);
-                        }
-                        GL11.glPushMatrix();
-                        GL11.glTranslated(
-                            page.worldXs[i] - page.key.originX(),
-                            page.worldYs[i] - page.key.originY(),
-                            page.worldZs[i] - page.key.originZ());
-                        Aero_MeshRenderer.applyRotation(page.key.rotation);
-                        GL11.glCallList(modelList);
-                        GL11.glPopMatrix();
-                    }
-                }
+                emitBucket(page, g, modelList);
                 GL11.glEndList();
                 ids[g] = id;
             }
@@ -92,6 +53,46 @@ static Aero_BECellCachedPage compilePage(Aero_BECellQueuedPage page, int[] model
             Aero_FrameSpikeLogger.endCellRebuild(censusStartNs);
             Aero_Profiler.end("aero.becell.compile");
         }
+    }
+
+private static boolean shouldCompile(Aero_BECellQueuedPage page, int bucket, int modelList) {
+        return FLATTENED_PAGES
+            ? hasBucketGeometry(page.key.model, bucket) : modelList != 0;
+    }
+
+private static void emitBucket(Aero_BECellQueuedPage page, int bucket, int modelList) {
+        if (FLATTENED_PAGES) emitFlattened(page, bucket);
+        else emitModelLists(page, bucket, modelList);
+    }
+
+private static void emitFlattened(Aero_BECellQueuedPage page, int bucket) {
+        GL11.glBegin(GL11.GL_TRIANGLES);
+        for (int i = 0; i < page.count; i++) {
+            applyLight(page, bucket, i);
+            Aero_BECellGeometry.emitModelBucketFlattened(page.key.model, bucket,
+                page.worldXs[i] - page.key.originX(), page.worldYs[i] - page.key.originY(),
+                page.worldZs[i] - page.key.originZ(), page.key.rotation);
+        }
+        GL11.glEnd();
+    }
+
+private static void emitModelLists(Aero_BECellQueuedPage page, int bucket, int modelList) {
+        for (int i = 0; i < page.count; i++) {
+            applyLight(page, bucket, i);
+            GL11.glPushMatrix();
+            GL11.glTranslated(page.worldXs[i] - page.key.originX(),
+                page.worldYs[i] - page.key.originY(), page.worldZs[i] - page.key.originZ());
+            Aero_MeshRenderer.applyRotation(page.key.rotation);
+            GL11.glCallList(modelList);
+            GL11.glPopMatrix();
+        }
+    }
+
+private static void applyLight(Aero_BECellQueuedPage page, int bucket, int index) {
+        if (!PER_INSTANCE_LIGHT) return;
+        float bright = page.brightnesses[index] * Aero_MeshModel.BRIGHTNESS_FACTORS[bucket];
+        GL11.glColor4f(bright * page.key.options.tintR, bright * page.key.options.tintG,
+            bright * page.key.options.tintB, page.key.options.alpha);
     }
 
 static boolean hasBucketGeometry(Aero_MeshModel model, int bucket) {

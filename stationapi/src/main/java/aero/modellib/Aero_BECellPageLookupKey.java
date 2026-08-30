@@ -97,16 +97,42 @@ final class Aero_BECellPageLookupKey {
         public boolean equals(Object obj) {
             if (!(obj instanceof Aero_BECellPageKey)) return false;
             Aero_BECellPageKey other = (Aero_BECellPageKey) obj;
-            if (world != other.world || model != other.model) return false;
-            if (cellX != other.cellX || cellY != other.cellY || cellZ != other.cellZ) return false;
-            if (rotationBits != other.rotationBits || brightnessBits != other.brightnessBits) return false;
-            if (stateHash != other.stateHash || orientationHash != other.orientationHash) return false;
-            if (tintRBits != other.tintRBits || tintGBits != other.tintGBits
-                || tintBBits != other.tintBBits || alphaBits != other.alphaBits
-                || alphaClipBits != other.alphaClipBits) return false;
-            if (options.blend != other.options.blend
-                || options.depthTest != other.options.depthTest
-                || options.cullFaces != other.options.cullFaces) return false;
+            if (!sameOwner(other)) return false;
+            if (!sameCell(other)) return false;
+            if (!sameTransform(other)) return false;
+            if (!sameAppearance(other)) return false;
+            if (!sameOptions(other)) return false;
+            return sameTexture(other);
+        }
+
+        private boolean sameOwner(Aero_BECellPageKey other) {
+            return world == other.world && model == other.model;
+        }
+
+        private boolean sameCell(Aero_BECellPageKey other) {
+            return cellX == other.cellX && cellY == other.cellY && cellZ == other.cellZ;
+        }
+
+        private boolean sameTransform(Aero_BECellPageKey other) {
+            return rotationBits == other.rotationBits
+                && brightnessBits == other.brightnessBits
+                && stateHash == other.stateHash
+                && orientationHash == other.orientationHash;
+        }
+
+        private boolean sameAppearance(Aero_BECellPageKey other) {
+            return tintRBits == other.tintRBits && tintGBits == other.tintGBits
+                && tintBBits == other.tintBBits && alphaBits == other.alphaBits
+                && alphaClipBits == other.alphaClipBits;
+        }
+
+        private boolean sameOptions(Aero_BECellPageKey other) {
+            return options.blend == other.options.blend
+                && options.depthTest == other.options.depthTest
+                && options.cullFaces == other.options.cullFaces;
+        }
+
+        private boolean sameTexture(Aero_BECellPageKey other) {
             if (texturePath == other.texturePath) return true;
             return texturePath != null && texturePath.equals(other.texturePath);
         }

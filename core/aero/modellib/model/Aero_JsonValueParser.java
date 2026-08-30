@@ -80,18 +80,23 @@ final class Aero_JsonValueParser {
                 continue;
             }
             if (position >= source.length()) fail("Unterminated escape");
-            char escaped = source.charAt(position++);
-            if (escaped == '"' || escaped == '\\' || escaped == '/') result.append(escaped);
-            else if (escaped == 'b') result.append('\b');
-            else if (escaped == 'f') result.append('\f');
-            else if (escaped == 'n') result.append('\n');
-            else if (escaped == 'r') result.append('\r');
-            else if (escaped == 't') result.append('\t');
-            else if (escaped == 'u') result.append(unicode());
-            else fail("Unsupported escape");
+            appendEscape(source.charAt(position++), result);
         }
         fail("Unterminated string");
         return null;
+    }
+
+    private void appendEscape(char escape, StringBuilder output) {
+        switch (escape) {
+            case '"': case '\\': case '/': output.append(escape); break;
+            case 'b': output.append('\b'); break;
+            case 'f': output.append('\f'); break;
+            case 'n': output.append('\n'); break;
+            case 'r': output.append('\r'); break;
+            case 't': output.append('\t'); break;
+            case 'u': output.append(unicode()); break;
+            default: fail("Unsupported escape");
+        }
     }
 
     private char unicode() {

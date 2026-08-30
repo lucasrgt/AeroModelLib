@@ -127,32 +127,42 @@ static void runIkChains(Aero_IkChain[] chains,
         float[] target = SCRATCH_IK_TARGET;
         for (int c = 0; c < chains.length; c++) {
             Aero_IkChain chain = chains[c];
-            if (chain == null) continue;
-            String[] names = chain.getBoneChain();
-            if (names == null || names.length < 2) continue;
-
-            int len = names.length;
-            int[] boneIdx = (SCRATCH_IK_BONE_IDX != null
-                    && SCRATCH_IK_BONE_IDX.length == len)
-                ? SCRATCH_IK_BONE_IDX
-                : (SCRATCH_IK_BONE_IDX = new int[len]);
-            float[][] pivots = (SCRATCH_IK_PIVOTS != null
-                    && SCRATCH_IK_PIVOTS.length == len)
-                ? SCRATCH_IK_PIVOTS
-                : (SCRATCH_IK_PIVOTS = new float[len][]);
-            boolean valid = true;
-            for (int i = 0; i < len; i++) {
-                int idx = clip.indexOfBone(names[i]);
-                if (idx < 0) { valid = false; break; }
-                boneIdx[i] = idx;
-                pivots[i] = bundle.pivotOrZero(names[i]);
-            }
-            if (!valid) continue;
-
-            if (!chain.resolveTargetInto(target)) continue;
-            Aero_CCDSolver.solve(boneIdx, pivots, pool, target,
-                Aero_CCDSolver.DEFAULT_TOLERANCE);
+            if (chain != null) runIkChain(chain, clip, bundle, pool, target);
         }
+    }
+
+private static void runIkChain(Aero_IkChain chain, Aero_AnimationClip clip,
+        Aero_AnimationBundle bundle, Aero_BoneRenderPose[] pool, float[] target) {
+        String[] names = chain.getBoneChain();
+        if (names == null || names.length < 2) return;
+        int[] boneIndices = boneIndexScratch(names.length);
+        float[][] pivots = pivotScratch(names.length);
+        if (!resolveIkBones(names, clip, bundle, boneIndices, pivots)) return;
+        if (!chain.resolveTargetInto(target)) return;
+        Aero_CCDSolver.solve(boneIndices, pivots, pool, target, Aero_CCDSolver.DEFAULT_TOLERANCE);
+    }
+
+private static boolean resolveIkBones(String[] names, Aero_AnimationClip clip,
+        Aero_AnimationBundle bundle, int[] indices, float[][] pivots) {
+        for (int i = 0; i < names.length; i++) {
+            int index = clip.indexOfBone(names[i]);
+            if (index < 0) return false;
+            indices[i] = index;
+            pivots[i] = bundle.pivotOrZero(names[i]);
+        }
+        return true;
+    }
+
+private static int[] boneIndexScratch(int length) {
+        if (SCRATCH_IK_BONE_IDX == null || SCRATCH_IK_BONE_IDX.length != length)
+            SCRATCH_IK_BONE_IDX = new int[length];
+        return SCRATCH_IK_BONE_IDX;
+    }
+
+private static float[][] pivotScratch(int length) {
+        if (SCRATCH_IK_PIVOTS == null || SCRATCH_IK_PIVOTS.length != length)
+            SCRATCH_IK_PIVOTS = new float[length][];
+        return SCRATCH_IK_PIVOTS;
     }
 
 static void applyPose(Aero_BoneRenderPose pose) {

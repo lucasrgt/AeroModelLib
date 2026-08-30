@@ -80,94 +80,35 @@ static void renderAnimatedInternal(Aero_MeshModel model,
         try {
             Aero_MeshModel.NamedGroup[] entries = model.getNamedGroupArray();
             Aero_AnimationClip clip = null;
-            float time = 0f;
             Aero_MeshModel.BoneRef[] refs = null;
             Aero_BoneRenderPose[] pool = null;
             if (entries.length != 0) {
                 clip = state.getCurrentClip();
-                time = state.getInterpolatedTime(partialTick);
                 refs = model.boneRefsFor(clip, bundle);
-
-                if (clip != null) {
-                    pool = Aero_MeshPoseRenderer.ensurePoolSize(clip.boneNames.length);
-                    float[][] clipPivots = bundle.resolvePivotsFor(clip);
-                    // Pass 1: resolve every animated bone's pose into the
-                    // pool so the hierarchical render walk + any IK pre-pass
-                    // can read parent poses while drawing children.
-                    for (int b = 0; b < clip.boneNames.length; b++) {
-                        String boneName = clip.boneNames[b];
-                        Aero_AnimationPoseResolver.resolveClip(b, boneName, clipPivots[b],
-                            clip, state, time, partialTick,
-                            SCRATCH_ROT, SCRATCH_POS, SCRATCH_SCL, pool[b]);
-                        if (proceduralPose != null) proceduralPose.apply(boneName, pool[b]);
-                    }
-
-                    // Pass 1.5: run IK chains. Only present when the
-                    // caller provided ikChains; v0.1 callers pay zero cost
-                    // since the array is null.
-                    if (ikChains != null && ikChains.length > 0) {
-                        Aero_Profiler.start("aero.mesh.ikSolve");
-                        try {
-                            Aero_MeshPoseRenderer.runIkChains(ikChains, clip, bundle, pool);
-                        } finally {
-                            Aero_Profiler.end("aero.mesh.ikSolve");
-                        }
-                    }
-                }
+                pool = Aero_MeshAnimatedPoseResolver.resolve(clip, bundle, state,
+                    state.getInterpolatedTime(partialTick), partialTick, proceduralPose);
+                applyIk(ikChains, clip, bundle, pool);
             }
 
             int poseDepthLimit = Aero_MeshPoseRenderer.skeletalPoseDepthLimit(x, y, z,
                 proceduralPose, ikChains, morphState);
-            if (Aero_MeshBonePageRenderer.renderAnimatedViaBonePages(model, entries, refs, pool, x, y, z,
-                    brightness, options, morphState, poseDepthLimit)) {
-                return;
-            }
-
-            Tessellator tess = Tessellator.instance;
-            GL11.glPushMatrix();
-            try {
-                GL11.glTranslated(x, y, z);
-                Aero_MeshGlStateRenderer.beginMeshState(options);
-                try {
-                    // Static geometry: morph-blended path when the caller
-                    // provided a non-empty MorphState and the model carries
-                    // morph targets; else the raw fast path.
-                    if (morphState != null && model.hasMorphTargets() && !morphState.isEmpty()) {
-                        Aero_MeshGeometryRenderer.drawGroupsMorph(tess, model, brightness, options, morphState);
-                    } else {
-                        Aero_MeshGeometryRenderer.drawGroups(tess, model.groups, model.invScale, brightness, options);
-                    }
-
-                    for (int e = 0; e < entries.length; e++) {
-                        Aero_MeshModel.NamedGroup ng = entries[e];
-                        Aero_MeshModel.BoneRef    rf = refs[e];
-
-                        GL11.glPushMatrix();
-                        try {
-                            // Pass 2: walk root → leaf, applying each
-                            // animated ancestor's pose. Parent rotations
-                            // propagate to children automatically.
-                            Aero_BoneRenderPose deepest = pool != null
-                                ? Aero_MeshPoseRenderer.applyPoseChain(rf, pool, poseDepthLimit)
-                                : null;
-                            float uOff   = deepest != null ? deepest.uOffset : 0f;
-                            float vOff   = deepest != null ? deepest.vOffset : 0f;
-                            float uScale = deepest != null ? deepest.uScale  : 1f;
-                            float vScale = deepest != null ? deepest.vScale  : 1f;
-                            Aero_MeshGeometryRenderer.drawGroups(tess, ng.tris, model.invScale, brightness, options,
-                                uOff, vOff, uScale, vScale);
-                        } finally {
-                            GL11.glPopMatrix();
-                        }
-                    }
-                } finally {
-                    Aero_MeshGlStateRenderer.endMeshState();
-                }
-            } finally {
-                GL11.glPopMatrix();
-            }
+            if (Aero_MeshAnimatedDraw.tryBonePages(model, entries, refs, pool, x, y, z,
+                    brightness, options, morphState, poseDepthLimit)) return;
+            Aero_MeshAnimatedDraw.render(model, entries, refs, pool, x, y, z,
+                brightness, options, morphState, poseDepthLimit);
         } finally {
             Aero_Profiler.end("aero.mesh.renderAnimated");
+        }
+    }
+
+private static void applyIk(Aero_IkChain[] chains, Aero_AnimationClip clip,
+                            Aero_AnimationBundle bundle, Aero_BoneRenderPose[] pool) {
+        if (chains == null || chains.length == 0 || clip == null) return;
+        Aero_Profiler.start("aero.mesh.ikSolve");
+        try {
+            Aero_MeshPoseRenderer.runIkChains(chains, clip, bundle, pool);
+        } finally {
+            Aero_Profiler.end("aero.mesh.ikSolve");
         }
     }
 

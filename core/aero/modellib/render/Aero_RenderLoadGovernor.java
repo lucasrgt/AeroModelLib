@@ -73,24 +73,27 @@ public final class Aero_RenderLoadGovernor {
         boolean throughputPressure = recordThroughputPressure(frameMs);
 
         if (hardPressure || targetPressure || throughputPressure) {
-            double next = hardPressure
-                ? MIN_SCALE
-                : Math.max(MIN_SCALE, scale - STEP);
-            if (next < scale) {
-                scale = next;
-                drops++;
-            }
-            holdUntilFrame = frameIndex + HOLD_FRAMES;
-            nextRecoveryFrame = holdUntilFrame + RECOVERY_FRAMES;
+            applyPressure(hardPressure);
             return;
         }
+        recoverScale();
+    }
 
-        if (scale < 1.0d
-            && frameIndex > holdUntilFrame
-            && frameIndex >= nextRecoveryFrame) {
-            scale = Math.min(1.0d, scale + RECOVERY_STEP);
-            nextRecoveryFrame = frameIndex + RECOVERY_FRAMES;
+    private static void applyPressure(boolean hardPressure) {
+        double next = hardPressure ? MIN_SCALE : Math.max(MIN_SCALE, scale - STEP);
+        if (next < scale) {
+            scale = next;
+            drops++;
         }
+        holdUntilFrame = frameIndex + HOLD_FRAMES;
+        nextRecoveryFrame = holdUntilFrame + RECOVERY_FRAMES;
+    }
+
+    private static void recoverScale() {
+        if (scale >= 1.0d) return;
+        if (frameIndex <= holdUntilFrame || frameIndex < nextRecoveryFrame) return;
+        scale = Math.min(1.0d, scale + RECOVERY_STEP);
+        nextRecoveryFrame = frameIndex + RECOVERY_FRAMES;
     }
 
     public static double scaleRadius(double radius) {

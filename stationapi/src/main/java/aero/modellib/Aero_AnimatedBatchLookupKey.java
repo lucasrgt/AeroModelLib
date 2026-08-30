@@ -28,9 +28,18 @@ final class Aero_AnimatedBatchLookupKey {
     public boolean equals(Object object) {
         if (!(object instanceof Aero_AnimatedBatchKey)) return false;
         Aero_AnimatedBatchKey other = (Aero_AnimatedBatchKey) object;
-        return model == other.model && red == other.tintRBits && green == other.tintGBits
-            && blue == other.tintBBits && alpha == other.alphaBits && clip == other.alphaClipBits
-            && blend == other.blend && depth == other.depthTest && cull == other.cullFaces
-            && Aero_AnimatedBatchKey.sameTexture(texture, other.texturePath);
+        if (model != other.model || !sameTint(other)) return false;
+        if (!sameState(other)) return false;
+        return Aero_AnimatedBatchKey.sameTexture(texture, other.texturePath);
+    }
+
+    private boolean sameTint(Aero_AnimatedBatchKey other) {
+        return red == other.tintRBits && green == other.tintGBits
+            && blue == other.tintBBits && alpha == other.alphaBits
+            && clip == other.alphaClipBits;
+    }
+
+    private boolean sameState(Aero_AnimatedBatchKey other) {
+        return blend == other.blend && depth == other.depthTest && cull == other.cullFaces;
     }
 }

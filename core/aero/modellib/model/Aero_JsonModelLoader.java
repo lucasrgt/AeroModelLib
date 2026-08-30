@@ -21,6 +21,7 @@ import aero.modellib.util.Aero_PerfConfig;
  * into the jar automatically. Export from Blockbench: File > Export > Export as JSON.
  */
 public class Aero_JsonModelLoader {
+    private static final String[] FACE_ORDER = {"down", "up", "north", "south", "west", "east"};
 
     private static final int MAX_CACHE_ENTRIES =
         Aero_PerfConfig.intProperty("aero.modellib.cache.maxEntries",
@@ -78,62 +79,62 @@ public class Aero_JsonModelLoader {
 
     private static Aero_JsonModel fromJson(Object root, String name) {
         Map obj = (Map) root;
-
-        // textureSize: resolution.width → fallback 128
-        float textureSize = 128.0f;
-        if (obj.containsKey("resolution")) {
-            Map res = (Map) obj.get("resolution");
-            if (res.containsKey("width")) textureSize = toFloat(res.get("width"));
-        }
-
+        float textureSize = textureSize(obj);
         List elements = (List) obj.get("elements");
         if (elements == null || elements.isEmpty()) {
             throw new RuntimeException("AeroModelLoader: no elements in " + name);
         }
+        List cubes = cubes(elements);
+        float[][] parts = new float[cubes.size()][30];
+        for (int i = 0; i < cubes.size(); i++) {
+            fillPart((Map) cubes.get(i), parts[i]);
+        }
+        return new Aero_JsonModel(name, parts, textureSize, 16.0f);
+    }
 
-        // Filter only elements with from+to (skip meshes and other bbmodel types)
+    private static float textureSize(Map object) {
+        Map resolution = object.containsKey("resolution")
+            ? (Map) object.get("resolution") : null;
+        return resolution != null && resolution.containsKey("width")
+            ? toFloat(resolution.get("width")) : 128.0f;
+    }
+
+    private static List cubes(List elements) {
         List cubes = new ArrayList();
         for (int i = 0; i < elements.size(); i++) {
-            Object e = elements.get(i);
-            if (e instanceof Map) {
-                Map m = (Map) e;
-                if (m.containsKey("from") && m.containsKey("to")) cubes.add(m);
-            }
+            Object value = elements.get(i);
+            if (!(value instanceof Map)) continue;
+            Map element = (Map) value;
+            if (element.containsKey("from") && element.containsKey("to")) cubes.add(element);
         }
+        return cubes;
+    }
 
-        float[][] parts = new float[cubes.size()][30];
-        String[] FACE_ORDER = {"down", "up", "north", "south", "west", "east"};
+    private static void fillPart(Map element, float[] part) {
+        List from = (List) element.get("from");
+        List to = (List) element.get("to");
+        float inflate = element.containsKey("inflate") ? toFloat(element.get("inflate")) : 0.0f;
+        part[0] = toFloat(from.get(0)) - inflate;
+        part[1] = toFloat(from.get(1)) - inflate;
+        part[2] = toFloat(from.get(2)) - inflate;
+        part[3] = toFloat(to.get(0)) + inflate;
+        part[4] = toFloat(to.get(1)) + inflate;
+        part[5] = toFloat(to.get(2)) + inflate;
+        Map faces = element.containsKey("faces") ? (Map) element.get("faces") : new HashMap();
+        for (int face = 0; face < FACE_ORDER.length; face++)
+            fillFaceUv(faces.get(FACE_ORDER[face]), part, 6 + face * 4);
+    }
 
-        for (int i = 0; i < cubes.size(); i++) {
-            Map el = (Map) cubes.get(i);
-            List from = (List) el.get("from");
-            List to   = (List) el.get("to");
-            float[] p = parts[i];
-
-            float inf = el.containsKey("inflate") ? toFloat(el.get("inflate")) : 0.0f;
-            p[0] = toFloat(from.get(0)) - inf;  p[1] = toFloat(from.get(1)) - inf;  p[2] = toFloat(from.get(2)) - inf;
-            p[3] = toFloat(to.get(0))   + inf;  p[4] = toFloat(to.get(1))   + inf;  p[5] = toFloat(to.get(2))   + inf;
-
-            Map faces = el.containsKey("faces") ? (Map) el.get("faces") : new HashMap();
-            for (int f = 0; f < 6; f++) {
-                int base = 6 + f * 4;
-                Object faceObj = faces.get(FACE_ORDER[f]);
-                if (faceObj instanceof Map) {
-                    List uv = (List) ((Map) faceObj).get("uv");
-                    if (uv != null && uv.size() >= 4) {
-                        p[base]   = toFloat(uv.get(0));
-                        p[base+1] = toFloat(uv.get(1));
-                        p[base+2] = toFloat(uv.get(2));
-                        p[base+3] = toFloat(uv.get(3));
-                        continue;
-                    }
-                }
-                // Missing face or no UV — sentinel -1 (Aero_JsonModelRenderer skips)
-                p[base] = p[base+1] = p[base+2] = p[base+3] = -1.0f;
-            }
+    private static void fillFaceUv(Object value, float[] part, int base) {
+        List uv = value instanceof Map ? (List) ((Map) value).get("uv") : null;
+        if (uv == null || uv.size() < 4) {
+            part[base] = part[base + 1] = part[base + 2] = part[base + 3] = -1.0f;
+            return;
         }
-
-        return new Aero_JsonModel(name, parts, textureSize, 16.0f);
+        part[base] = toFloat(uv.get(0));
+        part[base + 1] = toFloat(uv.get(1));
+        part[base + 2] = toFloat(uv.get(2));
+        part[base + 3] = toFloat(uv.get(3));
     }
 
     private static float toFloat(Object o) {
@@ -207,19 +208,24 @@ public class Aero_JsonModelLoader {
             char c = s.charAt(pos[0]++);
             if (c == '"') break;
             if (c == '\\' && pos[0] < s.length()) {
-                char esc = s.charAt(pos[0]++);
-                if      (esc == '"')  sb.append('"');
-                else if (esc == '\\') sb.append('\\');
-                else if (esc == '/')  sb.append('/');
-                else if (esc == 'n')  sb.append('\n');
-                else if (esc == 'r')  sb.append('\r');
-                else if (esc == 't')  sb.append('\t');
-                else                  sb.append(esc);
+                appendEscape(s.charAt(pos[0]++), sb);
             } else {
                 sb.append(c);
             }
         }
         return sb.toString();
+    }
+
+    private static void appendEscape(char escape, StringBuilder output) {
+        switch (escape) {
+            case '"': output.append('"'); break;
+            case '\\': output.append('\\'); break;
+            case '/': output.append('/'); break;
+            case 'n': output.append('\n'); break;
+            case 'r': output.append('\r'); break;
+            case 't': output.append('\t'); break;
+            default: output.append(escape);
+        }
     }
 
     private static Float parseNumber(String s, int[] pos) {

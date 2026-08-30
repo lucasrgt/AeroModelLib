@@ -74,7 +74,18 @@ final class Aero_ThreeJsonImporter {
         if (geometry == null) Aero_ThreeJsonGeometry.fail("unknown geometry " + id);
         Map data = Aero_ThreeJsonGeometry.map(geometry.get("data"));
         Map attributes = data == null ? null : Aero_ThreeJsonGeometry.map(data.get("attributes"));
-        Map positions = attributes == null ? null : Aero_ThreeJsonGeometry.map(attributes.get("position"));
+        List xyz = positionValues(id, geometry, attributes);
+        List uv = uvValues(id, attributes, xyz.size() / 3);
+        List indices = indexValues(data);
+        int count = indices == null ? xyz.size() / 3 : indices.size();
+        if (count % 3 != 0) Aero_ThreeJsonGeometry.fail(
+            "geometry " + id + " is not triangle-aligned");
+        appendTriangles(target(groupName), xyz, uv, indices, count, matrix);
+    }
+
+    private List positionValues(String id, Map geometry, Map attributes) {
+        Map positions = attributes == null ? null
+            : Aero_ThreeJsonGeometry.map(attributes.get("position"));
         if (positions == null) Aero_ThreeJsonGeometry.fail("geometry " + id + " ("
             + Aero_ThreeJsonGeometry.string(geometry.get("type")) + ") is not baked BufferGeometry");
         if (Boolean.TRUE.equals(positions.get("normalized")))
@@ -83,19 +94,24 @@ final class Aero_ThreeJsonImporter {
         if (Aero_ThreeJsonGeometry.number(positions.get("itemSize"), 3) != 3
                 || xyz == null || xyz.size() % 3 != 0)
             Aero_ThreeJsonGeometry.fail("geometry " + id + " has invalid position attribute");
+        return xyz;
+    }
+
+    private List uvValues(String id, Map attributes, int vertexCount) {
         Map uvAttribute = Aero_ThreeJsonGeometry.map(attributes.get("uv"));
         List uv = uvAttribute == null ? null : Aero_ThreeJsonGeometry.list(uvAttribute.get("array"));
         if (uvAttribute != null && Boolean.TRUE.equals(uvAttribute.get("normalized")))
             Aero_ThreeJsonGeometry.fail("geometry " + id + " has normalized uvs");
         if (uv != null && (Aero_ThreeJsonGeometry.number(uvAttribute.get("itemSize"), 2) != 2
-                || uv.size() / 2 < xyz.size() / 3))
+                || uv.size() / 2 < vertexCount))
             Aero_ThreeJsonGeometry.fail("geometry " + id + " has invalid uv attribute");
+        return uv;
+    }
+
+    private List indexValues(Map data) {
         Map indexAttribute = Aero_ThreeJsonGeometry.map(data.get("index"));
-        List indices = indexAttribute == null ? null : Aero_ThreeJsonGeometry.list(indexAttribute.get("array"));
-        int count = indices == null ? xyz.size() / 3 : indices.size();
-        if (count % 3 != 0) Aero_ThreeJsonGeometry.fail(
-            "geometry " + id + " is not triangle-aligned");
-        appendTriangles(target(groupName), xyz, uv, indices, count, matrix);
+        return indexAttribute == null ? null
+            : Aero_ThreeJsonGeometry.list(indexAttribute.get("array"));
     }
 
     private void appendTriangles(List[] target, List xyz, List uv, List indices,

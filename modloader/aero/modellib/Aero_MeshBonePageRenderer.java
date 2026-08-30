@@ -71,8 +71,7 @@ static boolean renderAnimatedViaBonePages(Aero_MeshModel model,
                                                        Aero_RenderOptions options,
                                                        Aero_MorphState morphState,
                                                        int poseDepthLimit) {
-        if (!BONE_PAGES_ENABLED) return false;
-        if (morphState != null && model.hasMorphTargets() && !morphState.isEmpty()) return false;
+        if (!canRenderAnimatedPages(model, morphState)) return false;
 
         Aero_BonePageLists pages = Aero_MeshBonePageRenderer.getOrCompileBonePageLists(model, entries);
         if (pages == null || !pages.hasAnyPages) return false;
@@ -86,21 +85,8 @@ static boolean renderAnimatedViaBonePages(Aero_MeshModel model,
                 Aero_MeshGlStateRenderer.beginMeshState(options);
                 try {
                     Aero_MeshBonePageRenderer2.renderStaticPageOrFallback(tess, model, pages, brightness, options);
-                    for (int e = 0; e < entries.length; e++) {
-                        GL11.glPushMatrix();
-                        try {
-                            Aero_BoneRenderPose deepest = (pool != null && refs != null)
-                                ? Aero_MeshPoseRenderer.applyPoseChain(refs[e], pool, poseDepthLimit)
-                                : null;
-                            int[] groupPages = pages.bonePages != null && e < pages.bonePages.length
-                                ? pages.bonePages[e]
-                                : null;
-                            Aero_MeshBonePageRenderer2.renderBonePageOrFallback(tess, groupPages, entries[e].tris,
-                                model.invScale, brightness, options, deepest);
-                        } finally {
-                            GL11.glPopMatrix();
-                        }
-                    }
+                    renderAnimatedGroups(tess, model, pages, entries, refs, pool,
+                        brightness, options, poseDepthLimit);
                 } finally {
                     Aero_MeshGlStateRenderer.endMeshState();
                 }
@@ -111,6 +97,27 @@ static boolean renderAnimatedViaBonePages(Aero_MeshModel model,
             Aero_Profiler.end("aero.bonepages.call");
         }
         return true;
+    }
+
+private static boolean canRenderAnimatedPages(Aero_MeshModel model, Aero_MorphState morph) {
+        if (!BONE_PAGES_ENABLED) return false;
+        return morph == null || !model.hasMorphTargets() || morph.isEmpty();
+    }
+
+private static void renderAnimatedGroups(Tessellator tess, Aero_MeshModel model,
+        Aero_BonePageLists pages, Aero_MeshModel.NamedGroup[] entries,
+        Aero_MeshModel.BoneRef[] refs, Aero_BoneRenderPose[] pool,
+        float brightness, Aero_RenderOptions options, int poseDepthLimit) {
+        for (int index = 0; index < entries.length; index++) {
+            GL11.glPushMatrix();
+            try {
+                Aero_BoneRenderPose pose = pool != null && refs != null
+                    ? Aero_MeshPoseRenderer.applyPoseChain(refs[index], pool, poseDepthLimit) : null;
+                Aero_MeshBonePageRenderer2.renderBonePageOrFallback(tess,
+                    Aero_MeshBonePageRenderer2.pageFor(pages, index), entries[index].tris,
+                    model.invScale, brightness, options, pose);
+            } finally { GL11.glPopMatrix(); }
+        }
     }
 
 static boolean renderGraphViaBonePages(Aero_MeshModel model,

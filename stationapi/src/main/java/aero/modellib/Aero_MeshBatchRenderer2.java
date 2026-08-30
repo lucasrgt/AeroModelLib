@@ -110,10 +110,8 @@ static float emitStaticInstancesBatched(Tessellator tess, float[][] tris, float 
 static void emitBoneInstanceBatched(Tessellator tess, float[][] tris, float invSc,
                                                  Aero_BoneRenderPose pose,
                                                  double instX, double instY, double instZ) {
-        boolean rotIdentity = pose.rotX == 0f && pose.rotY == 0f && pose.rotZ == 0f;
-        boolean scaleIdentity = pose.scaleX == 1f && pose.scaleY == 1f && pose.scaleZ == 1f;
-        if (rotIdentity) {
-            if (scaleIdentity) {
+        if (rotationIdentity(pose)) {
+            if (scaleIdentity(pose)) {
                 Aero_MeshBatchRenderer2.emitBoneInstanceBatchedTranslateUv(tess, tris, invSc, pose, instX, instY, instZ);
             } else {
                 Aero_MeshBatchRenderer3.emitBoneInstanceBatchedScaleTranslateUv(tess, tris, invSc, pose, instX, instY, instZ);
@@ -174,6 +172,14 @@ static void emitBoneInstanceBatched(Tessellator tess, float[][] tris, float invS
                             u, v);
             }
         }
+    }
+
+private static boolean rotationIdentity(Aero_BoneRenderPose pose) {
+        return pose.rotX == 0f && pose.rotY == 0f && pose.rotZ == 0f;
+    }
+
+private static boolean scaleIdentity(Aero_BoneRenderPose pose) {
+        return pose.scaleX == 1f && pose.scaleY == 1f && pose.scaleZ == 1f;
     }
 
 static void emitBoneInstanceBatchedTranslateUv(Tessellator tess, float[][] tris,

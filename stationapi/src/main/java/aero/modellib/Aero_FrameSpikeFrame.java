@@ -29,44 +29,10 @@ static void beginFrame() {
         long threadCpuNs = Aero_FrameSpikeMetrics.currentThreadCpuTimeNs();
         long threadAllocBytes = Aero_FrameSpikeMetrics.currentThreadAllocatedBytes();
         if (lastGcCount < 0L) {
-            lastGcCount = gcCount;
-            lastGcTimeMs = gcTimeMs;
-            lastThreadCpuNs = threadCpuNs;
-            lastThreadAllocBytes = threadAllocBytes;
+            initializeMetrics(gcCount, gcTimeMs, threadCpuNs, threadAllocBytes);
         }
         if (lastFrameStartNs != 0L) {
-            double frameMs = (now - lastFrameStartNs) / 1000000.0d;
-            long gcCountDelta = Aero_FrameSpikeMetrics.positiveDelta(gcCount, lastGcCount);
-            long gcTimeDelta = Aero_FrameSpikeMetrics.positiveDelta(gcTimeMs, lastGcTimeMs);
-            lastFrameCpuNs = threadCpuNs >= 0L && lastThreadCpuNs >= 0L
-                ? Aero_FrameSpikeMetrics.positiveDelta(threadCpuNs, lastThreadCpuNs)
-                : -1L;
-            lastFrameAllocBytes = threadAllocBytes >= 0L && lastThreadAllocBytes >= 0L
-                ? Aero_FrameSpikeMetrics.positiveDelta(threadAllocBytes, lastThreadAllocBytes)
-                : -1L;
-            completedFrameAllocBytes = lastFrameAllocBytes;
-            Aero_AnimationRenderBudget.recordFramePressure(frameMs,
-                lastDisplayUpdateNs / 1000000.0d,
-                lastRenderChunksNs / 1000000.0d,
-                gcTimeDelta);
-            Aero_RenderLoadGovernor.recordFramePressure(frameMs,
-                lastDisplayUpdateNs / 1000000.0d,
-                lastRenderChunksNs / 1000000.0d,
-                lastRenderEntitiesNs / 1000000.0d,
-                gcTimeDelta,
-                Aero_ChunkVisibility.visibleChunkCount());
-            Aero_FramePacer.recordFramePressure(frameMs,
-                lastDisplayUpdateNs / 1000000.0d);
-            if (ENABLED && frameMs >= THRESHOLD_MS
-                && (MIN_INTERVAL_NS == 0L || now - lastLogNs >= MIN_INTERVAL_NS)) {
-                lastLogNs = now;
-                Aero_FrameSpikeFrame.logSpike(frameMs, gcCountDelta, gcTimeDelta);
-            } else if (ENABLED && LOG_GC && gcCountDelta > 0L) {
-                Aero_FrameSpikeWriter.logEvent("GC", frameMs, gcCountDelta, gcTimeDelta);
-            } else if (ENABLED && HEARTBEAT_NS > 0L && now - lastHeartbeatNs >= HEARTBEAT_NS) {
-                lastHeartbeatNs = now;
-                Aero_FrameSpikeWriter.logEvent("Pulse", frameMs, gcCountDelta, gcTimeDelta);
-            }
+            completeFrame(now, gcCount, gcTimeMs, threadCpuNs, threadAllocBytes);
         }
         Aero_FrameSpikeFrame.resetFrameStageCounters();
         lastFrameStartNs = now;
@@ -78,6 +44,63 @@ static void beginFrame() {
         gameRendererUpdateStartAllocBytes = threadAllocBytes;
         Aero_AnimatedBatcher.beginFrameCounters();
         Aero_MeshRenderer.beginFrameCounters();
+    }
+
+private static void initializeMetrics(long gcCount, long gcTimeMs,
+                                      long threadCpuNs, long threadAllocBytes) {
+        lastGcCount = gcCount;
+        lastGcTimeMs = gcTimeMs;
+        lastThreadCpuNs = threadCpuNs;
+        lastThreadAllocBytes = threadAllocBytes;
+    }
+
+private static void completeFrame(long now, long gcCount, long gcTimeMs,
+                                  long threadCpuNs, long threadAllocBytes) {
+        double frameMs = (now - lastFrameStartNs) / 1000000.0d;
+        long gcCountDelta = Aero_FrameSpikeMetrics.positiveDelta(gcCount, lastGcCount);
+        long gcTimeDelta = Aero_FrameSpikeMetrics.positiveDelta(gcTimeMs, lastGcTimeMs);
+        lastFrameCpuNs = measuredDelta(threadCpuNs, lastThreadCpuNs);
+        lastFrameAllocBytes = measuredDelta(threadAllocBytes, lastThreadAllocBytes);
+        completedFrameAllocBytes = lastFrameAllocBytes;
+        recordPressure(frameMs, gcTimeDelta);
+        logFrame(now, frameMs, gcCountDelta, gcTimeDelta);
+    }
+
+private static long measuredDelta(long current, long previous) {
+        return current >= 0L && previous >= 0L
+            ? Aero_FrameSpikeMetrics.positiveDelta(current, previous) : -1L;
+    }
+
+private static void recordPressure(double frameMs, long gcTimeDelta) {
+        double displayMs = lastDisplayUpdateNs / 1000000.0d;
+        double chunksMs = lastRenderChunksNs / 1000000.0d;
+        Aero_AnimationRenderBudget.recordFramePressure(frameMs, displayMs, chunksMs, gcTimeDelta);
+        Aero_RenderLoadGovernor.recordFramePressure(frameMs, displayMs, chunksMs,
+            lastRenderEntitiesNs / 1000000.0d, gcTimeDelta,
+            Aero_ChunkVisibility.visibleChunkCount());
+        Aero_FramePacer.recordFramePressure(frameMs, displayMs);
+    }
+
+private static void logFrame(long now, double frameMs,
+                             long gcCountDelta, long gcTimeDelta) {
+        if (shouldLogSpike(now, frameMs)) {
+            lastLogNs = now;
+            logSpike(frameMs, gcCountDelta, gcTimeDelta);
+            return;
+        }
+        if (ENABLED && LOG_GC && gcCountDelta > 0L) {
+            Aero_FrameSpikeWriter.logEvent("GC", frameMs, gcCountDelta, gcTimeDelta);
+            return;
+        }
+        if (ENABLED && HEARTBEAT_NS > 0L && now - lastHeartbeatNs >= HEARTBEAT_NS) {
+            lastHeartbeatNs = now;
+            Aero_FrameSpikeWriter.logEvent("Pulse", frameMs, gcCountDelta, gcTimeDelta);
+        }
+    }
+
+private static boolean shouldLogSpike(long now, double frameMs) {
+        if (!ENABLED || frameMs < THRESHOLD_MS) return false;
+        return MIN_INTERVAL_NS == 0L || now - lastLogNs >= MIN_INTERVAL_NS;
     }
 
 static void logSpike(double frameMs, long gcCountDelta, long gcTimeDelta) {

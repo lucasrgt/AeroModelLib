@@ -77,52 +77,68 @@ public final class Aero_AnimationStack {
         if (outRot == null || outPos == null || outScl == null) {
             throw new IllegalArgumentException("pose outputs must not be null");
         }
-
-        outRot[0] = 0f; outRot[1] = 0f; outRot[2] = 0f;
-        outPos[0] = 0f; outPos[1] = 0f; outPos[2] = 0f;
-        outScl[0] = 1f; outScl[1] = 1f; outScl[2] = 1f;
-        if (outUvOffset != null) { outUvOffset[0] = 0f; outUvOffset[1] = 0f; outUvOffset[2] = 0f; }
-        if (outUvScale  != null) { outUvScale[0]  = 1f; outUvScale[1]  = 1f; outUvScale[2]  = 1f; }
-
+        resetPose(outRot, outPos, outScl, outUvOffset, outUvScale);
         boolean any = false;
         for (int i = 0; i < layers.length; i++) {
-            Aero_AnimationLayer layer = layers[i];
-            Aero_AnimationPlayback pb = layer.getPlayback();
-            Aero_AnimationClip clip = pb.getCurrentClip();
-            if (clip == null) continue;
-            int bi = clip.indexOfBone(boneName);
-            if (bi < 0) continue;
-
-            float time = pb.getInterpolatedTime(partialTick);
-            float weight = layer.getWeight();
-            boolean additive = layer.isAdditive();
-
-            if (pb.sampleRotBlended(clip, bi, boneName, time, partialTick, tmp)) {
-                compose(outRot, tmp, weight, additive, CHANNEL_ROT);
-                any = true;
-            }
-            if (pb.samplePosBlended(clip, bi, boneName, time, partialTick, tmp)) {
-                compose(outPos, tmp, weight, additive, CHANNEL_POS);
-                any = true;
-            }
-            if (pb.sampleSclBlended(clip, bi, boneName, time, partialTick, tmp)) {
-                compose(outScl, tmp, weight, additive, CHANNEL_SCL);
-                any = true;
-            }
-            if (outUvOffset != null
-                && pb.sampleUvOffsetBlended(clip, bi, boneName, time, partialTick, tmp)) {
-                // UV offset composes like position (additive sums, REPLACE lerps).
-                compose(outUvOffset, tmp, weight, additive, CHANNEL_POS);
-                any = true;
-            }
-            if (outUvScale != null
-                && pb.sampleUvScaleBlended(clip, bi, boneName, time, partialTick, tmp)) {
-                // UV scale composes like scale (additive multiplies, REPLACE lerps).
-                compose(outUvScale, tmp, weight, additive, CHANNEL_SCL);
-                any = true;
-            }
+            if (sampleLayerPose(layers[i], boneName, partialTick, outRot, outPos,
+                    outScl, outUvOffset, outUvScale)) any = true;
         }
         return any;
+    }
+
+    private void resetPose(float[] rotation, float[] position, float[] scale,
+                           float[] uvOffset, float[] uvScale) {
+        reset(rotation, 0f);
+        reset(position, 0f);
+        reset(scale, 1f);
+        if (uvOffset != null) reset(uvOffset, 0f);
+        if (uvScale != null) reset(uvScale, 1f);
+    }
+
+    private boolean sampleLayerPose(Aero_AnimationLayer layer, String boneName,
+            float partialTick, float[] rotation, float[] position, float[] scale,
+            float[] uvOffset, float[] uvScale) {
+        Aero_AnimationPlayback playback = layer.getPlayback();
+        Aero_AnimationClip clip = playback.getCurrentClip();
+        if (clip == null) return false;
+        int bone = clip.indexOfBone(boneName);
+        if (bone < 0) return false;
+        float time = playback.getInterpolatedTime(partialTick);
+        boolean any = sampleLayerChannel(playback, clip, bone, boneName, time, partialTick,
+            rotation, layer, CHANNEL_ROT);
+        any |= sampleLayerChannel(playback, clip, bone, boneName, time, partialTick,
+            position, layer, CHANNEL_POS);
+        any |= sampleLayerChannel(playback, clip, bone, boneName, time, partialTick,
+            scale, layer, CHANNEL_SCL);
+        if (uvOffset != null && playback.sampleUvOffsetBlended(
+                clip, bone, boneName, time, partialTick, tmp)) {
+            compose(uvOffset, tmp, layer.getWeight(), layer.isAdditive(), CHANNEL_POS);
+            any = true;
+        }
+        if (uvScale != null && playback.sampleUvScaleBlended(
+                clip, bone, boneName, time, partialTick, tmp)) {
+            compose(uvScale, tmp, layer.getWeight(), layer.isAdditive(), CHANNEL_SCL);
+            any = true;
+        }
+        return any;
+    }
+
+    private boolean sampleLayerChannel(Aero_AnimationPlayback playback,
+            Aero_AnimationClip clip, int bone, String boneName, float time,
+            float partialTick, float[] output, Aero_AnimationLayer layer, int channel) {
+        boolean sampled;
+        if (channel == CHANNEL_ROT)
+            sampled = playback.sampleRotBlended(clip, bone, boneName, time, partialTick, tmp);
+        else if (channel == CHANNEL_POS)
+            sampled = playback.samplePosBlended(clip, bone, boneName, time, partialTick, tmp);
+        else sampled = playback.sampleSclBlended(clip, bone, boneName, time, partialTick, tmp);
+        if (!sampled) return false;
+        compose(output, tmp, layer.getWeight(), layer.isAdditive(), channel);
+        return true;
+    }
+
+    private static void reset(float[] output, float value) {
+        output[0] = value; output[1] = value; output[2] = value;
     }
 
     private static final int CHANNEL_ROT = 0;
