@@ -1,7 +1,7 @@
 # Aero Optimization Catalog
 
 This repository owns the canonical metadata for AeroModelLib optimizations.
-The 50 records under `worldline/optimizations/catalog` describe Aero implementation
+The 51 records under `worldline/optimizations/catalog` describe Aero implementation
 details, defaults, risks, rollback paths, source symbols, and evidence using
 the neutral `worldline.optimization.v1` schema.
 
@@ -28,7 +28,7 @@ repository as the source of truth for every `aero.*` optimization ID.
 | Status | Count | Meaning in this inventory |
 | --- | ---: | --- |
 | Active | 30 | Shipped implementation with a supported production path; some still require consumer adoption. |
-| Candidate | 14 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
+| Candidate | 15 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
 | Rejected | 5 | A known current implementation is unsafe or a measured regression. |
 | Retired | 1 | Historical implementation removed from current production source. |
 
@@ -58,6 +58,7 @@ implementation is shipped but consumers must call them explicitly.
   aggregate high-memory preset.
 - Early individual-render skipping, demoted after a focused -37.0% A/B.
 - Chunk compile budget, frame pacing, and the adaptive render-load governor.
+- Incremental non-forced autosave batches with an unchanged forced-save drain.
 
 ### Rejected implementations
 
