@@ -162,6 +162,36 @@ queue is identity-deduplicated and capacity-bound; visible work may displace
 speculation but never already-urgent work.
 
 Pure-Java tests qualify priority, promotion, capacity, drop, identity, and OBJ
-cache-revision semantics. Runtime benefit remains unclaimed until Worldline compares first
-sight, camera turns, teleports, display-list allocation, frame tails, geometry,
-and LOD behavior in the AERO-M119 matrix.
+cache-revision semantics. Worldline M776 then ran four counterbalanced rounds
+over direct, cold-list, predictive-prewarm, and LOD arms in a 120-machine,
+15-model scene. The candidate activated and drained safely, but independent
+full sessions disagreed on throughput and allocation direction. The integrated
+session improved prewarm over cold lists from about 184 to 205 FPS, reduced
+mean p99 from 31.5 to 20.1 ms, and reduced allocation from about 433 to 385
+KiB/frame, while first-sight hitches moved from 21,186 to 25,423 ppm and stayed
+inside the equivalence gate. An earlier session showed the opposite throughput
+and allocation direction. The candidate therefore remains default-off.
+
+Qualified Worldline revision: `f2fc3cc73560d2ad198e95ae65ebe9ccf3887490`.
+Qualified Aero revision: `217b5ecbcb53b34da3bd44f4e09b25baa3c7b6d9`.
+
+## AERO-M120 adaptive hotness-guided prewarm
+
+Adaptive mode does not enqueue a model merely because the OBJ loader knows it.
+Repeated render observations raise an identity-scoped hotness score; visible
+models are admitted immediately, cold scores decay, stale queued speculation
+expires lazily, and a pressured previous frame blocks only the speculative
+lane. Explicit consumer admission and the urgent lane remain deterministic.
+
+Promotion is fail-closed until Worldline M777 proves all of the following:
+
+1. At least three fresh, counterbalanced full-session matrices agree on the
+   direction of the adaptive-versus-cold and adaptive-versus-blind contrasts.
+2. Every session keeps first-sight hitch delta at or below +5,000 ppm, median
+   FPS within -3%, p99 within +5%, and allocation within +5% of cold lists.
+3. Loader-only decoy models allocate no display lists in adaptive mode, all
+   eligible hot work drains, the final queue is empty, and pressure skips occur
+   without starving visible work.
+4. Core tests, StationAPI, the integration mod, GL/list lifetime telemetry,
+   camera turns, teleports, and LOD behavior remain green on the exact promoted
+   revision.

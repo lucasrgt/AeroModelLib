@@ -36,11 +36,12 @@ public final class Aero_PrewarmPriorityQueue<T> {
     }
 
     public T poll() {
-        T value = urgent.pollFirst();
-        if (value == null) value = speculative.pollFirst();
-        if (value != null) queued.remove(value);
-        return value;
+        T value = pollUrgent();
+        return value != null ? value : pollSpeculative();
     }
+
+    public T pollUrgent() { return remove(urgent.pollFirst()); }
+    public T pollSpeculative() { return remove(speculative.pollFirst()); }
 
     public boolean contains(T value) { return queued.containsKey(value); }
     public int size() { return queued.size(); }
@@ -48,6 +49,11 @@ public final class Aero_PrewarmPriorityQueue<T> {
     public int speculativeSize() { return speculative.size(); }
     public int dropped() { return dropped; }
     public int promoted() { return promoted; }
+
+    private T remove(T value) {
+        if (value != null) queued.remove(value);
+        return value;
+    }
 
     private boolean makeRoom(boolean isUrgent) {
         if (!isUrgent) return false;

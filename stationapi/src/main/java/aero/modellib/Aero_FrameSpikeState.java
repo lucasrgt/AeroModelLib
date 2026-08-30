@@ -25,7 +25,8 @@ class Aero_FrameSpikeState {
     static final boolean TIMING_ENABLED =
         ENABLED
         || Aero_AnimationRenderBudget.framePressureThrottleEnabled()
-        || Aero_RenderLoadGovernor.enabled();
+        || Aero_RenderLoadGovernor.enabled()
+        || Aero_Prewarm.timingRequired();
 
     static final double THRESHOLD_MS =
         Aero_FrameSpikeFormat.doubleProperty("aero.spikelog.ms", 25.0d, 1.0d, 10000.0d);

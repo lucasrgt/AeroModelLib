@@ -7,15 +7,14 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
-- **Predictive display-list prewarm candidate.** The render boundary discovers
-  cached OBJ models whenever the loader's monotonic revision changes, before
-  vanilla's block-entity frustum can hide them from Aero. Render observations
-  still promote the same model ahead of speculation. First-sight rendering
-  can use the direct path while at-rest and bone display lists compile under
-  the existing per-frame count/time budgets. Queue capacity, promotion,
-  urgent/speculative drainage, and drops are exposed in frame-spike telemetry.
-  This remains an AERO-M119 candidate pending a counterbalanced first-sight,
-  turn, teleport, display-list, geometry, and LOD matrix.
+- **Adaptive predictive display-list prewarm candidate.** Optional hotness
+  admission now keeps merely loaded models out of the GL queue, learns from
+  repeated culled/visible render observations, expires cold speculation, and
+  suppresses speculative drains after pressured frames while preserving the
+  urgent visible lane. Frame-spike telemetry separates admission, rejection,
+  expiry, and pressure skips. The earlier bounded queue and loader discovery
+  remain available for controlled A/B qualification; production promotion is
+  fail-closed on the cross-session M777 repeatability matrix.
 - **Camera-aware incremental chunk pre-bake qualified.** The opt-in chunk-work
   scheduler now prioritizes the player's current chunk, adjacent or visible
   chunks, and a bounded look-ahead ring before background work. Priorities are

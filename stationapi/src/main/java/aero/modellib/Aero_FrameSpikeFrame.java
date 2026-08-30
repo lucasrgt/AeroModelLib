@@ -57,6 +57,7 @@ private static void initializeMetrics(long gcCount, long gcTimeMs,
 private static void completeFrame(long now, long gcCount, long gcTimeMs,
                                   long threadCpuNs, long threadAllocBytes) {
         double frameMs = (now - lastFrameStartNs) / 1000000.0d;
+        Aero_Prewarm.recordFrameTime(frameMs);
         long gcCountDelta = Aero_FrameSpikeMetrics.positiveDelta(gcCount, lastGcCount);
         long gcTimeDelta = Aero_FrameSpikeMetrics.positiveDelta(gcTimeMs, lastGcTimeMs);
         lastFrameCpuNs = measuredDelta(threadCpuNs, lastThreadCpuNs);

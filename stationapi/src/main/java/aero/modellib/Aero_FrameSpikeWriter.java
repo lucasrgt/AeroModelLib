@@ -111,6 +111,11 @@ static void logEvent(String kind, double frameMs, long gcCountDelta, long gcTime
             + " prewarmSpeculative=" + Aero_Prewarm.speculativeQueued()
             + " prewarmPromoted=" + Aero_Prewarm.promotedModelsTotal()
             + " prewarmDropped=" + Aero_Prewarm.droppedModelsTotal()
+            + " prewarmAdmissionTracked=" + Aero_Prewarm.admissionTracked()
+            + " prewarmAdmissionAccepted=" + Aero_Prewarm.admissionAcceptedTotal()
+            + " prewarmAdmissionRejected=" + Aero_Prewarm.admissionRejectedTotal()
+            + " prewarmAdmissionExpired=" + Aero_Prewarm.admissionExpiredTotal()
+            + " prewarmPressureSkips=" + Aero_Prewarm.pressureSkipsTotal()
             + " visibleChunks=" + Aero_ChunkVisibility.visibleChunkCount()
             + " recentChunks=" + Aero_ChunkVisibility.recentChunkCount();
         System.out.println(line);

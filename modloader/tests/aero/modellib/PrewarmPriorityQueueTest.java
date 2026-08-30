@@ -61,4 +61,16 @@ public class PrewarmPriorityQueueTest {
         assertTrue(queue.offer(second, false));
         assertEquals(2, queue.size());
     }
+
+    @Test
+    public void lanesCanDrainIndependentlyUnderPressure() {
+        Aero_PrewarmPriorityQueue<Object> queue = new Aero_PrewarmPriorityQueue<Object>(3);
+        Object speculative = new Object(), urgent = new Object();
+        queue.offer(speculative, false);
+        queue.offer(urgent, true);
+        assertSame(urgent, queue.pollUrgent());
+        assertEquals(1, queue.speculativeSize());
+        assertNull(queue.pollUrgent());
+        assertSame(speculative, queue.pollSpeculative());
+    }
 }
