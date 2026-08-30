@@ -49,6 +49,7 @@ public class Aero_ObjLoader {
             return MAX_CACHE_ENTRIES > 0 && size() > MAX_CACHE_ENTRIES;
         }
     };
+    private static int cacheRevision;
 
     /** Loads and caches an OBJ model from the classpath. */
     public static synchronized Aero_MeshModel load(String resourcePath) {
@@ -73,6 +74,7 @@ public class Aero_ObjLoader {
                 is.close();
             }
             cache.put(resourcePath, model);
+            cacheRevision++;
             return model;
         } catch (Exception e) {
             throw new RuntimeException("AeroObjLoader: failed to load " + resourcePath + ": " + e.getMessage(), e);
@@ -82,10 +84,22 @@ public class Aero_ObjLoader {
     /** Drops all cached OBJ models. Useful for tests and hot-reload tooling. */
     public static synchronized void clearCache() {
         cache.clear();
+        cacheRevision++;
     }
 
     public static synchronized int cacheSize() {
         return cache.size();
+    }
+
+    /** Monotonic signal for render-side discovery without per-frame snapshots. */
+    public static synchronized int cacheRevision() {
+        return cacheRevision;
+    }
+
+    /** Stable identity snapshot used by render-thread cache warmup. */
+    public static synchronized Aero_MeshModel[] cachedModels() {
+        return (Aero_MeshModel[]) cache.values().toArray(
+            new Aero_MeshModel[cache.size()]);
     }
 
     // -----------------------------------------------------------------------

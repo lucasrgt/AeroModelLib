@@ -3,6 +3,7 @@ package aero.modellib;
 
 import aero.modellib.optimization.OptimizationRef;
 import aero.modellib.model.Aero_MeshModel;
+import aero.modellib.model.Aero_ObjLoader;
 import aero.modellib.render.Aero_PrewarmPriorityQueue;
 import aero.modellib.util.Aero_PerfConfig;
 
@@ -28,6 +29,7 @@ public final class Aero_Prewarm {
 
     private static int drainedThisFrame, urgentDrainedThisFrame;
     private static int queuedModels;
+    private static int discoveredCacheRevision = -1;
 
     private Aero_Prewarm() {}
 
@@ -38,6 +40,15 @@ public final class Aero_Prewarm {
     static void observeModel(Aero_MeshModel model, boolean visible) {
         if (!needsCompile(model)) return;
         enqueue(model, visible);
+    }
+
+    static void discoverLoadedModels() {
+        if (!active()) return;
+        int revision = Aero_ObjLoader.cacheRevision();
+        if (revision == discoveredCacheRevision) return;
+        Aero_MeshModel[] loaded = Aero_ObjLoader.cachedModels();
+        for (int index = 0; index < loaded.length; index++) enqueue(loaded[index], false);
+        discoveredCacheRevision = revision;
     }
 
     static boolean deferFirstUse(Aero_MeshModel model) {

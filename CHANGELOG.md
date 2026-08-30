@@ -7,9 +7,10 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
-- **Predictive display-list prewarm candidate.** Models observed outside the
-  conservative view cone now enter a bounded speculative queue; entering the
-  view promotes the same model ahead of speculation. First-sight rendering
+- **Predictive display-list prewarm candidate.** The render boundary discovers
+  cached OBJ models whenever the loader's monotonic revision changes, before
+  vanilla's block-entity frustum can hide them from Aero. Render observations
+  still promote the same model ahead of speculation. First-sight rendering
   can use the direct path while at-rest and bone display lists compile under
   the existing per-frame count/time budgets. Queue capacity, promotion,
   urgent/speculative drainage, and drops are exposed in frame-spike telemetry.

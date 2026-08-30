@@ -30,6 +30,7 @@ final class Aero_RenderFrame {
         Aero_Frustum6Plane.invalidateFrame();
         Aero_AnimatedBatcher.flush();
         Aero_BECellRenderer.flushCachedCamera();
+        Aero_Prewarm.discoverLoadedModels();
         Aero_Prewarm.drainFrame();
         if (!prewarmDone) prewarmDone = Aero_MeshChunkBaker.prewarmAll();
         snapshotChunks();
