@@ -51,15 +51,18 @@ static void renderModelAtRest(Aero_MeshModel model, double x, double y, double z
 
 static void renderModelAtRest(Aero_MeshModel model, double x, double y, double z,
                                          float rotation, float brightness,
-                                         Aero_RenderOptions options) {
+        Aero_RenderOptions options) {
         Aero_MeshGlStateRenderer.updateCameraForwardFromPlayer();
-        if (!Aero_FrustumCull.isLikelyVisible(x, y, z)) return;
+        boolean visible = Aero_FrustumCull.isLikelyVisible(x, y, z);
+        Aero_Prewarm.observeModel(model, visible);
+        if (!visible) return;
         Aero_MeshAtRestRenderer.renderModelAtRestBody(model, x, y, z, rotation, brightness, options);
     }
 
 static void renderModelAtRestPreculled(Aero_MeshModel model, double x, double y, double z,
                                            float rotation, float brightness,
                                            Aero_RenderOptions options) {
+        Aero_Prewarm.observeModel(model, true);
         Aero_MeshAtRestRenderer.renderModelAtRestBody(model, x, y, z, rotation, brightness, options);
     }
 
@@ -98,6 +101,7 @@ static void renderModelAtRestBody(Aero_MeshModel model, double x, double y, doub
 static boolean renderAtRestViaLists(Aero_MeshModel model, float brightness,
                                                 Aero_RenderOptions options) {
         if (!AT_REST_LISTS_ENABLED) return false;
+        if (Aero_Prewarm.deferFirstUse(model)) return false;
         int[] ids = Aero_MeshRenderer.ensureAtRestListIds(model);
         if (ids == null) return false;
         for (int g = 0; g < 4; g++) {

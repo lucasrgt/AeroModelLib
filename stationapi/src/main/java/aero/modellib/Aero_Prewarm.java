@@ -2,10 +2,8 @@ package aero.modellib;
 
 
 import aero.modellib.optimization.OptimizationRef;
-import java.util.ArrayDeque;
-import java.util.IdentityHashMap;
-
 import aero.modellib.model.Aero_MeshModel;
+import aero.modellib.render.Aero_PrewarmPriorityQueue;
 import aero.modellib.util.Aero_PerfConfig;
 
 /**
@@ -23,38 +21,45 @@ public final class Aero_Prewarm {
     private static final long MAX_NANOS_PER_FRAME = (long)
         (Aero_PerfConfig.doubleProperty("aero.prewarm.maxMsPerFrame",
             0.0d, 1.0d, 0.0d, 1000.0d) * 1000000.0d);
+    private static final int MAX_QUEUED =
+        Aero_PerfConfig.intProperty("aero.prewarm.maxQueued", 256, 256, 1, 65536);
+    private static final Aero_PrewarmPriorityQueue<Aero_MeshModel> MODELS =
+        new Aero_PrewarmPriorityQueue<Aero_MeshModel>(MAX_QUEUED);
 
-    private static final ArrayDeque<Aero_MeshModel> MODELS =
-        new ArrayDeque<Aero_MeshModel>();
-    private static final IdentityHashMap<Aero_MeshModel, Boolean> MODEL_SET =
-        new IdentityHashMap<Aero_MeshModel, Boolean>();
-
-    private static int drainedThisFrame;
+    private static int drainedThisFrame, urgentDrainedThisFrame;
     private static int queuedModels;
 
     private Aero_Prewarm() {}
 
     public static void enqueueModel(Aero_MeshModel model) {
-        if (!ENABLED || model == null) return;
-        if (MODEL_SET.containsKey(model)) return;
-        MODEL_SET.put(model, Boolean.TRUE);
-        MODELS.addLast(model);
-        queuedModels++;
+        enqueue(model, false);
+    }
+
+    static void observeModel(Aero_MeshModel model, boolean visible) {
+        if (!needsCompile(model)) return;
+        enqueue(model, visible);
+    }
+
+    static boolean deferFirstUse(Aero_MeshModel model) {
+        if (!needsCompile(model)) return false;
+        enqueue(model, true);
+        return MODELS.contains(model);
     }
 
     static void drainFrame() {
-        drainedThisFrame = 0;
-        if (!ENABLED || PER_FRAME <= 0 || MODELS.isEmpty()) return;
+        drainedThisFrame = urgentDrainedThisFrame = 0;
+        if (!active() || MODELS.size() == 0) return;
         long start = System.nanoTime();
-        while (drainedThisFrame < PER_FRAME && !MODELS.isEmpty()) {
+        while (drainedThisFrame < PER_FRAME && MODELS.size() > 0) {
             if (MAX_NANOS_PER_FRAME > 0
                 && System.nanoTime() - start >= MAX_NANOS_PER_FRAME) {
                 break;
             }
-            Aero_MeshModel model = MODELS.removeFirst();
-            MODEL_SET.remove(model);
+            boolean urgent = MODELS.urgentSize() > 0;
+            Aero_MeshModel model = MODELS.poll();
             Aero_MeshRenderer.prewarmModel(model);
             drainedThisFrame++;
+            if (urgent) urgentDrainedThisFrame++;
         }
     }
 
@@ -68,5 +73,23 @@ public final class Aero_Prewarm {
 
     public static int drainedThisFrame() {
         return drainedThisFrame;
+    }
+
+    public static int urgentDrainedThisFrame() { return urgentDrainedThisFrame; }
+    public static int speculativeQueued() { return MODELS.speculativeSize(); }
+    public static int promotedModelsTotal() { return MODELS.promoted(); }
+    public static int droppedModelsTotal() { return MODELS.dropped(); }
+
+    private static void enqueue(Aero_MeshModel model, boolean urgent) {
+        if (!active() || !needsCompile(model)) return;
+        boolean existing = MODELS.contains(model);
+        if (MODELS.offer(model, urgent) && !existing) queuedModels++;
+    }
+
+    private static boolean active() { return ENABLED && PER_FRAME > 0; }
+
+    private static boolean needsCompile(Aero_MeshModel model) {
+        return active() && model != null && model.getAtRestListIds() == null
+            && !model.atRestListsCompileFailed();
     }
 }
