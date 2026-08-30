@@ -38,4 +38,29 @@ public class IncrementalAutosaveTest {
         System.setProperty("aero.incrementalAutosave.chunkBudget", "0");
         assertEquals(1, Aero_IncrementalAutosave.chunkLimit(24, false));
     }
+
+    @Test
+    public void boundedTraversalResumesAfterTheLastVisitedChunk() {
+        System.setProperty("aero.incrementalAutosave", "true");
+        Aero_IncrementalAutosaveCursor cursor = new Aero_IncrementalAutosaveCursor();
+        cursor.begin();
+        assertEquals(0, cursor.visit(0, 4, false));
+        cursor.end(false);
+        cursor.begin();
+        assertEquals(1, cursor.visit(0, 4, false));
+        cursor.end(false);
+        cursor.begin();
+        assertEquals(0, cursor.visit(2, 4, false));
+    }
+
+    @Test
+    public void forcedTraversalKeepsVanillaOrderAndCursor() {
+        System.setProperty("aero.incrementalAutosave", "true");
+        Aero_IncrementalAutosaveCursor cursor = new Aero_IncrementalAutosaveCursor();
+        cursor.begin();
+        assertEquals(0, cursor.visit(0, 4, true));
+        cursor.end(true);
+        cursor.begin();
+        assertEquals(0, cursor.visit(0, 4, false));
+    }
 }

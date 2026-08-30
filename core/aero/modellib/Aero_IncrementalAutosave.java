@@ -19,10 +19,14 @@ public final class Aero_IncrementalAutosave {
     private Aero_IncrementalAutosave() {}
 
     public static int chunkLimit(int vanillaLimit, boolean force) {
-        if (force || !Boolean.getBoolean(ENABLE_PROPERTY)) {
+        if (!isBounded(force)) {
             return vanillaLimit;
         }
         return intProperty(BUDGET_PROPERTY, 1, 1, vanillaLimit);
+    }
+
+    public static boolean isBounded(boolean force) {
+        return !force && Boolean.getBoolean(ENABLE_PROPERTY);
     }
 
     private static int intProperty(String name, int fallback,
