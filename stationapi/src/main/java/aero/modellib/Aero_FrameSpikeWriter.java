@@ -52,7 +52,11 @@ static void logEvent(String kind, double frameMs, long gcCountDelta, long gcTime
             + " compileChunksMaxMs=" + Aero_FrameSpikeFormat.round1(lastChunkCompileMaxNs / 1000000.0d)
             + " compileChunksCalls=" + chunkCompileCalls
             + " compileChunksSkipped=" + chunkCompileSkipped
-            + " compileBudgetSkipped=" + Aero_ChunkCompileBudget.skippedLastFrame()
+            + " chunkWorkBuilt=" + Aero_ChunkCompileBudget.builtLastFrame()
+            + " chunkWorkVisible=" + Aero_ChunkCompileBudget.visibleBuiltLastFrame()
+            + " chunkWorkUrgent=" + Aero_ChunkCompileBudget.urgentBuiltLastFrame()
+            + " chunkWorkOldestAge=" + Aero_ChunkCompileBudget.oldestAge()
+            + " chunkWorkMaxDebt=" + Aero_ChunkCompileBudget.maximumDebt()
             + " slowChunkCompiles=" + slowChunkCompiles
             + " renderChunksMs=" + Aero_FrameSpikeFormat.round1(lastRenderChunksNs / 1000000.0d)
             + " renderChunksAllocMB=" + Aero_FrameSpikeFormat.round2(Aero_FrameSpikeFormat.bytesToMb(lastRenderChunksAllocBytes))

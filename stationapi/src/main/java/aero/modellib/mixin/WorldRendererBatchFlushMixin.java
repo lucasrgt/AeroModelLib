@@ -2,7 +2,6 @@ package aero.modellib.mixin;
 
 import aero.modellib.Aero_AnimatedBatcher;
 import aero.modellib.Aero_BECellRenderer;
-import aero.modellib.Aero_ChunkCompileBudget;
 import aero.modellib.Aero_FrameSpikeLogger;
 import aero.modellib.Aero_SoundDispatcher;
 import net.fabricmc.loader.api.FabricLoader;
@@ -56,38 +55,6 @@ public abstract class WorldRendererBatchFlushMixin {
             float partialTick,
             CallbackInfo ci) {
         Aero_FrameSpikeLogger.beginRenderEntities();
-    }
-
-    @Inject(
-        method = "compileChunks(Lnet/minecraft/entity/LivingEntity;Z)Z",
-        at = @At("HEAD"),
-        cancellable = true,
-        require = 0,
-        expect = 0
-    )
-    private void aeroModelLib_beginChunkCompileTiming(
-            net.minecraft.entity.LivingEntity entity,
-            boolean flag,
-            CallbackInfoReturnable<Boolean> cir) {
-        if (Aero_ChunkCompileBudget.shouldSkip(flag)) {
-            Aero_FrameSpikeLogger.skipChunkCompile();
-            cir.setReturnValue(Boolean.FALSE);
-            return;
-        }
-        Aero_FrameSpikeLogger.beginChunkCompile();
-    }
-
-    @Inject(
-        method = "compileChunks(Lnet/minecraft/entity/LivingEntity;Z)Z",
-        at = @At("TAIL"),
-        require = 0,
-        expect = 0
-    )
-    private void aeroModelLib_endChunkCompileTiming(
-            net.minecraft.entity.LivingEntity entity,
-            boolean flag,
-            CallbackInfoReturnable<Boolean> cir) {
-        Aero_FrameSpikeLogger.endChunkCompile();
     }
 
     @Inject(

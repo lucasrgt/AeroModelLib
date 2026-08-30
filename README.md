@@ -338,7 +338,7 @@ paths remain opt-in.
 | Prewarm queue | `-Daero.prewarm=true` | Earlier CPU/driver work and cache allocation |
 | High-memory preset | `-Daero.perf.memory=high` | Higher heap and display-list retention |
 | Chunk-scoped palette cache | `-Daero.palettedcache.chunkScope=true` | Experimental injection during chunk rebuild |
-| Chunk compile budget | `-Daero.chunkCompileBudget=true` | Changes terrain update latency |
+| Chunk work scheduler | `-Daero.chunkCompileBudget=true` | Bounded non-forced rebuilds; visible first, then age/debt starvation recovery |
 | Frame pacing | `-Daero.framePacing=true` | Caps submission rate and may add latency |
 
 Do not enable every experiment at once. Change one family at a time and record

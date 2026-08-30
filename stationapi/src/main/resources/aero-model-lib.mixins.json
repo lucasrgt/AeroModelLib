@@ -12,6 +12,7 @@
     "MinecraftFrameStageMixin",
     "PalettedContainerCacheMixin",
     "WorldRendererBatchFlushMixin",
+    "WorldRendererChunkSchedulerMixin",
     "WorldRendererChunksAccessor"
   ],
   "injectors": {
