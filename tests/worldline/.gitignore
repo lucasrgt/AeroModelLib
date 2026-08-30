@@ -1,0 +1,4 @@
+.gradle/
+build/
+.local/official-runtime.lock
+.local/oracles/b1.7.3/*.jar

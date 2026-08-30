@@ -1,0 +1,4 @@
+runtime = "b1.7.3"
+profile = "b173-local"
+noRuntime = "true"
+loader = "modloader"
