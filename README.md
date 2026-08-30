@@ -335,7 +335,7 @@ paths remain opt-in.
 | Animation curve LUT (rejected research path) | `-Daero.anim.lut=true` | Bounded approximation, more memory, and a measured dense-scene regression |
 | OBJ hidden-face removal | `-Daero.obj.cullhidden=true` | Load-time geometry decision needs asset validation |
 | Skeletal LOD | `-Daero.skeletalLod=true` | Distant poses become less detailed |
-| Prewarm queue | `-Daero.prewarm=true` | Earlier CPU/driver work and cache allocation |
+| Predictive prewarm queue | `-Daero.prewarm=true` | Earlier bounded CPU/driver work and cache allocation |
 | High-memory preset | `-Daero.perf.memory=high` | Higher heap and display-list retention |
 | Chunk-scoped palette cache | `-Daero.palettedcache.chunkScope=true` | Experimental injection during chunk rebuild |
 | Chunk work scheduler | `-Daero.chunkCompileBudget=true` | Bounded non-forced rebuilds; current/adjacent/visible and camera look-ahead first, then age/debt recovery |

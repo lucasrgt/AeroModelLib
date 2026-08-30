@@ -149,3 +149,17 @@ This qualifies the candidate's activation, boundedness, drainage, and hitch
 safety. It remains default-off until the long-soak and promotion gate; AERO-M119
 continues with GL state, geometry, display-list, and LOD matrices. Qualified
 Worldline revision: `8b6292782f89a693e846dab4f19b8808a55f14e7`.
+
+## AERO-M119 predictive display-list prewarm candidate
+
+The prior prewarm queue required every consumer to enqueue models manually, so
+normal rendering never exercised it. The renderer now observes culled models
+as speculative work, promotes a model when it enters the view, and defers a
+first-sight list compile to the bounded render-frame queue while preserving the
+direct-render fallback. The queue is identity-deduplicated and capacity-bound;
+visible work may displace speculation but never already-urgent work.
+
+Pure-Java tests qualify priority, promotion, capacity, drop, and identity
+semantics. Runtime benefit remains unclaimed until Worldline compares first
+sight, camera turns, teleports, display-list allocation, frame tails, geometry,
+and LOD behavior in the AERO-M119 matrix.

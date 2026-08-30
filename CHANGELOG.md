@@ -7,6 +7,14 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Predictive display-list prewarm candidate.** Models observed outside the
+  conservative view cone now enter a bounded speculative queue; entering the
+  view promotes the same model ahead of speculation. First-sight rendering
+  can use the direct path while at-rest and bone display lists compile under
+  the existing per-frame count/time budgets. Queue capacity, promotion,
+  urgent/speculative drainage, and drops are exposed in frame-spike telemetry.
+  This remains an AERO-M119 candidate pending a counterbalanced first-sight,
+  turn, teleport, display-list, geometry, and LOD matrix.
 - **Camera-aware incremental chunk pre-bake qualified.** The opt-in chunk-work
   scheduler now prioritizes the player's current chunk, adjacent or visible
   chunks, and a bounded look-ahead ring before background work. Priorities are
@@ -374,9 +382,11 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 
 - **Render-thread prewarm queue.** `Aero_Prewarm.enqueueModel(model)` lets
   consumers gradually compile at-rest model lists and bone pages on render
-  frames instead of paying the full cost on first visibility. It is opt-in via
+  frames instead of paying the full cost on first visibility. The renderer now
+  also discovers and prioritizes models automatically. It is opt-in via
   `-Daero.prewarm=true` or enabled by the high-memory preset; tune with
-  `-Daero.prewarm.perFrame=N` and `-Daero.prewarm.maxMsPerFrame=N`.
+  `-Daero.prewarm.perFrame=N`, `-Daero.prewarm.maxMsPerFrame=N`, and
+  `-Daero.prewarm.maxQueued=N`.
 
 - **Benchmark tasks accept extra Aero JVM flags.** The StationAPI test mod's
   `runClient*` Gradle tasks now accept `-PaeroJvmArgs="..."`, making A/B runs
