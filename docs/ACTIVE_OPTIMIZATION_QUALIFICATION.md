@@ -129,3 +129,23 @@ This proves adoption and behavioral parity for the maintained CPU paths; it is
 not an FPS or promotion claim. AERO-M118 remains responsible for page rebuild,
 invalidation, allocation, cache, and pre-bake A/B matrices. Qualified Worldline
 revision: `896873212d850c1b4a286250e1db5c21613783d2`.
+
+## AERO-M118 page cache and camera-aware pre-bake
+
+Worldline M775 ran four counterbalanced three-arm rounds across twelve fresh
+GPU clients in the restored 576-machine scene. Direct rendering, page caching,
+and page caching plus camera-aware pre-bake each followed entry, walk, turn,
+machine removal and restoration, teleport, and complete backlog drainage.
+
+The pre-bake arm rebuilt at most one chunk per frame, reprioritized after
+camera movement and teleport, performed speculative adjacent or visible work
+in every replica, and ended every replica with zero backlog. Against pages
+alone, the aggregate 50 ms hitch rate improved from 19,173 ppm to 11,945 ppm;
+median p99 improved from about 35.2 ms to 14.5 ms, while median allocation per
+frame did not regress. Fresh-JVM FPS remained descriptive because individual
+replicas were noisy.
+
+This qualifies the candidate's activation, boundedness, drainage, and hitch
+safety. It remains default-off until the long-soak and promotion gate; AERO-M119
+continues with GL state, geometry, display-list, and LOD matrices. Qualified
+Worldline revision: `8b6292782f89a693e846dab4f19b8808a55f14e7`.
