@@ -26,7 +26,7 @@ public final class Aero_ChunkCompileBudget {
     private static int builtThisFrame, visibleBuiltThisFrame;
     private static int urgentBuiltThisFrame, oldestAge, maximumDebt;
     private static int builtLastFrame, visibleBuiltLastFrame;
-    private static int urgentBuiltLastFrame;
+    private static int urgentBuiltLastFrame, remainingThisFrame;
 
     private Aero_ChunkCompileBudget() {}
 
@@ -35,6 +35,7 @@ public final class Aero_ChunkCompileBudget {
         visibleBuiltLastFrame = visibleBuiltThisFrame;
         urgentBuiltLastFrame = urgentBuiltThisFrame;
         builtThisFrame = visibleBuiltThisFrame = urgentBuiltThisFrame = 0;
+        remainingThisFrame = BUDGET;
     }
 
     public static boolean handles(boolean forced) {
@@ -43,9 +44,10 @@ public final class Aero_ChunkCompileBudget {
 
     public static boolean schedule(List<ChunkBuilder> dirtyChunks,
                                    LivingEntity camera) {
+        if (remainingThisFrame <= 0) return dirtyChunks.isEmpty();
         ADAPTER.camera = camera;
         try {
-            SCHEDULER.schedule(dirtyChunks, ADAPTER, BUDGET,
+            SCHEDULER.schedule(dirtyChunks, ADAPTER, remainingThisFrame,
                 MAXIMUM_AGE, DEBT_LIMIT);
         } finally {
             ADAPTER.camera = null;
@@ -53,6 +55,7 @@ public final class Aero_ChunkCompileBudget {
         builtThisFrame += SCHEDULER.built();
         visibleBuiltThisFrame += SCHEDULER.visibleBuilt();
         urgentBuiltThisFrame += SCHEDULER.urgentBuilt();
+        remainingThisFrame -= SCHEDULER.built();
         oldestAge = SCHEDULER.oldestAge();
         maximumDebt = SCHEDULER.maximumDebt();
         return dirtyChunks.isEmpty();
