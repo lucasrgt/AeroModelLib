@@ -115,3 +115,17 @@ rather than promoted by throughput alone.
 The scheduler remains default-off pending the later AERO adoption and matrix
 milestones. Qualified Worldline revision:
 `bc3e415f20a6b1050f80af14ed6fcf8d02df7216`.
+
+## AERO-M117 external CPU consumer
+
+Worldline M774 qualified this repository as a real external TestKit 0.3.1
+consumer. Its isolated Java 8 product closure compiles without a Minecraft
+runtime and executes three independent differentials: parallel morph storage
+against a boxed map reference, bounded visible-first chunk selection, and
+debt-based hidden-work service. Two clean Gradle 8.14.4 runs passed all three
+tests with zero failures or skips.
+
+This proves adoption and behavioral parity for the maintained CPU paths; it is
+not an FPS or promotion claim. AERO-M118 remains responsible for page rebuild,
+invalidation, allocation, cache, and pre-bake A/B matrices. Qualified Worldline
+revision: `896873212d850c1b4a286250e1db5c21613783d2`.

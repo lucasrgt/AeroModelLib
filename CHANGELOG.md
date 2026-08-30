@@ -7,6 +7,11 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Worldline CPU-path consumer adopted.** AeroModelLib now owns an isolated
+  Java 8 Worldline TestKit project that compiles maintained core product code
+  without Minecraft and differentially verifies morph-array parity, bounded
+  visible-first chunk scheduling, and debt-based hidden-work service. Worldline
+  AERO-M117 executed all three tests twice with zero failures or skips.
 - **Bounded chunk-work scheduler qualified.** The opt-in scheduler now applies
   one absolute non-forced rebuild budget across the whole frame, prioritizes
   visible work, and recovers hidden work through age and debt. Worldline
