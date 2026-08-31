@@ -39,7 +39,10 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   releasing its retained dirty queue, chunk identities, age, and debt state.
   When visible arrivals and background work are both urgent, debt and age now
   rank before the visual tier, preserving the promised starvation bound under
-  sustained chunk arrivals.
+  sustained chunk arrivals. Worldline AERO-M121 rebuilt 164,096 items in each
+  of two fresh Java 8 JVMs, bounded hidden wait to 157 frames, and proved zero
+  retained scheduler state after each of 256 world transitions per JVM. The
+  candidate remains default-off until the real-client visual-latency gate.
 - **Worldline CPU-path consumer adopted.** AeroModelLib now owns an isolated
   Java 8 Worldline TestKit project that compiles maintained core product code
   without Minecraft and differentially verifies morph-array parity, bounded
