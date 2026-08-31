@@ -42,7 +42,13 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   sustained chunk arrivals. Worldline AERO-M121 rebuilt 164,096 items in each
   of two fresh Java 8 JVMs, bounded hidden wait to 157 frames, and proved zero
   retained scheduler state after each of 256 world transitions per JVM. The
-  candidate remains default-off until the real-client visual-latency gate.
+  real-client promotion gate then exposed a lifecycle flaw in the replacement
+  integration: a renderer rebind could enqueue about 1,462 essential rebuilds
+  and the absolute one-per-frame budget made the scene appear only in pieces.
+  The integration is now vanilla-first and additive: vanilla rebuild selection
+  always runs unchanged, and the Aero budget applies only to residual
+  speculative work at method return. The candidate remains default-off until
+  the corrected real-client visual-latency gate passes.
 - **Worldline CPU-path consumer adopted.** AeroModelLib now owns an isolated
   Java 8 Worldline TestKit project that compiles maintained core product code
   without Minecraft and differentially verifies morph-array parity, bounded
