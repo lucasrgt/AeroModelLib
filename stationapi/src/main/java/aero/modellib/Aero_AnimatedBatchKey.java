@@ -53,7 +53,11 @@ final class Aero_AnimatedBatchKey implements Comparable<Aero_AnimatedBatchKey> {
         if (result == 0) result = integer(tintRBits, other.tintRBits);
         if (result == 0) result = integer(tintGBits, other.tintGBits);
         if (result == 0) result = integer(tintBBits, other.tintBBits);
-        if (result == 0) result = integer(System.identityHashCode(model), System.identityHashCode(other.model));
+        // Identity hashes vary between JVMs and made otherwise identical
+        // render-state sorts swap model batches across launches. Model names
+        // are stable resource identities; equal names deliberately preserve
+        // the collector's insertion order.
+        if (result == 0) result = compareTexture(model.name, other.model.name);
         return result;
     }
 
