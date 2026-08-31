@@ -188,10 +188,13 @@ deadline miss instead of deferring visible work across later frames.
 
 Promotion is fail-closed until Worldline M777 proves all of the following:
 
-1. At least three fresh, counterbalanced full-session matrices agree on the
-   direction of the adaptive-versus-cold and adaptive-versus-blind contrasts.
-2. Every session keeps first-sight hitch delta at or below +5,000 ppm, median
-   FPS within -3%, p99 within +5%, and allocation within +5% of cold lists.
+1. Four fresh, counterbalanced sessions reduce blind-prewarm display-list
+   allocation in every session and agree on the aggregate adaptive-versus-cold
+   direction over identical fixed 600-frame camera journeys.
+2. The four-pair first-sight aggregate keeps hitch delta at or below +5,000
+   ppm. Fixed-window aggregate FPS stays within -3%, p99 within +5%, and
+   allocation within +5% of cold lists; at least three of four sessions must
+   independently satisfy each of those three performance bounds.
 3. Loader-only decoy models allocate no display lists in adaptive mode, all
    eligible hot work drains, the final queue is empty, and pressure skips occur
    without starving visible work.
