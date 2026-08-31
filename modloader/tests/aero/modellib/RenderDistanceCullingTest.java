@@ -19,6 +19,25 @@ public class RenderDistanceCullingTest {
     }
 
     @Test
+    public void coneCullUsesVisualRadiusAtTheViewportEdge() {
+        Aero_FrustumCull.updateCameraForward(0f, 0f);
+        Aero_FrustumCull.setConeHalfAngleDegrees(30d);
+        try {
+            double distance = 100d;
+            double angle = Math.toRadians(35d);
+            double x = Math.sin(angle) * distance;
+            double z = Math.cos(angle) * distance;
+
+            assertFalse(Aero_FrustumCull.isLikelyVisibleWithRadius(x, 0d, z, 0d));
+            assertFalse(Aero_FrustumCull.isLikelyVisibleWithRadius(x, 0d, z, 8d));
+            assertTrue(Aero_FrustumCull.isLikelyVisibleWithRadius(x, 0d, z, 10d));
+        } finally {
+            Aero_FrustumCull.resetCone();
+            Aero_FrustumCull.clearCamera();
+        }
+    }
+
+    @Test
     public void mapsBetaViewDistanceToBlockRadii() {
         assertEquals(256d, Aero_RenderDistanceCulling.blockRadiusForViewDistance(0), DELTA);
         assertEquals(128d, Aero_RenderDistanceCulling.blockRadiusForViewDistance(1), DELTA);

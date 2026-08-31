@@ -86,7 +86,26 @@ public final class Aero_FrustumCull {
             double visualRadiusBlocks, double extraBehindTolerance) {
         double radius = Math.max(0.0d, visualRadiusBlocks);
         double tolerance = Math.max(0.0d, extraBehindTolerance);
-        return isLikelyVisible(dx, dy, dz, radius + tolerance);
+        if (!ENABLED || !cameraValid) return true;
+        double distanceSquared = dx * dx + dy * dy + dz * dz;
+        double closeTolerance = radius + tolerance;
+        if (distanceSquared < CLOSE_RANGE_SQ + closeTolerance * closeTolerance) return true;
+
+        double dot = dx * forwardX + dy * forwardY + dz * forwardZ;
+        if (radius == 0.0d) {
+            return dot > 0.0d && dot * dot >= distanceSquared * coneCosHalfAngleSq;
+        }
+        if (dot <= 0.0d) return distanceSquared <= radius * radius;
+
+        // Test the model's bounding sphere against the cone, not just its
+        // centre. The signed distance from the sphere centre to the nearest
+        // cone side is perpendicular*cos(theta) - forward*sin(theta).
+        // A sphere intersects the cone when that distance is at most r.
+        double perpendicularSquared = Math.max(0.0d, distanceSquared - dot * dot);
+        double coneCos = Math.sqrt(coneCosHalfAngleSq);
+        double coneSin = Math.sqrt(1.0d - coneCosHalfAngleSq);
+        double distanceToCone = Math.sqrt(perpendicularSquared) * coneCos - dot * coneSin;
+        return distanceToCone <= radius;
     }
 
     public static boolean isLikelyVisibleWithRadius(double dx, double dy, double dz,
