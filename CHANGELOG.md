@@ -34,7 +34,9 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   clients over entry, walk, turn, mutation, teleport, and drain phases. Every
   backlog drained, the candidate stayed at one rebuild per frame, and 50 ms
   hitches improved from 19,173 ppm to 11,945 ppm versus pages alone. It stays
-  opt-in pending the long-soak and promotion gate.
+  opt-in pending the long-soak and promotion gate. `WorldRenderer.setWorld`
+  now resets the static scheduler on unload and world transition, immediately
+  releasing its retained dirty queue, chunk identities, age, and debt state.
 - **Worldline CPU-path consumer adopted.** AeroModelLib now owns an isolated
   Java 8 Worldline TestKit project that compiles maintained core product code
   without Minecraft and differentially verifies morph-array parity, bounded
