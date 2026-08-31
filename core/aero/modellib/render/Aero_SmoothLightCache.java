@@ -36,13 +36,21 @@ public final class Aero_SmoothLightCache {
         1000000L * longProperty("aero.smoothlight.cacheMs", 50L, 0L, 10000L);
     private static int maxEntries =
         (int) longProperty("aero.smoothlight.cacheMax", 1024L, 1L, 1048576L);
+    private static long hits;
+    private static long misses;
+    private static long coldMisses;
+    private static long staleMisses;
+    private static long sizeMismatchMisses;
+    private static long evictions;
 
     private static final Key LOOKUP = new Key();
     private static final LinkedHashMap<Key, Resolved> ENTRIES =
         new LinkedHashMap<Key, Resolved>(64, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<Key, Resolved> eldest) {
-                return size() > maxEntries;
+                boolean remove = size() > maxEntries;
+                if (remove) evictions++;
+                return remove;
             }
         };
 
@@ -57,8 +65,23 @@ public final class Aero_SmoothLightCache {
     public static float[] cached(Object world, Object geometry,
                                  int x, int y, int z, int size, long nowNanos) {
         Resolved entry = ENTRIES.get(LOOKUP.set(world, geometry, x, y, z));
-        if (entry == null || entry.values.length != size) return null;
-        return nowNanos - entry.stamp <= ttlNanos ? entry.values : null;
+        if (entry == null) {
+            misses++;
+            coldMisses++;
+            return null;
+        }
+        if (entry.values.length != size) {
+            misses++;
+            sizeMismatchMisses++;
+            return null;
+        }
+        if (nowNanos - entry.stamp > ttlNanos) {
+            misses++;
+            staleMisses++;
+            return null;
+        }
+        hits++;
+        return entry.values;
     }
 
     /**
@@ -84,6 +107,29 @@ public final class Aero_SmoothLightCache {
         return ENTRIES.size();
     }
 
+    /** Fresh lookups that reused an already-resolved brightness array. */
+    public static long hitCount() { return hits; }
+
+    /** All lookups that required the renderer to resolve brightness again. */
+    public static long missCount() { return misses; }
+
+    /** Misses for instance keys not currently retained by the bounded LRU. */
+    public static long coldMissCount() { return coldMisses; }
+
+    /** Misses whose retained value exceeded the configured TTL. */
+    public static long staleMissCount() { return staleMisses; }
+
+    /** Misses caused by a geometry triangle-count change under the same key. */
+    public static long sizeMismatchMissCount() { return sizeMismatchMisses; }
+
+    /** Entries removed by the configured LRU capacity bound. */
+    public static long evictionCount() { return evictions; }
+
+    /** Resets diagnostics without changing retained resolved-light entries. */
+    public static void resetStatistics() {
+        hits = misses = coldMisses = staleMisses = sizeMismatchMisses = evictions = 0L;
+    }
+
     /** Drops every entry. Call on world unload or from tests. */
     public static void clear() {
         ENTRIES.clear();
@@ -97,6 +143,7 @@ public final class Aero_SmoothLightCache {
         ttlNanos = 1000000L * Math.max(0L, ttlMilliseconds);
         maxEntries = Math.max(1, maxCachedEntries);
         clear();
+        resetStatistics();
     }
 
     private static long longProperty(String name, long fallback, long min, long max) {

@@ -128,4 +128,32 @@ public class SmoothLightCacheTest {
             Aero_SmoothLightCache.cached(world, geometry, 1, 2, 3, 4, 0L));
         assertNull(Aero_SmoothLightCache.cached(world, geometry, 1, 2, 3, 4, 1L));
     }
+
+    @Test
+    public void diagnosticsClassifyHitsMissesAndEvictions() {
+        Aero_SmoothLightCache.configure(50L, 2);
+        Object geometryB = new Object();
+        Object geometryC = new Object();
+
+        Aero_SmoothLightCache.claim(world, geometry, 1, 2, 3, 4, 0L);
+        assertNotNull(Aero_SmoothLightCache.cached(world, geometry, 1, 2, 3, 4, 1L));
+        assertNull(Aero_SmoothLightCache.cached(world, geometryB, 1, 2, 3, 4, 1L));
+        assertNull(Aero_SmoothLightCache.cached(world, geometry, 1, 2, 3, 4, 51L * MS));
+        assertNull(Aero_SmoothLightCache.cached(world, geometry, 1, 2, 3, 6, 1L));
+
+        Aero_SmoothLightCache.claim(world, geometryB, 1, 2, 3, 4, 2L);
+        Aero_SmoothLightCache.claim(world, geometryC, 1, 2, 3, 4, 3L);
+
+        assertEquals(1L, Aero_SmoothLightCache.hitCount());
+        assertEquals(3L, Aero_SmoothLightCache.missCount());
+        assertEquals(1L, Aero_SmoothLightCache.coldMissCount());
+        assertEquals(1L, Aero_SmoothLightCache.staleMissCount());
+        assertEquals(1L, Aero_SmoothLightCache.sizeMismatchMissCount());
+        assertEquals(1L, Aero_SmoothLightCache.evictionCount());
+
+        Aero_SmoothLightCache.resetStatistics();
+        assertEquals(0L, Aero_SmoothLightCache.hitCount());
+        assertEquals(0L, Aero_SmoothLightCache.missCount());
+        assertEquals(2, Aero_SmoothLightCache.entryCount());
+    }
 }
