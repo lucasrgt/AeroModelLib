@@ -27,8 +27,8 @@ repository as the source of truth for every `aero.*` optimization ID.
 
 | Status | Count | Meaning in this inventory |
 | --- | ---: | --- |
-| Active | 30 | Shipped implementation with a supported production path; some still require consumer adoption. |
-| Candidate | 15 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
+| Active | 31 | Shipped implementation with a supported production path; some still require consumer adoption. |
+| Candidate | 14 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
 | Rejected | 5 | A known current implementation is unsafe or a measured regression. |
 | Retired | 1 | Historical implementation removed from current production source. |
 
@@ -46,14 +46,14 @@ implementation is shipped but consumers must call them explicitly.
 - Visibility and detail: smart LOD, conservative cone culling, small-object
   culling, chunk visibility, and animation admission control.
 - Inner-loop work: animation event lower bounds and cursors, smooth-light grid
-  reuse, loop-invariant hoisting, and opt-in back-face culling.
+  and resolved-brightness reuse, loop-invariant hoisting, and opt-in back-face
+  culling.
 - Side-effect pressure: same-name sound coalescing.
 
 ### Candidate families
 
 - Motion-aware tick LOD, dense tick budget, and skeletal LOD.
 - OBJ hidden-face removal and consumer-authored mesh LODs.
-- TTL-bounded resolved smooth-light cache for static instances.
 - Cell-page fragmentation controls, prewarm, display-list budget, and the
   aggregate high-memory preset.
 - Early individual-render skipping, demoted after a focused -37.0% A/B.

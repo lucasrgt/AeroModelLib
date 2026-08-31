@@ -135,17 +135,21 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   automatic per-tick dirty detection remains intact. StationAPI also reuses
   the sound-coalescing dispatcher instead of allocating one adapter per world
   flush.
-- **Opt-in resolved smooth-light cache (smooth-light-resolved).**
+- **Resolved smooth-light cache promoted to default-on (smooth-light-resolved).**
   `Aero_SmoothLightCache` keeps the resolved per-triangle brightness of each
   (world, geometry, block position) smooth-lit instance under a bounded TTL
-  (`-Daero.smoothlight.cache=true`, `-Daero.smoothlight.cacheMs=50`,
+  (`-Daero.smoothlight.cacheMs=50`,
   `-Daero.smoothlight.cacheMax=1024`). Steady-state draws of static block
   entities skip the world light-grid sampling and the per-triangle bilinear
   blend entirely; a local light change may render at most one TTL late. The
   smooth draw path itself moved into `Aero_MeshSmoothLightRenderer` on both
   runtimes, split into resolve + emit passes that keep the GL stream
-  byte-identical when the cache is off. Catalog:
-  `aero.render.smooth-light-resolved-cache` (candidate, default off).
+  byte-identical when the cache is off. Worldline M780 re-qualified four fresh
+  ABBA clients with zero resolved-brightness differences: light samples fell
+  from 1,536,000 to 633,725 (-58.7%), aggregate render time improved 12.4%,
+  and 50 ms hitches fell from 10 to 1. The cache is now enabled by default;
+  `-Daero.smoothlight.cache=false` is the rollback. Catalog:
+  `aero.render.smooth-light-resolved-cache` (active, default on).
 - **Morph weights in parallel arrays (morph-weight-arrays).**
   `Aero_MorphState` now stores (name, weight) pairs in parallel arrays and
   exposes indexed accessors (`activeCount`/`nameAt`/`weightAt`). Both

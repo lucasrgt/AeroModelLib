@@ -9,7 +9,7 @@ Os registros estruturados e canônicos pertencem a este repositório e ficam em
 [`OPTIMIZATION_CATALOG.md`](OPTIMIZATION_CATALOG.md). Este roadmap preserva o
 histórico detalhado e o protocolo experimental.
 
-Última limpeza de status: 2026-05-02.
+Last status reconciliation: 2026-08-31.
 
 ## Legenda
 
@@ -20,7 +20,7 @@ histórico detalhado e o protocolo experimental.
 
 ## Validação Atual
 
-- [x] Canonical pure-Java gate: 252 tests passing.
+- [x] Canonical pure-Java gate: 291 tests across 37 suites passing.
 - [x] `stationapi`: `compileJava remapJar` passando.
 - [x] `stationapi/test`: `compileJava` passando.
 - [x] Spike logger em torre densa: Cell Pages/BPDL não recompilam durante os
@@ -177,19 +177,19 @@ histórico detalhado e o protocolo experimental.
   - [ ] Vanilla ainda itera a lista de BEs e chama `distanceFrom(...)`.
   - [ ] Só atacar mixin/dispatcher próprio se JFR mostrar esse custo no topo.
 
-- [x] **A7. Cache de luz suave resolvida - CONCLUÍDO, OPT-IN**
-  - [x] `Aero_SmoothLightCache` guarda o brilho resolvido por triângulo por
-    (mundo, geometria, posição) com TTL e LRU limitado.
-  - [x] Caminho suave extraído para `Aero_MeshSmoothLightRenderer` nos dois
-    runtimes, dividido em resolve + emit com stream GL idêntico.
-  - [x] Hit fresco pula amostragem da grade de luz do mundo e a bilinear por
-    triângulo; mudança de luz local aparece com atraso máximo de um TTL.
-  - [x] Flag: `-Daero.smoothlight.cache=true`.
-  - [x] Flag: `-Daero.smoothlight.cacheMs=N` (default `50`).
-  - [x] Flag: `-Daero.smoothlight.cacheMax=N` (default `1024`).
-  - [ ] Rodar A/B em cena densa de BEs suaves estáticos antes de ligar por
-    padrão (candidato no catálogo:
-    `aero.render.smooth-light-resolved-cache`).
+- [x] **A7. Resolved smooth-light cache - QUALIFIED, DEFAULT ON**
+  - [x] `Aero_SmoothLightCache` retains per-triangle resolved brightness by
+    (world, geometry, position) under a bounded TTL and LRU.
+  - [x] Both runtimes use `Aero_MeshSmoothLightRenderer`, split into resolve
+    and emit passes with identical uncached GL streams.
+  - [x] A fresh hit skips world-grid sampling and per-triangle bilinear work;
+    local light changes may appear at most one TTL late.
+  - [x] Worldline M780 qualified four fresh ABBA clients with zero resolved
+    differences, 58.7% fewer light samples, 12.4% lower aggregate render time,
+    and hitches reduced from 10 to 1.
+  - [x] Default-on rollback: `-Daero.smoothlight.cache=false`.
+  - [x] TTL: `-Daero.smoothlight.cacheMs=N` (default `50`).
+  - [x] Capacity: `-Daero.smoothlight.cacheMax=N` (default `1024`).
 
 ---
 
