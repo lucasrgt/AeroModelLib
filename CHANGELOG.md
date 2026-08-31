@@ -37,6 +37,9 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   opt-in pending the long-soak and promotion gate. `WorldRenderer.setWorld`
   now resets the static scheduler on unload and world transition, immediately
   releasing its retained dirty queue, chunk identities, age, and debt state.
+  When visible arrivals and background work are both urgent, debt and age now
+  rank before the visual tier, preserving the promised starvation bound under
+  sustained chunk arrivals.
 - **Worldline CPU-path consumer adopted.** AeroModelLib now owns an isolated
   Java 8 Worldline TestKit project that compiles maintained core product code
   without Minecraft and differentially verifies morph-array parity, bounded
