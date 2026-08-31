@@ -116,6 +116,7 @@ static void logEvent(String kind, double frameMs, long gcCountDelta, long gcTime
             + " prewarmAdmissionRejected=" + Aero_Prewarm.admissionRejectedTotal()
             + " prewarmAdmissionExpired=" + Aero_Prewarm.admissionExpiredTotal()
             + " prewarmPressureSkips=" + Aero_Prewarm.pressureSkipsTotal()
+            + " prewarmFirstUseMisses=" + Aero_Prewarm.firstUseMissesTotal()
             + " visibleChunks=" + Aero_ChunkVisibility.visibleChunkCount()
             + " recentChunks=" + Aero_ChunkVisibility.recentChunkCount();
         System.out.println(line);

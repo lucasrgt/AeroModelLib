@@ -40,8 +40,15 @@ public final class Aero_PrewarmPriorityQueue<T> {
         return value != null ? value : pollSpeculative();
     }
 
-    public T pollUrgent() { return remove(urgent.pollFirst()); }
-    public T pollSpeculative() { return remove(speculative.pollFirst()); }
+    public T pollUrgent() { return finishPoll(urgent.pollFirst()); }
+    public T pollSpeculative() { return finishPoll(speculative.pollFirst()); }
+
+    /** Removes one identity when visible first use beats speculative drainage. */
+    public boolean remove(T value) {
+        Boolean lane = queued.remove(value);
+        if (lane == null) return false;
+        return (lane.booleanValue() ? urgent : speculative).remove(value);
+    }
 
     public boolean contains(T value) { return queued.containsKey(value); }
     public int size() { return queued.size(); }
@@ -50,7 +57,7 @@ public final class Aero_PrewarmPriorityQueue<T> {
     public int dropped() { return dropped; }
     public int promoted() { return promoted; }
 
-    private T remove(T value) {
+    private T finishPoll(T value) {
         if (value != null) queued.remove(value);
         return value;
     }

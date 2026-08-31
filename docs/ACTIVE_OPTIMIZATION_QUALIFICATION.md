@@ -181,7 +181,10 @@ Adaptive mode does not enqueue a model merely because the OBJ loader knows it.
 Repeated render observations raise an identity-scoped hotness score; visible
 models are admitted immediately, cold scores decay, stale queued speculation
 expires lazily, and a pressured previous frame blocks only the speculative
-lane. Explicit consumer admission and the urgent lane remain deterministic.
+lane. Explicit consumer admission and the urgent lane remain deterministic. If
+visible first use arrives before a prediction drains, that identity is removed
+from the queue and compiled synchronously; `prewarmFirstUseMisses` exposes this
+deadline miss instead of deferring visible work across later frames.
 
 Promotion is fail-closed until Worldline M777 proves all of the following:
 

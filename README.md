@@ -357,7 +357,10 @@ decays one point every 60 frames, expires after 180 frames, and pauses
 speculative drainage when the previous frame exceeds 20 ms. Tune with
 `aero.prewarm.hotnessThreshold`, `aero.prewarm.decayFrames`,
 `aero.prewarm.staleFrames`, and `aero.prewarm.idleMaxFrameMs`; visible work
-remains urgent and the absolute count/time budgets still apply.
+remains urgent and the absolute count/time budgets still apply. If visible
+first use beats the speculative queue, adaptive mode cancels that queued work
+and compiles synchronously instead of spreading an already-visible miss over
+later frames.
 
 The canonical optimization IDs, ownership, status, defaults, risks, and
 rollback paths are in

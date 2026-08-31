@@ -45,7 +45,7 @@ public final class Aero_Prewarm {
     private static int drainedThisFrame, urgentDrainedThisFrame;
     private static int queuedModels;
     private static int discoveredCacheRevision = -1;
-    private static int pressureSkips;
+    private static int pressureSkips, firstUseMisses;
     private static double lastFrameMs;
 
     private Aero_Prewarm() {}
@@ -57,7 +57,10 @@ public final class Aero_Prewarm {
 
     static void observeModel(Aero_MeshModel model, boolean visible) {
         if (!needsCompile(model)) return;
-        if (ADAPTIVE && !ADMISSION.observe(model, visible)) return;
+        if (ADAPTIVE) {
+            if (!ADMISSION.observe(model, visible)) return;
+            if (visible && !MODELS.contains(model)) return;
+        }
         enqueue(model, visible);
     }
 
@@ -75,6 +78,11 @@ public final class Aero_Prewarm {
 
     static boolean deferFirstUse(Aero_MeshModel model) {
         if (!needsCompile(model)) return false;
+        if (ADAPTIVE) {
+            if (MODELS.remove(model)) firstUseMisses++;
+            ADMISSION.forget(model);
+            return false;
+        }
         enqueue(model, true);
         return MODELS.contains(model);
     }
@@ -128,6 +136,7 @@ public final class Aero_Prewarm {
     public static int admissionRejectedTotal() { return ADMISSION.rejected(); }
     public static int admissionExpiredTotal() { return ADMISSION.expired(); }
     public static int pressureSkipsTotal() { return pressureSkips; }
+    public static int firstUseMissesTotal() { return firstUseMisses; }
 
     private static void enqueue(Aero_MeshModel model, boolean urgent) {
         if (!active() || !needsCompile(model)) return;

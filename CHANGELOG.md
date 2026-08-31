@@ -12,7 +12,10 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   repeated culled/visible render observations, expires cold speculation, and
   suppresses speculative drains after pressured frames while preserving the
   urgent visible lane. Frame-spike telemetry separates admission, rejection,
-  expiry, and pressure skips. The earlier bounded queue and loader discovery
+  expiry, pressure skips, and speculation that missed visible first use. A
+  missed prediction now leaves the queue and compiles synchronously instead of
+  turning one cold first-use event into several later urgent-drain hitches. The
+  earlier bounded queue and loader discovery
   remain available for controlled A/B qualification; production promotion is
   fail-closed on the cross-session M777 repeatability matrix.
 - **Camera-aware incremental chunk pre-bake qualified.** The opt-in chunk-work

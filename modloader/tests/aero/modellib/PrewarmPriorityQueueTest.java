@@ -73,4 +73,17 @@ public class PrewarmPriorityQueueTest {
         assertNull(queue.pollUrgent());
         assertSame(speculative, queue.pollSpeculative());
     }
+
+    @Test
+    public void visibleFirstUseCanCancelMissedSpeculation() {
+        Aero_PrewarmPriorityQueue<Object> queue = new Aero_PrewarmPriorityQueue<Object>(3);
+        Object speculative = new Object(), urgent = new Object();
+        queue.offer(speculative, false);
+        queue.offer(urgent, true);
+        assertTrue(queue.remove(speculative));
+        assertTrue(queue.remove(urgent));
+        assertEquals(0, queue.size());
+        assertNull(queue.poll());
+        assertFalse(queue.remove(speculative));
+    }
 }
