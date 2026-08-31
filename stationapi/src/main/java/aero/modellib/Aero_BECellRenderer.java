@@ -47,4 +47,8 @@ public final class Aero_BECellRenderer extends Aero_BECellRenderState {
     public static int compiledCachedPages() { return Aero_BECellMetrics.compiledCachedPages(); }
     public static int expiredCachedPages() { return Aero_BECellMetrics.expiredCachedPages(); }
     public static int evictedCachedPages() { return Aero_BECellMetrics.evictedCachedPages(); }
+    public static boolean flattenedPagesEnabled() { return FLATTENED_PAGES; }
+    public static int pageTtlFrames() { return PAGE_TTL_FRAMES; }
+    public static int rebuildsPerFrame() { return REBUILDS_PER_FRAME; }
+    public static int maxCachedPages() { return MAX_CACHED_PAGES; }
 }

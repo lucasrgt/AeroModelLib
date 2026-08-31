@@ -108,6 +108,18 @@ public final class Aero_Profiler {
         sections.clear();
     }
 
+    /** Returns the completed call count without resetting the section. */
+    public static synchronized long callCount(String section) {
+        Section value = (Section) sections.get(section);
+        return value == null ? 0L : value.calls;
+    }
+
+    /** Returns completed elapsed nanoseconds without resetting the section. */
+    public static synchronized long totalNanos(String section) {
+        Section value = (Section) sections.get(section);
+        return value == null ? 0L : value.totalNanos;
+    }
+
     private static final class Section {
         long calls;
         long totalNanos;
