@@ -150,7 +150,10 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   and 50 ms hitches fell from 10 to 1. The cache is now enabled by default;
   `-Daero.smoothlight.cache=false` is the rollback. Selecting a different
   client-world identity immediately clears the previous world's entries, so
-  default-on keys cannot retain an unloaded world. Catalog:
+  default-on keys cannot retain an unloaded world. Worldline M781 independently
+  compiled the pinned production cache with Java 8 and verified the absent,
+  explicit-false, and explicit-true property arms in six fresh JVMs, same-world
+  array reuse, and two-way world-switch eviction. Catalog:
   `aero.render.smooth-light-resolved-cache` (active, default on).
 - **Morph weights in parallel arrays (morph-weight-arrays).**
   `Aero_MorphState` now stores (name, weight) pairs in parallel arrays and

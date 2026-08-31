@@ -192,6 +192,9 @@ Last status reconciliation: 2026-08-31.
   - [x] Capacity: `-Daero.smoothlight.cacheMax=N` (default `1024`).
   - [x] A different client-world identity clears the previous world's entries
     before lookup, preventing strong-key retention across world switches.
+  - [x] Worldline M781 independently compiled the pinned production cache for
+    Java 8 and verified default/false/true startup policy, same-world array
+    reuse, and two-way world-switch eviction across six fresh JVMs.
 
 ---
 
