@@ -322,7 +322,7 @@ paths remain opt-in.
 | Animated batches | Enabled on StationAPI | `-Daero.animatedbatch=false` |
 | Batch state sorting | Enabled | `-Daero.batcher.sort=false` |
 | Smart LOD | Enabled | `-Daero.smartlod=false` |
-| View-cone culling | Enabled with close/turn safeguards | `-Daero.frustumcull=false` |
+| Broad view-cone culling | Enabled with close/turn safeguards | `-Daero.frustumcull=false` |
 | Small-object culling | Enabled at a conservative pixel threshold | `-Daero.smallobj=false` |
 | Chunk visibility | Enabled using vanilla chunk visibility | `-Daero.chunkvisibility=false` |
 | Cell pages | Infrastructure enabled; consumer adoption required | `-Daero.becell.pages=false` |
@@ -332,6 +332,7 @@ paths remain opt-in.
 
 | Feature | Enable with | Main trade-off |
 | --- | --- | --- |
+| Strict block-entity view culling | `-Daero.beViewCull=true` | Experimental: the full-frame oracle found visible static models could be rejected, so production defaults keep this layer off |
 | Animation curve LUT (rejected research path) | `-Daero.anim.lut=true` | Bounded approximation, more memory, and a measured dense-scene regression |
 | OBJ hidden-face removal | `-Daero.obj.cullhidden=true` | Load-time geometry decision needs asset validation |
 | Skeletal LOD | `-Daero.skeletalLod=true` | Distant poses become less detailed |

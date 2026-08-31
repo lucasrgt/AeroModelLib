@@ -3,6 +3,7 @@ package aero.modellib;
 import org.junit.Test;
 
 import aero.modellib.render.Aero_RenderDistanceCulling;
+import aero.modellib.render.Aero_FrustumCull;
 import aero.modellib.render.Aero_RenderLod;
 
 import static org.junit.Assert.*;
@@ -10,6 +11,12 @@ import static org.junit.Assert.*;
 public class RenderDistanceCullingTest {
 
     private static final double DELTA = 0.0001d;
+
+    @Test
+    public void stricterBlockEntityViewCullIsOptIn() {
+        assertTrue(Aero_FrustumCull.ENABLED);
+        assertFalse(Aero_FrustumCull.BE_VIEW_CULL_ENABLED);
+    }
 
     @Test
     public void mapsBetaViewDistanceToBlockRadii() {

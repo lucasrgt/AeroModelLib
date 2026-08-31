@@ -7,6 +7,12 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Unsafe strict block-entity view culling is now opt-in.** The broad
+  conservative cone remains enabled, but `aero.beViewCull` now requires an
+  explicit `true`. Worldline's same-client full-frame oracle reproduced
+  visible static MegaCrusher models disappearing while the stricter layer was
+  active; production defaults therefore fail safe while the projection
+  heuristic is redesigned.
 - **Adaptive predictive display-list prewarm candidate.** Optional hotness
   admission now keeps merely loaded models out of the GL queue, learns from
   repeated culled/visible render observations, expires cold speculation, and

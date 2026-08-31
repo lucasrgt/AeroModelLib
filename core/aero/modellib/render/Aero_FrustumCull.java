@@ -6,7 +6,7 @@ public final class Aero_FrustumCull {
     public static final boolean ENABLED =
         !"false".equalsIgnoreCase(System.getProperty("aero.frustumcull"));
     public static final boolean BE_VIEW_CULL_ENABLED =
-        !"false".equalsIgnoreCase(System.getProperty("aero.beViewCull"));
+        "true".equalsIgnoreCase(System.getProperty("aero.beViewCull"));
     public static final double DEFAULT_BEHIND_TOLERANCE = 8.0d;
 
     private static final double CLOSE_RANGE_SQ = 256.0d;
