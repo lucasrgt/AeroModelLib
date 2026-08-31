@@ -148,7 +148,9 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   ABBA clients with zero resolved-brightness differences: light samples fell
   from 1,536,000 to 633,725 (-58.7%), aggregate render time improved 12.4%,
   and 50 ms hitches fell from 10 to 1. The cache is now enabled by default;
-  `-Daero.smoothlight.cache=false` is the rollback. Catalog:
+  `-Daero.smoothlight.cache=false` is the rollback. Selecting a different
+  client-world identity immediately clears the previous world's entries, so
+  default-on keys cannot retain an unloaded world. Catalog:
   `aero.render.smooth-light-resolved-cache` (active, default on).
 - **Morph weights in parallel arrays (morph-weight-arrays).**
   `Aero_MorphState` now stores (name, weight) pairs in parallel arrays and

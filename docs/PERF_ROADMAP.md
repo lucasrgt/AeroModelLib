@@ -20,7 +20,7 @@ Last status reconciliation: 2026-08-31.
 
 ## Validação Atual
 
-- [x] Canonical pure-Java gate: 291 tests across 37 suites passing.
+- [x] Canonical pure-Java gate: 292 tests across 37 suites passing.
 - [x] `stationapi`: `compileJava remapJar` passando.
 - [x] `stationapi/test`: `compileJava` passando.
 - [x] Spike logger em torre densa: Cell Pages/BPDL não recompilam durante os
@@ -190,6 +190,8 @@ Last status reconciliation: 2026-08-31.
   - [x] Default-on rollback: `-Daero.smoothlight.cache=false`.
   - [x] TTL: `-Daero.smoothlight.cacheMs=N` (default `50`).
   - [x] Capacity: `-Daero.smoothlight.cacheMax=N` (default `1024`).
+  - [x] A different client-world identity clears the previous world's entries
+    before lookup, preventing strong-key retention across world switches.
 
 ---
 
