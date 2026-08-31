@@ -27,6 +27,7 @@ public final class AeroTestProfilerHook {
     public static synchronized void install() {
         if (installed) return;
         if (!Aero_Profiler.isEnabled()) return;
+        if (Boolean.getBoolean("aero.test.profilerHook.disable")) return;
         installed = true;
 
         Thread periodic = new Thread(new Runnable() {
