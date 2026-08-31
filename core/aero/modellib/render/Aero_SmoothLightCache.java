@@ -6,20 +6,19 @@ import java.util.Map;
 import aero.modellib.optimization.OptimizationRef;
 
 /**
- * Opt-in cache of resolved smooth-light brightness for static model instances.
+ * Default-on cache of resolved smooth-light brightness for static model instances.
  *
  * <p>The smooth-light render path samples a world brightness grid over the
  * model footprint and bilinearly blends one brightness per triangle — every
  * draw, even though a resting block entity's light almost never changes
- * between frames. With {@code -Daero.smoothlight.cache=true} the resolved
+ * between frames. Unless {@code -Daero.smoothlight.cache=false}, the resolved
  * per-triangle brightness array is kept per (world, geometry, block position)
  * and reused until its TTL expires, so steady-state draws skip both the world
  * grid sampling and the per-triangle bilinear blend.
  *
- * <p>Behavioral contract (documented opt-in): a local light change may render
+ * <p>Behavioral contract: a local light change may render
  * up to {@code aero.smoothlight.cacheMs} milliseconds late (default 50 ms).
- * With the flag unset the renderers never consult this class and behavior is
- * byte-identical to the uncached path.
+ * Setting the flag to false restores the uncached path.
  *
  * <p>Entries are bounded by an LRU cap ({@code aero.smoothlight.cacheMax},
  * default 1024). Keys hold strong world references until eviction or
@@ -30,7 +29,7 @@ import aero.modellib.optimization.OptimizationRef;
 public final class Aero_SmoothLightCache {
 
     public static final boolean ENABLED =
-        "true".equalsIgnoreCase(System.getProperty("aero.smoothlight.cache"));
+        enabled(System.getProperty("aero.smoothlight.cache"));
 
     private static long ttlNanos =
         1000000L * longProperty("aero.smoothlight.cacheMs", 50L, 0L, 10000L);
@@ -55,6 +54,10 @@ public final class Aero_SmoothLightCache {
         };
 
     private Aero_SmoothLightCache() {}
+
+    static boolean enabled(String setting) {
+        return !"false".equalsIgnoreCase(setting);
+    }
 
     /**
      * Returns the fresh resolved brightness array for the instance, or null

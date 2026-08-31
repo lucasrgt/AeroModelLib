@@ -8,7 +8,7 @@ import aero.modellib.render.Aero_SmoothLightCache;
 import static org.junit.Assert.*;
 
 /**
- * Unit tests for the opt-in resolved smooth-light cache:
+ * Unit tests for the resolved smooth-light cache:
  *  - TTL freshness window (hit inside, miss after expiry)
  *  - claim create/refresh/resize semantics
  *  - key identity across world, geometry, and block position
