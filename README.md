@@ -340,7 +340,7 @@ paths remain opt-in.
 | Adaptive prewarm admission | `-Daero.prewarm=true -Daero.prewarm.adaptive=true` | Learns hot models, expires cold speculation, and uses only idle frame budget for non-visible work |
 | High-memory preset | `-Daero.perf.memory=high` | Higher heap and display-list retention |
 | Chunk-scoped palette cache | `-Daero.palettedcache.chunkScope=true` | Experimental injection during chunk rebuild |
-| Chunk work scheduler | `-Daero.chunkCompileBudget=true` | Bounded non-forced rebuilds; current/adjacent/visible and camera look-ahead first, then age/debt recovery |
+| Chunk work scheduler (rejected gameplay candidate) | `-Daero.chunkCompileBudget=true` | Diagnostic only: M783 measured 0.55x baseline FPS, 9.70x p99, 1.78x allocation, and nondeterministic visible residuals |
 | Frame pacing | `-Daero.framePacing=true` | Caps submission rate and may add latency |
 
 Do not enable every experiment at once. Change one family at a time and record
@@ -352,6 +352,9 @@ The chunk scheduler's speculative look-ahead defaults to three chunks and can
 be adjusted with `-Daero.chunkCompileBudget.lookAheadRadius=1..8`. It does not
 create a second cache or block world entry: priorities are recomputed from the
 current camera every frame, and the existing rebuild budget remains absolute.
+Keep it disabled outside controlled diagnostics; the fresh-client M783 gate
+found severe p99 and allocation regressions plus nondeterministic visible
+residual work even after the integration was made vanilla-first.
 
 Adaptive prewarm defaults to four observations before hidden work is admitted,
 decays one point every 60 frames, expires after 180 frames, and pauses

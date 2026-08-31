@@ -47,8 +47,13 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   and the absolute one-per-frame budget made the scene appear only in pieces.
   The integration is now vanilla-first and additive: vanilla rebuild selection
   always runs unchanged, and the Aero budget applies only to residual
-  speculative work at method return. The candidate remains default-off until
-  the corrected real-client visual-latency gate passes.
+  speculative work at method return. The corrected Worldline AERO-M122 gate
+  then kept the candidate disabled: across four fresh-client pairs it retained
+  only 54.98% of baseline FPS, raised p99 frame time to 9.70x and allocation to
+  1.78x, and one load still ended with 380 dirty in-frustum builders. Directly
+  dirtied camera chunks rebuilt with zero-frame latency, but that local win did
+  not justify the broad additive work. The option remains a diagnostic-only,
+  default-off experiment and is not recommended for gameplay.
 - **Worldline CPU-path consumer adopted.** AeroModelLib now owns an isolated
   Java 8 Worldline TestKit project that compiles maintained core product code
   without Minecraft and differentially verifies morph-array parity, bounded
