@@ -93,23 +93,47 @@ public final class Aero_Prewarm {
         if (!active() || MODELS.size() == 0) return;
         boolean pressure = ADAPTIVE && !Aero_PrewarmAdmission.allowsSpeculation(
             lastFrameMs, IDLE_MAX_FRAME_MS);
+        drainQueuedModels(pressure);
+    }
+
+    private static void drainQueuedModels(boolean pressure) {
         long start = System.nanoTime();
         int inspected = 0;
-        while (drainedThisFrame < PER_FRAME && MODELS.size() > 0
-            && inspected++ < MAX_QUEUED) {
-            if (MAX_NANOS_PER_FRAME > 0
-                && System.nanoTime() - start >= MAX_NANOS_PER_FRAME) {
-                break;
-            }
+        while (canInspect(inspected)) {
+            inspected++;
+            if (timeBudgetExhausted(start)) break;
             boolean urgent = MODELS.urgentSize() > 0;
-            if (!urgent && pressure) { pressureSkips++; break; }
+            if (blockedByPressure(urgent, pressure)) break;
             Aero_MeshModel model = urgent ? MODELS.pollUrgent() : MODELS.pollSpeculative();
-            if (ADAPTIVE && !urgent && !ADMISSION.shouldDrain(model)) continue;
-            Aero_MeshRenderer.prewarmModel(model);
-            if (ADAPTIVE) ADMISSION.forget(model);
-            drainedThisFrame++;
-            if (urgent) urgentDrainedThisFrame++;
+            if (skipSpeculativeModel(model, urgent)) continue;
+            compileModel(model, urgent);
         }
+    }
+
+    private static boolean canInspect(int inspected) {
+        return drainedThisFrame < PER_FRAME && MODELS.size() > 0 && inspected < MAX_QUEUED;
+    }
+
+    private static boolean timeBudgetExhausted(long start) {
+        return MAX_NANOS_PER_FRAME > 0
+            && System.nanoTime() - start >= MAX_NANOS_PER_FRAME;
+    }
+
+    private static boolean blockedByPressure(boolean urgent, boolean pressure) {
+        if (urgent || !pressure) return false;
+        pressureSkips++;
+        return true;
+    }
+
+    private static boolean skipSpeculativeModel(Aero_MeshModel model, boolean urgent) {
+        return ADAPTIVE && !urgent && !ADMISSION.shouldDrain(model);
+    }
+
+    private static void compileModel(Aero_MeshModel model, boolean urgent) {
+        Aero_MeshRenderer.prewarmModel(model);
+        if (ADAPTIVE) ADMISSION.forget(model);
+        drainedThisFrame++;
+        if (urgent) urgentDrainedThisFrame++;
     }
 
     static void recordFrameTime(double frameMs) { lastFrameMs = frameMs; }
