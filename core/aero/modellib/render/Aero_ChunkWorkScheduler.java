@@ -122,6 +122,10 @@ public final class Aero_ChunkWorkScheduler<T> {
         boolean urgentA = urgent(a, maximumAge, debtLimit);
         boolean urgentB = urgent(b, maximumAge, debtLimit);
         if (urgentA != urgentB) return urgentA;
+        if (urgentA) {
+            if (a.debt != b.debt) return a.debt > b.debt;
+            if (a.age != b.age) return a.age > b.age;
+        }
         if (a.priority != b.priority) return a.priority < b.priority;
         if (a.debt != b.debt) return a.debt > b.debt;
         if (a.age != b.age) return a.age > b.age;

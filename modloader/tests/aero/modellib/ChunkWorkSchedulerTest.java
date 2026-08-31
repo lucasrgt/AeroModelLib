@@ -46,6 +46,25 @@ public class ChunkWorkSchedulerTest {
     }
 
     @Test
+    public void urgentDebtWinsWhenVisibleArrivalsAlsoBecomeUrgent() {
+        Aero_ChunkWorkScheduler<Fake> scheduler = scheduler();
+        List<Fake> hidden = new ArrayList<Fake>();
+        List<Fake> queue = new ArrayList<Fake>();
+        for (int index = 0; index < 64; index++) {
+            Fake work = new Fake("hidden-" + index, false, index);
+            hidden.add(work);
+            queue.add(work);
+        }
+
+        for (int frame = 0; frame < 94; frame++) {
+            queue.add(new Fake("visible-" + frame, true, frame));
+            scheduler.schedule(queue, adapter, 1, 120, 30);
+        }
+
+        for (Fake work : hidden) assertFalse(work.name + " starved", work.dirty);
+    }
+
+    @Test
     public void ageCanMakeHiddenWorkUrgentIndependentlyOfDebtLimit() {
         Aero_ChunkWorkScheduler<Fake> scheduler = scheduler();
         Fake hidden = new Fake("hidden", false, 1.0d);
