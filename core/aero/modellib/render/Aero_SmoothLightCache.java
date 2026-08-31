@@ -21,9 +21,9 @@ import aero.modellib.optimization.OptimizationRef;
  * Setting the flag to false restores the uncached path.
  *
  * <p>Entries are bounded by an LRU cap ({@code aero.smoothlight.cacheMax},
- * default 1024). Keys hold strong world references until eviction or
- * {@link #clear()}; callers that unload worlds aggressively should clear on
- * world switch. Render thread only — no synchronization.
+ * default 1024). The first lookup with a different world identity clears the
+ * previous world's entries before selecting the new world, so keys cannot
+ * retain an unloaded client world. Render thread only — no synchronization.
  */
 @OptimizationRef({"aero.render.smooth-light-resolved-cache"})
 public final class Aero_SmoothLightCache {
@@ -41,6 +41,7 @@ public final class Aero_SmoothLightCache {
     private static long staleMisses;
     private static long sizeMismatchMisses;
     private static long evictions;
+    private static Object activeWorld;
 
     private static final Key LOOKUP = new Key();
     private static final LinkedHashMap<Key, Resolved> ENTRIES =
@@ -67,6 +68,7 @@ public final class Aero_SmoothLightCache {
      */
     public static float[] cached(Object world, Object geometry,
                                  int x, int y, int z, int size, long nowNanos) {
+        selectWorld(world);
         Resolved entry = ENTRIES.get(LOOKUP.set(world, geometry, x, y, z));
         if (entry == null) {
             misses++;
@@ -94,6 +96,7 @@ public final class Aero_SmoothLightCache {
      */
     public static float[] claim(Object world, Object geometry,
                                 int x, int y, int z, int size, long nowNanos) {
+        selectWorld(world);
         Resolved entry = ENTRIES.get(LOOKUP.set(world, geometry, x, y, z));
         if (entry == null) {
             entry = new Resolved(size);
@@ -136,6 +139,7 @@ public final class Aero_SmoothLightCache {
     /** Drops every entry. Call on world unload or from tests. */
     public static void clear() {
         ENTRIES.clear();
+        activeWorld = null;
     }
 
     /**
@@ -157,6 +161,12 @@ public final class Aero_SmoothLightCache {
         } catch (NumberFormatException error) {
             return fallback;
         }
+    }
+
+    private static void selectWorld(Object world) {
+        if (activeWorld == world) return;
+        ENTRIES.clear();
+        activeWorld = world;
     }
 
     /** Identity key: (world, geometry) by reference plus exact block coords. */

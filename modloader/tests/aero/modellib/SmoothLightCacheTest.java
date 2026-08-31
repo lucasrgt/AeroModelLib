@@ -78,11 +78,10 @@ public class SmoothLightCacheTest {
     }
 
     @Test
-    public void keysDiscriminateWorldGeometryAndPosition() {
+    public void keysDiscriminateGeometryAndPosition() {
         float[] base = Aero_SmoothLightCache.claim(world, geometry, 1, 2, 3, 4, 0L);
         base[0] = 7f;
 
-        assertNull(Aero_SmoothLightCache.cached(new Object(), geometry, 1, 2, 3, 4, 0L));
         assertNull(Aero_SmoothLightCache.cached(world, new Object(), 1, 2, 3, 4, 0L));
         assertNull(Aero_SmoothLightCache.cached(world, geometry, 9, 2, 3, 4, 0L));
         assertNull(Aero_SmoothLightCache.cached(world, geometry, 1, 9, 3, 4, 0L));
@@ -90,6 +89,20 @@ public class SmoothLightCacheTest {
 
         float[] hit = Aero_SmoothLightCache.cached(world, geometry, 1, 2, 3, 4, 0L);
         assertSame(base, hit);
+    }
+
+    @Test
+    public void worldSwitchDropsPreviousWorldEntries() {
+        Object nextWorld = new Object();
+        Aero_SmoothLightCache.claim(world, geometry, 1, 2, 3, 4, 0L);
+        assertEquals(1, Aero_SmoothLightCache.entryCount());
+
+        assertNull(Aero_SmoothLightCache.cached(nextWorld, geometry, 1, 2, 3, 4, 0L));
+        assertEquals("new world selection must release old entries",
+            0, Aero_SmoothLightCache.entryCount());
+
+        Aero_SmoothLightCache.claim(nextWorld, geometry, 1, 2, 3, 4, 0L);
+        assertNull(Aero_SmoothLightCache.cached(world, geometry, 1, 2, 3, 4, 0L));
     }
 
     @Test
