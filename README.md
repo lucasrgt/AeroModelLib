@@ -340,7 +340,7 @@ paths remain opt-in.
 | Adaptive prewarm admission | `-Daero.prewarm=true -Daero.prewarm.adaptive=true` | Learns hot models, expires cold speculation, and uses only idle frame budget for non-visible work |
 | High-memory preset | `-Daero.perf.memory=high` | Higher heap and display-list retention |
 | Chunk-scoped palette cache | `-Daero.palettedcache.chunkScope=true` | Experimental injection during chunk rebuild |
-| Chunk work scheduler (rejected gameplay candidate) | `-Daero.chunkCompileBudget=true` | Diagnostic only: M783 measured 0.55x baseline FPS, 9.70x p99, 1.78x allocation, and nondeterministic visible residuals |
+| Chunk work scheduler (rejected gameplay candidate) | `-Daero.chunkCompileBudget=true` | Diagnostic only: M783 confirmations measured 0.55-0.72x baseline FPS, 1.11-9.70x p99, 1.43-1.78x allocation, and nondeterministic visible residuals |
 | Frame pacing | `-Daero.framePacing=true` | Caps submission rate and may add latency |
 
 Do not enable every experiment at once. Change one family at a time and record

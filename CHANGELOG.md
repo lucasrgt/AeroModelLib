@@ -48,9 +48,12 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
   The integration is now vanilla-first and additive: vanilla rebuild selection
   always runs unchanged, and the Aero budget applies only to residual
   speculative work at method return. The corrected Worldline AERO-M122 gate
-  then kept the candidate disabled: across four fresh-client pairs it retained
-  only 54.98% of baseline FPS, raised p99 frame time to 9.70x and allocation to
-  1.78x, and one load still ended with 380 dirty in-frustum builders. Directly
+  then kept the candidate disabled. The first qualification retained only
+  54.98% of baseline FPS, raised p99 frame time to 9.70x and allocation to
+  1.78x, and one load ended with 380 dirty in-frustum builders. A clean
+  published confirmation still retained only 71.51% of baseline FPS, raised
+  p99 to 1.11x and allocation to 1.43x, and left as many as 19 visible builders
+  pending. Directly
   dirtied camera chunks rebuilt with zero-frame latency, but that local win did
   not justify the broad additive work. The option remains a diagnostic-only,
   default-off experiment and is not recommended for gameplay.
