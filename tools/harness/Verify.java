@@ -50,6 +50,10 @@ public final class Verify {
         enforce("harness", Collections.singleton("tools/harness"), integer("harness.max.file"));
         enforce("tool", new HashSet<String>(values("tool.roots")), integer("tool.max.file"),
                 Collections.singleton("tools/harness"));
+        List<String> complexity = new ArrayList<String>(Arrays.asList(
+                "java", "tools/complexity/Check.java", required("complexity.max")));
+        complexity.addAll(production.stream().sorted().collect(Collectors.toList()));
+        run(complexity, root);
         run(Arrays.asList("java", "tools/optimization-catalog/Audit.java"), root);
         recreateBuild();
         compileAndTest();
