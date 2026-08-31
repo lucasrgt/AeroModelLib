@@ -33,6 +33,16 @@ public final class Aero_ChunkCompileBudget {
 
     private Aero_ChunkCompileBudget() {}
 
+    /** Releases the previous world's queue and scheduler state. */
+    public static void reset() {
+        SCHEDULER.reset();
+        ADAPTER.setCamera(null);
+        builtThisFrame = visibleBuiltThisFrame = prebakeBuiltThisFrame = 0;
+        urgentBuiltThisFrame = oldestAge = maximumDebt = 0;
+        builtLastFrame = visibleBuiltLastFrame = prebakeBuiltLastFrame = 0;
+        urgentBuiltLastFrame = remainingThisFrame = 0;
+    }
+
     public static void beginFrame() {
         builtLastFrame = builtThisFrame;
         visibleBuiltLastFrame = visibleBuiltThisFrame;

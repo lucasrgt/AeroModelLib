@@ -8,10 +8,12 @@ import aero.modellib.optimization.OptimizationRef;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.chunk.ChunkBuilder;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /** Owns the optional replacement of vanilla's dirty-chunk scheduler. */
@@ -19,6 +21,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @OptimizationRef({"aero.chunk.compile-budget"})
 public abstract class WorldRendererChunkSchedulerMixin {
     @Shadow private List<ChunkBuilder> dirtyChunks;
+
+    @Inject(method = "setWorld(Lnet/minecraft/world/World;)V", at = @At("HEAD"))
+    private void aeroModelLib_releaseChunkWork(World world, CallbackInfo callback) {
+        Aero_ChunkCompileBudget.reset();
+    }
 
     @Inject(method = "compileChunks(Lnet/minecraft/entity/LivingEntity;Z)Z",
         at = @At("HEAD"), cancellable = true, require = 0, expect = 0)

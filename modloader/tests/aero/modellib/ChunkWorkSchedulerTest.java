@@ -101,6 +101,22 @@ public class ChunkWorkSchedulerTest {
     }
 
     @Test
+    public void explicitResetDropsDebtEvenWhenQueueIdentityIsReused() {
+        Aero_ChunkWorkScheduler<Fake> scheduler = scheduler();
+        Fake hidden = new Fake("hidden", false, 1.0d);
+        List<Fake> queue = list(hidden, new Fake("visible-0", true, 1.0d));
+        scheduler.schedule(queue, adapter, 1, 100, 100);
+        assertEquals(1, scheduler.maximumDebt());
+
+        scheduler.reset();
+        queue.add(new Fake("visible-1", true, 1.0d));
+        scheduler.schedule(queue, adapter, 1, 100, 100);
+
+        assertTrue(hidden.dirty);
+        assertEquals(1, scheduler.maximumDebt());
+    }
+
+    @Test
     public void duplicateAndAlreadyCleanEntriesAreCompacted() {
         Aero_ChunkWorkScheduler<Fake> scheduler = scheduler();
         Fake work = new Fake("one", true, 1.0d);
