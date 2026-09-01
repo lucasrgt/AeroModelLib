@@ -98,7 +98,7 @@ static boolean queueWorldAtRest(Aero_MeshModel model, String texturePath,
             Aero_BECellPageKey key = new Aero_BECellPageKey(be.world, model, texturePath, options,
                 cellX, cellY, cellZ, rotation, keyBrightness,
                 stateHash, orientationHash);
-            page = new Aero_BECellQueuedPage(key);
+            page = Aero_BECellQueuePool.acquire(key);
             ACTIVE.put(key, page);
             ACTIVE_PAGES.add(page);
         }

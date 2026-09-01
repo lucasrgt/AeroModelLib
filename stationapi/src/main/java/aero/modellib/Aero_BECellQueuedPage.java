@@ -24,7 +24,7 @@ import aero.modellib.util.Aero_Profiler;
  * while preserving the existing direct-render fallback.
  */
 final class Aero_BECellQueuedPage {
-        final Aero_BECellPageKey key;
+        Aero_BECellPageKey key;
         double[] worldXs = new double[16];
         double[] worldYs = new double[16];
         double[] worldZs = new double[16];
@@ -37,7 +37,12 @@ final class Aero_BECellQueuedPage {
         int count;
 
         Aero_BECellQueuedPage(Aero_BECellPageKey key) {
-            this.key = key;
+            reset(key);
+        }
+
+        void reset(Aero_BECellPageKey pageKey) {
+            if (pageKey == null) throw new IllegalArgumentException("pageKey must not be null");
+            key = pageKey;
         }
 
         void add(BlockEntity be, double worldX, double worldY, double worldZ,
@@ -75,6 +80,15 @@ final class Aero_BECellQueuedPage {
             replayModelIds = null;
             replayDirect = false;
             count = 0;
+        }
+
+        void releaseReferences() {
+            clear();
+            key = null;
+        }
+
+        int capacity() {
+            return worldXs.length;
         }
 
         void prepareReplay(Aero_BECellCachedPage cached, int[] modelIds) {

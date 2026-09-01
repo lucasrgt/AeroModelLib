@@ -161,7 +161,9 @@ final class Aero_BECellFlush extends Aero_BECellRenderState {
 
     private static void finishFrame() {
         ACTIVE.clear();
-        for (int i = 0; i < ACTIVE_PAGES.size(); i++) ACTIVE_PAGES.get(i).clear();
+        for (int i = 0; i < ACTIVE_PAGES.size(); i++) {
+            Aero_BECellQueuePool.release(ACTIVE_PAGES.get(i));
+        }
         ACTIVE_PAGES.clear();
         Aero_BECellReplay.clear();
         queuedLastFrame = queuedThisFrame;

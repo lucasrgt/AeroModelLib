@@ -1,7 +1,7 @@
 # Aero Optimization Catalog
 
 This repository owns the canonical metadata for AeroModelLib optimizations.
-The 51 records under `worldline/optimizations/catalog` describe Aero implementation
+The 53 records under `worldline/optimizations/catalog` describe Aero implementation
 details, defaults, risks, rollback paths, source symbols, and evidence using
 the neutral `worldline.optimization.v1` schema.
 
@@ -29,7 +29,7 @@ repository as the source of truth for every `aero.*` optimization ID.
 | --- | ---: | --- |
 | Active | 31 | Shipped implementation with a supported production path; some still require consumer adoption. |
 | Candidate | 14 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
-| Rejected | 5 | A known current implementation is unsafe or a measured regression. |
+| Rejected | 7 | A known current implementation is unsafe or a measured regression. |
 | Retired | 1 | Historical implementation removed from current production source. |
 
 The `default.enabled` field records the source-level default, not proof of a
@@ -54,8 +54,8 @@ implementation is shipped but consumers must call them explicitly.
 
 - Motion-aware tick LOD, dense tick budget, and skeletal LOD.
 - OBJ hidden-face removal and consumer-authored mesh LODs.
-- Cell-page fragmentation controls, prewarm, display-list budget, and the
-  aggregate high-memory preset.
+- Cell-page fragmentation controls, bounded transient queue reuse, prewarm,
+  display-list budget, and the aggregate high-memory preset.
 - Early individual-render skipping, demoted after a focused -37.0% A/B.
 - Chunk compile budget, frame pacing, and the adaptive render-load governor.
 - Incremental non-forced autosave batches with an unchanged forced-save drain.
