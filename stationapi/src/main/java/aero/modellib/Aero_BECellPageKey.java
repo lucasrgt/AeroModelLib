@@ -151,4 +151,9 @@ final class Aero_BECellPageKey {
             if (texturePath == other.texturePath) return true;
             return texturePath != null && texturePath.equals(other.texturePath);
         }
+
+        boolean sameReplayState(Aero_BECellPageKey other) {
+            return other != null && sameOwner(other) && sameTransform(other)
+                && sameAppearance(other) && sameOptions(other) && sameTexture(other);
+        }
     }

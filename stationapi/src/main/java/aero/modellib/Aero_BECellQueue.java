@@ -103,6 +103,7 @@ static boolean queueWorldAtRest(Aero_MeshModel model, String texturePath,
             ACTIVE_PAGES.add(page);
         }
         page.add(be, worldX, worldY, worldZ, brightness);
+        Aero_BECellReplay.add(page, worldX, worldY, worldZ, brightness);
         queuedThisFrame++;
         return true;
     }

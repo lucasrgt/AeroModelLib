@@ -7,6 +7,12 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Non-flattened Cell Pages preserve direct-render ordering.** Page display
+  lists now replay each instance's four brightness buckets together, matching
+  the direct at-rest renderer instead of grouping all instances by bucket.
+  Cached pages now replay `world - camera` per instance, exactly like the
+  direct renderer, while sharing texture/state setup and collapsing each
+  instance's four model-list calls into one ordered template call.
 - **Flattened Cell Pages rejected and removed from the high-memory preset.**
   Worldline M784 exercised 576 static machines across four chunks in four
   counterbalanced fresh-client pairs while orbiting, traversing, spinning,

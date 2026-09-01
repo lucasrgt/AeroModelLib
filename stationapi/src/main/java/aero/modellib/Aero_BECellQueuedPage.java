@@ -31,6 +31,9 @@ final class Aero_BECellQueuedPage {
         float[] brightnesses = new float[16];
         int[] identityHashes = new int[16];
         long[] sortKeys = new long[16];
+        Aero_BECellCachedPage replayCached;
+        int[] replayModelIds;
+        boolean replayDirect;
         int count;
 
         Aero_BECellQueuedPage(Aero_BECellPageKey key) {
@@ -68,7 +71,22 @@ final class Aero_BECellQueuedPage {
         }
 
         void clear() {
+            replayCached = null;
+            replayModelIds = null;
+            replayDirect = false;
             count = 0;
+        }
+
+        void prepareReplay(Aero_BECellCachedPage cached, int[] modelIds) {
+            replayCached = cached;
+            replayModelIds = modelIds;
+            replayDirect = false;
+        }
+
+        void prepareDirectReplay() {
+            replayCached = null;
+            replayModelIds = null;
+            replayDirect = true;
         }
 
         private void ensureCapacity() {

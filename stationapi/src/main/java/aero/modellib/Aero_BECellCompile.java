@@ -33,39 +33,43 @@ static boolean canRebuildAnotherPageThisFrame() {
     }
 
 static Aero_BECellCachedPage compilePage(Aero_BECellQueuedPage page, int[] modelIds, int membershipHash) {
-        long censusStartNs = Aero_FrameSpikeLogger.beginCellRebuild();
-        Aero_Profiler.start("aero.becell.compile");
-        try {
-            int[] ids = new int[4];
-            for (int g = 0; g < 4; g++) {
-                int modelList = modelIds != null ? modelIds[g] : 0;
-                if (!shouldCompile(page, g, modelList)) continue;
-                int id = Aero_DisplayListBudget.glGenList();
-                if (id == 0) {
-                    Aero_BECellCache.deleteIds(ids);
-                    return null;
-                }
-                GL11.glNewList(id, GL11.GL_COMPILE);
-                emitBucket(page, g, modelList);
-                GL11.glEndList();
-                ids[g] = id;
+    long censusStartNs = Aero_FrameSpikeLogger.beginCellRebuild();
+    Aero_Profiler.start("aero.becell.compile");
+    try {
+        if (!FLATTENED_PAGES) {
+            return compileOrderedModelPage(page, modelIds, membershipHash);
+        }
+        int[] ids = new int[4];
+        for (int g = 0; g < 4; g++) {
+            if (!hasBucketGeometry(page.key.model, g)) continue;
+            int id = Aero_DisplayListBudget.glGenList();
+            if (id == 0) {
+                Aero_BECellCache.deleteIds(ids);
+                return null;
+            }
+            GL11.glNewList(id, GL11.GL_COMPILE);
+            emitFlattened(page, g);
+            GL11.glEndList();
+            ids[g] = id;
             }
             return new Aero_BECellCachedPage(ids, page.count, membershipHash, frameIndex);
         } finally {
             Aero_FrameSpikeLogger.endCellRebuild(censusStartNs);
             Aero_Profiler.end("aero.becell.compile");
-        }
     }
+}
 
-private static boolean shouldCompile(Aero_BECellQueuedPage page, int bucket, int modelList) {
-        return FLATTENED_PAGES
-            ? hasBucketGeometry(page.key.model, bucket) : modelList != 0;
-    }
-
-private static void emitBucket(Aero_BECellQueuedPage page, int bucket, int modelList) {
-        if (FLATTENED_PAGES) emitFlattened(page, bucket);
-        else emitModelLists(page, bucket, modelList);
-    }
+private static Aero_BECellCachedPage compileOrderedModelPage(Aero_BECellQueuedPage page,
+        int[] modelIds, int membershipHash) {
+    if (!hasModelList(modelIds)) return null;
+    int id = Aero_DisplayListBudget.glGenList();
+    if (id == 0) return null;
+    GL11.glNewList(id, GL11.GL_COMPILE);
+    emitOrderedModelTemplate(page, modelIds);
+    GL11.glEndList();
+    return new Aero_BECellCachedPage(new int[] {id, 0, 0, 0},
+        page.count, membershipHash, frameIndex);
+}
 
 private static void emitFlattened(Aero_BECellQueuedPage page, int bucket) {
         for (int i = 0; i < page.count; i++) {
@@ -92,17 +96,23 @@ private static void emitFlattenedInstance(Aero_BECellQueuedPage page, int bucket
         }
     }
 
-private static void emitModelLists(Aero_BECellQueuedPage page, int bucket, int modelList) {
-        for (int i = 0; i < page.count; i++) {
-            applyLight(page, bucket, i);
-            GL11.glPushMatrix();
-            GL11.glTranslated(page.worldXs[i] - page.key.originX(),
-                page.worldYs[i] - page.key.originY(), page.worldZs[i] - page.key.originZ());
-            Aero_MeshRenderer.applyRotation(page.key.rotation);
-            GL11.glCallList(modelList);
-            GL11.glPopMatrix();
-        }
+private static void emitOrderedModelTemplate(Aero_BECellQueuedPage page, int[] modelIds) {
+    for (int bucket = 0; bucket < modelIds.length; bucket++) {
+        if (modelIds[bucket] == 0) continue;
+        float bright = page.key.brightness * Aero_MeshModel.BRIGHTNESS_FACTORS[bucket];
+        GL11.glColor4f(bright * page.key.options.tintR, bright * page.key.options.tintG,
+            bright * page.key.options.tintB, page.key.options.alpha);
+        GL11.glCallList(modelIds[bucket]);
     }
+}
+
+private static boolean hasModelList(int[] modelIds) {
+    if (modelIds == null) return false;
+    for (int i = 0; i < modelIds.length; i++) {
+        if (modelIds[i] != 0) return true;
+    }
+    return false;
+}
 
 private static void applyLight(Aero_BECellQueuedPage page, int bucket, int index) {
         if (!PER_INSTANCE_LIGHT) return;
