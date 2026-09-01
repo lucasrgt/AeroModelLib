@@ -175,6 +175,29 @@ and allocation direction. The candidate therefore remains default-off.
 Qualified Worldline revision: `f2fc3cc73560d2ad198e95ae65ebe9ccf3887490`.
 Qualified Aero revision: `217b5ecbcb53b34da3bd44f4e09b25baa3c7b6d9`.
 
+## Worldline M789 bounded Cell Page queue reuse
+
+Worldline M789 ran four counterbalanced baseline/reuse pairs across eight fresh
+GPU clients in the 576-machine, four-tower, four-chunk scene. Both arms used the
+same ordered-template Cell Page path, submitted all 576 machines every frame,
+and followed the same orbit, traversal, spin, and teleport route. The only arm
+difference was bounded queue reuse.
+
+Reuse cut aggregate allocation per frame to 50.5% of baseline and won all four
+pairs. The pool allocated 33 pages and then served 443,017 to 473,097 reuses per
+run, retained 105 pages inside its 256-page bound, discarded none, and cleared
+owner references before retention. Aggregate FPS moved from 206.196 to 208.328,
+p99 from 13.078 to 13.099 ms, and isolated render time remained at a 1.002
+ratio. The 50 ms hitch rate moved from 65 to 0 ppm.
+
+All four cross-arm comparisons and both same-arm repeatability comparisons had
+zero changed RGBA pixels and zero channel delta. This qualifies bounded queue
+reuse as default-on while preserving `aero.becell.queueReuse=false` and a zero
+page limit as immediate rollback controls.
+
+Qualified Worldline revision: `b286f18ec8aba62a111dd5b6d8efa31e0e56aa4c`.
+Qualified Aero candidate revision: `609dd53f6a11af8b1b0c9c9250e29b33e8012222`.
+
 ## AERO-M120 adaptive hotness-guided prewarm
 
 Adaptive mode does not enqueue a model merely because the OBJ loader knows it.

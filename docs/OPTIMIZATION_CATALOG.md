@@ -27,8 +27,8 @@ repository as the source of truth for every `aero.*` optimization ID.
 
 | Status | Count | Meaning in this inventory |
 | --- | ---: | --- |
-| Active | 31 | Shipped implementation with a supported production path; some still require consumer adoption. |
-| Candidate | 14 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
+| Active | 32 | Shipped implementation with a supported production path; some still require consumer adoption. |
+| Candidate | 13 | Opt-in, adoption-gated, or awaiting representative benchmark evidence. |
 | Rejected | 7 | A known current implementation is unsafe or a measured regression. |
 | Retired | 1 | Historical implementation removed from current production source. |
 
@@ -40,7 +40,7 @@ implementation is shipped but consumers must call them explicitly.
 
 - Allocation and cache control: bounded loader caches, hot-path sampling,
   lookup and metadata caches, morph/IK scratch reuse, morph weight arrays,
-  texture-ID caching, and chunk-bake prewarm.
+  texture-ID caching, chunk-bake prewarm, and bounded Cell Page queue reuse.
 - Render submission: animated batching, composite-state sorting, bone pages,
   at-rest display lists, and block-entity cell indexing/pages.
 - Visibility and detail: smart LOD, conservative cone culling, small-object
@@ -54,8 +54,8 @@ implementation is shipped but consumers must call them explicitly.
 
 - Motion-aware tick LOD, dense tick budget, and skeletal LOD.
 - OBJ hidden-face removal and consumer-authored mesh LODs.
-- Cell-page fragmentation controls, bounded transient queue reuse, prewarm,
-  display-list budget, and the aggregate high-memory preset.
+- Cell-page fragmentation controls, prewarm, display-list budget, and the
+  aggregate high-memory preset.
 - Early individual-render skipping, demoted after a focused -37.0% A/B.
 - Chunk compile budget, frame pacing, and the adaptive render-load governor.
 - Incremental non-forced autosave batches with an unchanged forced-save drain.
