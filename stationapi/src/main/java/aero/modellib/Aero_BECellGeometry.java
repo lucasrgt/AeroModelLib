@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL11;
 
 import aero.modellib.model.Aero_MeshBlendMode;
 import aero.modellib.model.Aero_MeshModel;
+import aero.modellib.optimization.OptimizationRef;
 import aero.modellib.render.Aero_CellRenderableBE;
 import aero.modellib.render.Aero_RenderOptions;
 import aero.modellib.util.Aero_PerfConfig;
@@ -23,6 +24,7 @@ import aero.modellib.util.Aero_Profiler;
  * small display-list page per visible cell/render key and replays that page
  * while preserving the existing direct-render fallback.
  */
+@OptimizationRef({"aero.render.be-cell-pages", "aero.perf.high-memory-preset"})
 final class Aero_BECellGeometry extends Aero_BECellRenderState {
     private Aero_BECellGeometry() {}
 
@@ -68,7 +70,9 @@ static void emitVertexFlattened(double x, double y, double z,
             rz = -dx * sin + dz * cos + 0.5d;
         }
         GL11.glTexCoord2f(u, v);
-        GL11.glVertex3d(ox + rx, oy + y, oz + rz);
+        // Match the float vertices used by the normal nested display-list path.
+        // Keeping doubles here changes coplanar depth outcomes after flattening.
+        GL11.glVertex3f((float) (ox + rx), (float) (oy + y), (float) (oz + rz));
     }
 
 static float pageKeyBrightness(float brightness) {
