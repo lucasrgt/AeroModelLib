@@ -195,6 +195,14 @@ The option remains explicit because flattened pages duplicate model geometry
 in driver memory. A bounded 4,096-vertex auto-flatten experiment was neutral
 (147.41 versus 148.62 FPS, 0.52 versus 0.53 ms flush) and was removed.
 
+Worldline M784 later superseded this narrow static-camera result. Its 576-
+machine, four-chunk moving-camera matrix first exposed missing coplanar faces
+from CPU-baked transforms. Recording the original per-instance OpenGL
+translation and rotation restored exact output (`0` changed pixels in all four
+pairs), but reduced throughput to `0.960x` and raised Cell Page flush cost to
+`1.193x`. Flattening is therefore rejected for gameplay, remains available
+only through the explicit flag, and is no longer part of high-memory mode.
+
 The fresh-world chunk-scoped PalettedContainer cache was also rejected. It
 raised measured chunk compile time from 1.999 to 2.232 seconds and allocation
 from 882 to 1,295 MB while reducing throughput from 102.87 to 89.86 FPS.

@@ -7,6 +7,15 @@ correspond to `mod_version` in `stationapi/gradle.properties`.
 ## [3.x] — Smart LOD + occlusion default-on
 
 ### Added
+- **Flattened Cell Pages rejected and removed from the high-memory preset.**
+  Worldline M784 exercised 576 static machines across four chunks in four
+  counterbalanced fresh-client pairs while orbiting, traversing, spinning,
+  teleporting, and inspecting close geometry. Preserving the normal
+  per-instance OpenGL transform sequence eliminated the missing-machine bug
+  with zero changed pixels across every checkpoint, but the corrected path
+  delivered only `0.960x` FPS and cost `1.193x` as much Cell Page flush time.
+  `-Daero.becell.flatten=true` remains an explicit research oracle; high-memory
+  mode no longer enables it.
 - **Unsafe strict block-entity view culling is now opt-in.** The broad
   conservative cone remains enabled, but `aero.beViewCull` now requires an
   explicit `true`. Worldline's same-client full-frame oracle reproduced

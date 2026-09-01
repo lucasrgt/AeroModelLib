@@ -339,6 +339,7 @@ paths remain opt-in.
 | Predictive prewarm queue | `-Daero.prewarm=true` | Loader-revision discovery plus earlier bounded CPU/driver work and cache allocation |
 | Adaptive prewarm admission | `-Daero.prewarm=true -Daero.prewarm.adaptive=true` | Learns hot models, expires cold speculation, and uses only idle frame budget for non-visible work |
 | High-memory preset | `-Daero.perf.memory=high` | Higher heap and display-list retention |
+| Flattened Cell Pages (rejected research path) | `-Daero.becell.flatten=true` | Exact raster after transform preservation, but M784 measured 0.96x FPS and 1.19x flush cost |
 | Chunk-scoped palette cache | `-Daero.palettedcache.chunkScope=true` | Experimental injection during chunk rebuild |
 | Chunk work scheduler (rejected gameplay candidate) | `-Daero.chunkCompileBudget=true` | Diagnostic only: M783 confirmations measured 0.55-0.72x baseline FPS, 1.11-9.70x p99, 1.43-1.78x allocation, and nondeterministic visible residuals |
 | Frame pacing | `-Daero.framePacing=true` | Caps submission rate and may add latency |

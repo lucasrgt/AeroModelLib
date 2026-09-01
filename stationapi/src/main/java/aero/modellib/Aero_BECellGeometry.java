@@ -24,7 +24,7 @@ import aero.modellib.util.Aero_Profiler;
  * small display-list page per visible cell/render key and replays that page
  * while preserving the existing direct-render fallback.
  */
-@OptimizationRef({"aero.render.be-cell-pages", "aero.perf.high-memory-preset"})
+@OptimizationRef({"aero.render.be-cell-pages", "aero.render.be-cell-page-flattening"})
 final class Aero_BECellGeometry extends Aero_BECellRenderState {
     private Aero_BECellGeometry() {}
 

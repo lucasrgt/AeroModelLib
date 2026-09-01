@@ -79,6 +79,11 @@ Last status reconciliation: 2026-08-31.
   `0.57 -> 0.20 ms`. It remains opt-in because the speedup duplicates geometry
   in driver memory. `perInstanceLight` did not reduce the 40-page count, and
   steady-state page rebuilds remained zero, leaving `stableMembership` idle.
+- [x] Worldline M784 superseded that narrow result with four counterbalanced
+  fresh-client pairs, 576 machines across four chunks, and a moving-camera
+  full-RGBA oracle. Transform-preserving flattening produced zero changed
+  pixels but only `0.960x` FPS and `1.193x` flush performance, so it is rejected
+  for gameplay and no longer enabled by the high-memory preset.
 - [ ] Rodar benchmark visual/stress com muitos BEs reais.
 - [ ] Rodar JFR antes/depois para confirmar ganho real em produção.
 - [ ] Conferir adoção em mods consumidores reais.
@@ -341,6 +346,10 @@ Last status reconciliation: 2026-08-31.
   - [x] `-Daero.becell.flatten=true` reduced average flush from `0.57` to
     `0.23 ms`; the high-memory aggregate reached `0.20 ms`, but remains opt-in
     because it duplicates full geometry in driver memory.
+  - [x] M784 requalification rejected promotion: the corrected transform-exact
+    path measured `0.960x` FPS and `1.193x` flush cost in a 576-machine,
+    four-chunk moving-camera scene. The explicit flag remains only as a
+    research oracle and high-memory mode leaves it off.
 
 - [x] **C4. Central cell flush - CONCLUÍDO**
   - [x] `Aero_BECellRenderer.flush(...)` no fim de

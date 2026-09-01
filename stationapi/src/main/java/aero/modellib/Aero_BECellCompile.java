@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL11;
 
 import aero.modellib.model.Aero_MeshBlendMode;
 import aero.modellib.model.Aero_MeshModel;
+import aero.modellib.optimization.OptimizationRef;
 import aero.modellib.render.Aero_CellRenderableBE;
 import aero.modellib.render.Aero_RenderOptions;
 import aero.modellib.util.Aero_PerfConfig;
@@ -23,6 +24,7 @@ import aero.modellib.util.Aero_Profiler;
  * small display-list page per visible cell/render key and replays that page
  * while preserving the existing direct-render fallback.
  */
+@OptimizationRef({"aero.render.be-cell-pages", "aero.render.be-cell-page-flattening"})
 final class Aero_BECellCompile extends Aero_BECellRenderState {
     private Aero_BECellCompile() {}
 
