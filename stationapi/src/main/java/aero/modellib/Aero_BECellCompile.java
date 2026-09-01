@@ -66,14 +66,28 @@ private static void emitBucket(Aero_BECellQueuedPage page, int bucket, int model
     }
 
 private static void emitFlattened(Aero_BECellQueuedPage page, int bucket) {
-        GL11.glBegin(GL11.GL_TRIANGLES);
         for (int i = 0; i < page.count; i++) {
             applyLight(page, bucket, i);
-            Aero_BECellGeometry.emitModelBucketFlattened(page.key.model, bucket,
-                page.worldXs[i] - page.key.originX(), page.worldYs[i] - page.key.originY(),
-                page.worldZs[i] - page.key.originZ(), page.key.rotation);
+            emitFlattenedInstance(page, bucket, i);
         }
-        GL11.glEnd();
+    }
+
+private static void emitFlattenedInstance(Aero_BECellQueuedPage page, int bucket, int index) {
+        GL11.glPushMatrix();
+        try {
+            GL11.glTranslated(page.worldXs[index] - page.key.originX(),
+                page.worldYs[index] - page.key.originY(), page.worldZs[index] - page.key.originZ());
+            Aero_MeshRenderer.applyRotation(page.key.rotation);
+            GL11.glBegin(GL11.GL_TRIANGLES);
+            try {
+                Aero_BECellGeometry.emitModelBucketFlattened(
+                    page.key.model, bucket, 0.0d, 0.0d, 0.0d, 0.0f);
+            } finally {
+                GL11.glEnd();
+            }
+        } finally {
+            GL11.glPopMatrix();
+        }
     }
 
 private static void emitModelLists(Aero_BECellQueuedPage page, int bucket, int modelList) {
