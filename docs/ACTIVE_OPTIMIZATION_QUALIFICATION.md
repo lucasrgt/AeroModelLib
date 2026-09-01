@@ -191,12 +191,22 @@ p99 from 13.078 to 13.099 ms, and isolated render time remained at a 1.002
 ratio. The 50 ms hitch rate moved from 65 to 0 ppm.
 
 All four cross-arm comparisons and both same-arm repeatability comparisons had
-zero changed RGBA pixels and zero channel delta. This qualifies bounded queue
-reuse as default-on while preserving `aero.becell.queueReuse=false` and a zero
-page limit as immediate rollback controls.
+zero changed RGBA pixels and zero channel delta. M789 therefore established a
+strong candidate result, subject to an independent default-activation run.
+
+Worldline M790 repeated the same four-pair scene on the published default-on
+revision, comparing the unconfigured default with explicit rollback. Pixels,
+workload, pool bounds, and owner-reference clearing remained exact, and
+allocation again won all four pairs at a 0.473 aggregate ratio. Throughput,
+however, fell to a 0.943 ratio and p99 rose to 1.063; two pairs carried the
+material slowdown and both order strata missed the promotion bounds. The hitch
+delta of +67 ppm remained equivalent, but the independent frame regression
+contradicts a safe default-on claim. Queue reuse therefore remains a supported
+opt-in candidate while the shipped default returns to off.
 
 Qualified Worldline revision: `b286f18ec8aba62a111dd5b6d8efa31e0e56aa4c`.
 Qualified Aero candidate revision: `609dd53f6a11af8b1b0c9c9250e29b33e8012222`.
+Independent Worldline M790 evidence revision: `b1743aa19ae79aeadc2e52332fb83b9f930062cf`.
 
 ## AERO-M120 adaptive hotness-guided prewarm
 

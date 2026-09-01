@@ -9,7 +9,7 @@ import aero.modellib.util.Aero_PerfConfig;
 @OptimizationRef({"aero.render.be-cell-queue-reuse"})
 final class Aero_BECellQueuePool {
     static final boolean ENABLED = Aero_PerfConfig.booleanProperty(
-        "aero.becell.queueReuse", true, true);
+        "aero.becell.queueReuse", false, false);
     private static final int MAX_PAGES = Aero_PerfConfig.intProperty(
         "aero.becell.queueReuseMaxPages", 256, 512, 0, 4096);
     private static final int MAX_RETAINED_INSTANCES = Aero_PerfConfig.intProperty(
